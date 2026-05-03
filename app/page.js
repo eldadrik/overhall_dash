@@ -1,8 +1,8 @@
-import Image from "next/image";
-import { getDashboardData } from "@/lib/dashboard-data";
-import { hasHebrewCharacters, normalizeStatusTone } from "@/lib/format";
+"use client";
 
-export const dynamic = "force-dynamic";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { hasHebrewCharacters, normalizeStatusTone } from "@/lib/format";
 
 const STATUS_LABELS = {
   ok: "פעיל",
@@ -139,8 +139,45 @@ function WarningStrip({ warnings }) {
   );
 }
 
-export default async function HomePage() {
-  const dashboard = await getDashboardData();
+export default function HomePage() {
+  const [dashboard, setDashboard] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDashboard() {
+      try {
+        const response = await fetch("/api/dashboard", {
+          cache: "no-store"
+        });
+
+        if (!response.ok) {
+          throw new Error(`Dashboard request failed with status ${response.status}.`);
+        }
+
+        const payload = await response.json();
+
+        if (isMounted) {
+          setDashboard(payload);
+          setError(null);
+        }
+      } catch (loadError) {
+        if (isMounted) {
+          setError(loadError);
+        }
+      }
+    }
+
+    loadDashboard();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const generatedAtLabel = dashboard ? new Date(dashboard.generatedAt).toLocaleString() : "טוען...";
+  const activePanelsLabel = dashboard ? `${dashboard.summary.activePanels} / 5` : "טוען...";
 
   return (
     <main className="shell">
@@ -158,7 +195,7 @@ export default async function HomePage() {
           <dl>
             <div>
               <dt>עודכן</dt>
-              <dd>{new Date(dashboard.generatedAt).toLocaleString()}</dd>
+              <dd>{generatedAtLabel}</dd>
             </div>
             <div>
               <dt>חלון מטמון</dt>
@@ -166,75 +203,91 @@ export default async function HomePage() {
             </div>
             <div>
               <dt>פאנלים פעילים</dt>
-              <dd>{dashboard.summary.activePanels} / 5</dd>
+              <dd>{activePanelsLabel}</dd>
             </div>
           </dl>
         </div>
       </section>
 
-      <section className="grid">
-        <TrendPanel
-          bucket={dashboard.searches.he}
-          eyebrow="חיפושי Google"
-          emptyMessage="מגמות החיפוש בעברית אינן זמינות כרגע."
-          localeTag="search-he"
-          title="ישראל / עברית"
-        />
-        <TrendPanel
-          bucket={dashboard.searches.en}
-          eyebrow="חיפושי Google"
-          emptyMessage="מגמות החיפוש באנגלית אינן זמינות כרגע."
-          localeTag="search-en"
-          title="ארה״ב / אנגלית"
-        />
-        <TrendPanel
-          bucket={dashboard.xTrends.he}
-          eyebrow="מגמות X"
-          emptyMessage="מגמות X בעברית אינן זמינות כרגע."
-          localeTag="x-he"
-          title="ישראל / עברית"
-        />
-        <TrendPanel
-          bucket={dashboard.xTrends.en}
-          eyebrow="מגמות X"
-          emptyMessage="מגמות X באנגלית אינן זמינות כרגע."
-          localeTag="x-en"
-          title="ארה״ב / אנגלית"
-        />
-      </section>
+      {error ? (
+        <section className="warning-strip card">
+          <p className="eyebrow">שגיאה</p>
+          <p className="empty-state">{error.message}</p>
+        </section>
+      ) : null}
 
-      <WarningStrip warnings={dashboard.warnings} />
+      {dashboard ? (
+        <>
+          <section className="grid">
+            <TrendPanel
+              bucket={dashboard.searches.he}
+              eyebrow="חיפושי Google"
+              emptyMessage="מגמות החיפוש בעברית אינן זמינות כרגע."
+              localeTag="search-he"
+              title="ישראל / עברית"
+            />
+            <TrendPanel
+              bucket={dashboard.searches.en}
+              eyebrow="חיפושי Google"
+              emptyMessage="מגמות החיפוש באנגלית אינן זמינות כרגע."
+              localeTag="search-en"
+              title="ארה״ב / אנגלית"
+            />
+            <TrendPanel
+              bucket={dashboard.xTrends.he}
+              eyebrow="מגמות X"
+              emptyMessage="מגמות X בעברית אינן זמינות כרגע."
+              localeTag="x-he"
+              title="ישראל / עברית"
+            />
+            <TrendPanel
+              bucket={dashboard.xTrends.en}
+              eyebrow="מגמות X"
+              emptyMessage="מגמות X באנגלית אינן זמינות כרגע."
+              localeTag="x-en"
+              title="ארה״ב / אנגלית"
+            />
+          </section>
 
-      <section className="sources card">
-        <div className="sources-head">
-          <p className="eyebrow">מקורות</p>
-          <p>כל פאנל מציג גם את המקור שהפיק את הנתונים הנוכחיים שלו.</p>
-        </div>
-        <div className="sources-grid">
-          <div>
-            <span>חיפוש / ישראל</span>
-            <strong>{PROVIDER_LABELS[dashboard.sources.searches.he] || dashboard.sources.searches.he}</strong>
-          </div>
-          <div>
-            <span>חיפוש / ארה״ב</span>
-            <strong>{PROVIDER_LABELS[dashboard.sources.searches.en] || dashboard.sources.searches.en}</strong>
-          </div>
-          <div>
-            <span>X / ישראל</span>
-            <strong>{PROVIDER_LABELS[dashboard.sources.xTrends.he] || dashboard.sources.xTrends.he}</strong>
-          </div>
-          <div>
-            <span>X / ארה״ב</span>
-            <strong>{PROVIDER_LABELS[dashboard.sources.xTrends.en] || dashboard.sources.xTrends.en}</strong>
-          </div>
-          <div>
-            <span>פולימרקט</span>
-            <strong>{PROVIDER_LABELS[dashboard.sources.hotBet] || dashboard.sources.hotBet}</strong>
-          </div>
-        </div>
-      </section>
+          <WarningStrip warnings={dashboard.warnings} />
 
-      <HotBetPanel hotBet={dashboard.hotBet} />
+          <section className="sources card">
+            <div className="sources-head">
+              <p className="eyebrow">מקורות</p>
+              <p>כל פאנל מציג גם את המקור שהפיק את הנתונים הנוכחיים שלו.</p>
+            </div>
+            <div className="sources-grid">
+              <div>
+                <span>חיפוש / ישראל</span>
+                <strong>{PROVIDER_LABELS[dashboard.sources.searches.he] || dashboard.sources.searches.he}</strong>
+              </div>
+              <div>
+                <span>חיפוש / ארה״ב</span>
+                <strong>{PROVIDER_LABELS[dashboard.sources.searches.en] || dashboard.sources.searches.en}</strong>
+              </div>
+              <div>
+                <span>X / ישראל</span>
+                <strong>{PROVIDER_LABELS[dashboard.sources.xTrends.he] || dashboard.sources.xTrends.he}</strong>
+              </div>
+              <div>
+                <span>X / ארה״ב</span>
+                <strong>{PROVIDER_LABELS[dashboard.sources.xTrends.en] || dashboard.sources.xTrends.en}</strong>
+              </div>
+              <div>
+                <span>פולימרקט</span>
+                <strong>{PROVIDER_LABELS[dashboard.sources.hotBet] || dashboard.sources.hotBet}</strong>
+              </div>
+            </div>
+          </section>
+
+          <HotBetPanel hotBet={dashboard.hotBet} />
+        </>
+      ) : !error ? (
+        <section className="panel card">
+          <PanelHeader eyebrow="טוען" title="מעדכן נתונים" caption="הדשבורד נטען ברקע דרך API ייעודי." tone="partial" />
+          <p className="empty-state">העמוד מוכן, הנתונים יופיעו מיד אחרי שהספקים יחזירו תשובה.</p>
+        </section>
+      ) : null}
     </main>
   );
 }

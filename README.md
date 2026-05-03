@@ -23,14 +23,14 @@ Copy `.env.example` to `.env.local` and fill in:
 
 - `XAI_API_KEY`: required for Grok X Search
 - `XAI_MODEL`: defaults to `grok-4.20-reasoning`
-- `KV_REST_API_URL`: Vercel KV / Redis REST URL
-- `KV_REST_API_TOKEN`: Vercel KV / Redis REST token
+- `KV_REST_API_URL`: optional Upstash Redis REST URL for persistent Grok cache
+- `KV_REST_API_TOKEN`: optional Upstash Redis REST token for persistent Grok cache
 
-Local development can fall back to `.cache/grok-x-trends` when KV variables are missing. Vercel production requires the KV variables because serverless files are not persistent.
+Local development falls back to `.cache/grok-x-trends` when Redis variables are missing. Vercel production falls back to in-memory cache when Redis variables are missing, so Grok still returns results, but cold starts or multiple instances can regenerate more than once per hour. Use Upstash Redis for the strict one-hour cache guarantee.
 
 ## Vercel Deployment
 
-1. Create or connect a Vercel KV / Redis store in the Vercel project.
+1. Create or connect an Upstash Redis store in the Vercel project if you need persistent one-hour Grok caching.
 2. Add the environment variables from `.env.example` in Vercel Project Settings.
 3. Deploy with the default Vercel Next.js settings:
 
@@ -43,7 +43,7 @@ The dashboard page loads a lightweight shell first and fetches `/api/dashboard` 
 ## Provider Behavior
 
 - Google search trends: public Google Trends RSS.
-- X trends: Grok X Search only, cached for one hour in Vercel KV.
+- X trends: Grok X Search only, cached for one hour in Redis when configured, otherwise in local files during development or process memory on Vercel.
 - Polymarket: Gamma API plus CLOB price history, ranked by Interesting Score.
 
 ## API
@@ -62,4 +62,4 @@ You can bypass that dashboard memory cache manually with:
 /api/dashboard?refresh=1
 ```
 
-This does not bypass the one-hour Grok KV cache.
+This does not bypass the one-hour Grok cache.

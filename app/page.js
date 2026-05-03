@@ -16,6 +16,7 @@ const PROVIDER_LABELS = {
   "x-official-trends": "API רשמי של X",
   "xai-web-search-fallback": "xAI חיפוש רשת",
   "xai-x-search-fallback": "xAI X Search",
+  "grok-x-search": "Grok X Search",
   "polymarket-gamma": "Polymarket Gamma",
   unavailable: "לא זמין"
 };
@@ -98,15 +99,15 @@ function HotBetPanel({ hotBet }) {
           <p className="hero-description">{item.subtitle}</p>
           <div className="hero-stats">
             <div className="hero-stat">
-              <span className="hero-stat-label">נפח ב־24 שעות</span>
+              <span className="hero-stat-label">Interesting Score</span>
               <strong>{item.metricValue}</strong>
             </div>
             <div className="hero-stat">
-              <span className="hero-stat-label">נזילות</span>
+              <span className="hero-stat-label">Price move</span>
               <strong>{item.liquidityValue}</strong>
             </div>
             <div className="hero-stat">
-              <span className="hero-stat-label">תמונת שוק</span>
+              <span className="hero-stat-label">Probability</span>
               <strong>{item.probabilitySummary}</strong>
             </div>
           </div>

@@ -26,6 +26,8 @@ Copy `.env.example` to `.env.local` and fill in:
 - `KV_REST_API_URL`: optional Upstash Redis REST URL for persistent Grok cache
 - `KV_REST_API_TOKEN`: optional Upstash Redis REST token for persistent Grok cache
 
+In Vercel, set `XAI_API_KEY` to the raw key value only, for example `xai-...`. Do not paste `XAI_API_KEY=xai-...` into the value field.
+
 Local development falls back to `.cache/grok-x-trends` when Redis variables are missing. Vercel production falls back to in-memory cache when Redis variables are missing, so Grok still returns results, but cold starts or multiple instances can regenerate more than once per hour. Use Upstash Redis for the strict one-hour cache guarantee.
 
 ## Vercel Deployment

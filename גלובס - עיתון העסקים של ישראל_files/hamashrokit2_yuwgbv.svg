@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="prefix__hamashrokit" width="104.121" height="17.162" viewBox="0 0 104.121 17.162">
+    <defs>
+        <style>
+            .prefix__cls-1{fill:#c00}
+        </style>
+    </defs>
+    <path id="prefix__Path_3" d="M199.027 87.5a2.146 2.146 0 00.653 1.525 2.375 2.375 0 001.58.6h2.18V76.169h-4.413z" class="prefix__cls-1" data-name="Path 3" transform="translate(-141.548 -76.169)"/>
+    <path id="prefix__Path_4" d="M209.439 89.221h2.18a2.375 2.375 0 001.58-.6 1.981 1.981 0 00.653-1.525V78.6h-4.413z" class="prefix__cls-1" data-name="Path 4" transform="translate(-139.811 -75.764)"/>
+    <path id="prefix__Rectangle_5" d="M0 0H4.413V7.191H0z" class="prefix__cls-1" data-name="Rectangle 5" transform="translate(63.58 6.266)"/>
+    <path id="prefix__Rectangle_6" d="M0 0H4.413V13.457H0z" class="prefix__cls-1" data-name="Rectangle 6" transform="translate(37.755)"/>
+    <path id="prefix__Path_5" d="M197.036 76.169h-9.589v4.25h7.409v9.208h4.413V78.294a2.261 2.261 0 00-2.233-2.125z" class="prefix__cls-1" data-name="Path 5" transform="translate(-143.48 -76.169)"/>
+    <path id="prefix__Path_6" d="M226.367 76.169h-11.6v13.457h4.412v-9.207h5.012v4.958h-3.159v4.25h5.394A2.176 2.176 0 00228.6 87.5v-9.206a2.262 2.262 0 00-2.233-2.125z" class="prefix__cls-1" data-name="Path 6" transform="translate(-138.923 -76.169)"/>
+    <path id="prefix__Path_7" d="M151.51 78.294v7.083h-1.743v4.25h6.156v-9.208h3.7v9.208h4.413V76.169h-10.3a2.188 2.188 0 00-2.226 2.125z" class="prefix__cls-1" data-name="Path 7" transform="translate(-149.767 -76.169)"/>
+    <path id="prefix__Rectangle_7" d="M0 0H4.413V8.499H0z" class="prefix__cls-1" data-name="Rectangle 7" transform="translate(16.017)"/>
+    <path id="prefix__Path_8" d="M168.771 93.331h4.412V80.419h5.017v4.958h-3.16v4.25h5.393a2.176 2.176 0 002.178-2.125V76.169h-13.84z" class="prefix__cls-1" data-name="Path 8" transform="translate(-146.596 -76.169)"/>
+    <path id="prefix__Rectangle_8" d="M0 0H4.419V7.301H0z" class="prefix__cls-1" data-name="Rectangle 8" transform="translate(92.21 6.156)"/>
+    <path id="prefix__Path_9" d="M238.4 76.169h-9.607V80.4h7.493v9.223h4.414V78.282a2.18 2.18 0 00-2.3-2.113z" class="prefix__cls-1" data-name="Path 9" transform="translate(-136.583 -76.169)"/>
+</svg>

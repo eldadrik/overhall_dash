@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="13px" height="13px" viewBox="0 0 13 13" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 53.2 (72643) - https://sketchapp.com -->
+    <title>Icon/radio_checked</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Menu,-Header,-My-G" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Menu---1024" transform="translate(-941.000000, -20.000000)" fill="#1A1A1A">
+            <g id="Icon/radio_checked" transform="translate(941.000000, 20.000000)">
+                <path d="M6.5,12.5 C3.1862915,12.5 0.5,9.8137085 0.5,6.5 C0.5,3.1862915 3.1862915,0.5 6.5,0.5 C9.8137085,0.5 12.5,3.1862915 12.5,6.5 C12.5,9.8137085 9.8137085,12.5 6.5,12.5 Z M6.5,11.5 C9.26142375,11.5 11.5,9.26142375 11.5,6.5 C11.5,3.73857625 9.26142375,1.5 6.5,1.5 C3.73857625,1.5 1.5,3.73857625 1.5,6.5 C1.5,9.26142375 3.73857625,11.5 6.5,11.5 Z" id="Oval-Copy" fill-rule="nonzero"></path>
+                <circle id="Oval-Copy-2" cx="6.5" cy="6.5" r="2.5"></circle>
+            </g>
+        </g>
+    </g>
+</svg>

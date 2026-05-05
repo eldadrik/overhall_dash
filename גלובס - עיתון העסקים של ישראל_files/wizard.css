@@ -1,0 +1,238 @@
+﻿#SignWizard_Gray_Layer{overflow:hidden; width:110% !important;height:110%  !important; display:none; position: absolute; top: 0px; left: 0px; background-color: Gray; filter: alpha(opacity=70); opacity: 0.7; z-index:201}
+/*.SignWizard_popup{padding:10px 0px 20px 17px; overflow:hidden; width:600px; height:390px; background-repeat:no-repeat; background-image: url(http://images.globes.co.il/images/Site2/wizard/wizbg_600x450.png); position: absolute; display:none; z-index:202}*/
+.SignWizard_popup{
+    background-image:none !important;
+    background-color: #FFF;
+    border: 1px solid #333;
+    box-shadow: 0 0 10px 5px #666;
+    display: none;
+    /*height: 390px;*/
+    overflow: hidden;
+    /*padding: 10px 0 20px 17px;*/
+    padding:15px;
+    position: absolute;
+    /*width: 600px;*/
+    z-index: 202;
+    }
+.SignWizard_popup_LoginOnly{padding:10px 0px 20px 0px; float:left; overflow:hidden; width:300px; height:250px; background-repeat:no-repeat; background-image: url(http://images.globes.co.il/images/Site2/wizard/wizbg300x250.png); position: absolute; display:none; z-index:202}
+.SignWizard_popup_Iframe
+    {
+    display: block;
+    height: 520px;
+    margin: 10px auto 0;
+    z-index: 202;
+    width:550px;
+    }
+.SignWizard_popup_Iframe_LoginOnly{width:250px; height:200px; z-index:202}
+
+.Wizard_TopTitle{
+    color:#cc0000; font-size:16px; font-family: Arial; font-weight:bold; width:100%; direction:rtl; border-bottom:1px solid #cc0000;
+    margin:22px 0 10px 0;
+}
+.Wizard_TopTitle span {color:#000000; font-size:12px;font-weight:normal;}
+.Wizard_TopTitle span a {color:#000000; font-size:12px;font-weight:bold;text-decoration:none;}
+.Wizard_TopTitle_SmallFont{color:#000000; font-size:11px; font-family: Arial; font-weight:normal; display:inline; padding:0 30px 0 30px; direction:rtl;}
+.Wizard_HeightSpace{line-height:1px; font-size:1px; height:5px; clear:both;}
+.Wizard_SubTitle{
+    color:#000000; font-size:14px; font-family: Arial; font-weight:bold; direction:rtl; 
+    margin-bottom:20px;
+  }
+.Wizard_SubTitle1   {margin-top:20px;
+    color:#000000; font-size:14px; font-family: Arial; font-weight:bold; direction:rtl;
+  }
+  #Wizard_Login_tbl, #Wizard_Signup_tbl {margin-top:15px;}
+.Wizard_FontNormal TD, .Wizard_FontNormal
+	{
+	direction:rtl; 
+	color:#000000; 
+	font-size:12px; 
+	font-family: Arial;
+	}
+#Wizard_BottomRow, .ClassWizard_BottomRow
+{
+    background-color:#E8E8E8;    
+    width:548px;
+    height:44px !important;
+    clear:both;
+    position:absolute; 
+    top:330px !important;
+}
+#Wizard_BottomRow A{color:#000000;}
+.NewsLetterDrawLine_Gray{ width:1px; font-size:1px; background-color:#E8E8E8;}
+.tdMoreContent
+{
+    width:170px;
+    border-right:solid 1px #AEAEAE;
+    padding-right:25px;
+}
+#wizard_ProgresBar
+{
+    background-image:url(http://images.globes.co.il/images/site/ProgressBar_1x14_grey.gif);
+    background-repeat:repeat-x;
+    width:270px;
+    height:14px;
+    float:right;
+    border:solid 1px #AEAEAE;
+    margin-top:14px !important;
+    margin-right:20px;
+    direction:rtl;
+}
+.spnErrorMessage
+{
+    color:#cc0000;
+    font-size:12px;
+    font-weight:bold;
+    font-family:Arial;
+    background-color:#FFFFCC;
+    border:solid 1px #E8E8E8;
+    width:548px;
+    clear:both;
+    padding:4px 0px 4px 0;   
+	bottom:130px; 
+	position:absolute; 
+	direction:rtl;
+	z-index:7800;
+}
+.HeightGup
+{
+    height:13px;
+    clear:both;
+    font-size:1px;
+    width:100%;
+}
+.ErrorFieldBG{background-color:#FFFFCC; border:1px solid #cc0000;}
+.ErrorFieldToNormalBG{background-color:#FFFFFF;}
+
+.Wizard_BottomButtons
+{
+    width:548px;
+    text-align:left;
+}
+/* Benny - 15-11-2009 */
+#NewsLetterWizard_main
+	{
+	width:550px;
+	font-family:Arial;
+	font-size:18px; 
+	font-weight:normal;
+	text-align:right;
+	clear:both;
+	height:300px; 
+	color:#cc0000;
+	direction:rtl;
+	}
+#NewsLetterWizard_main input[type=text], input[type=password]
+	{
+	width:120px;
+	}	
+#NewsLetterWizard_Line
+	{
+	border-top:1px solid #cc0000; 
+	width:550px; 
+	height:5px; 
+	margin-top:3px; 
+	clear:both;
+	}
+#NewsLetterWizard_Center
+	{
+	float:right; 
+	border-left:1px solid #cccccc; 
+	width:5px; 
+	height:170px;
+	margin-top:10px;
+	margin-right:2px;
+	}	
+.NewsLetterWizard_box
+	{
+	float:right; 
+	width:260px; 
+	height:220px;
+	font-size:12px; 
+	font-weight:normal;
+	color:#000000; 
+	padding-top:0px;
+	}
+.NewsLetterWizard_Hseprator
+	{
+	height:5px;
+	width:100%;
+	}
+.NewLetterWizard_SpanTitle	
+	{
+	width:100px; 
+	display:block; 
+	float:right;
+	}
+#Wizard_Bottom_Button
+	{
+		float:left;
+		margin-left:10px;
+		margin-top:10px;
+	}	
+.spnErrorMessage img[src$='attention.gif']
+	{
+		margin-right:10px;
+	}
+.spnErrorMessage img
+	{
+		margin-right:10px;
+	}
+#gigyaToolbar
+	{
+		font-family:Arial;
+	}
+/*/====== standart button styles ======/*/
+.btn{
+	display:inline-block;
+	border-radius:4px;
+	text-decoration:none;
+	text-align: center;
+	}
+.btnProp{
+    height:24px;
+    font-size: 14px;
+    line-height:24px;
+    font-weight: bold;
+    padding:0 14px;
+    color: #fff !important;
+	background: #df3d3d; /* Old browsers */
+	background: -ms-linear-gradient(top,  #df3d3d 68%,#d63434 100%); /* IE10+ */
+	background: linear-gradient(top,  #df3d3d 68%,#d63434 100%); /* W3C */
+	border:1px solid #d34730;
+	cursor:pointer;
+ }
+ .btnProp:hover
+ {
+    color: #fff;
+    background: #d62e2e; /* Old browsers */
+	background: -ms-linear-gradient(top,  #d62e2e 1%,#d21c1c 2%,#cf0d0d 49%,#c20101 100%); /* IE10+ */
+	background: linear-gradient(top,  #d62e2e 1%,#d21c1c 2%,#cf0d0d 49%,#c20101 100%); /* W3C */
+	border:1px solid #b2260f;
+	box-shadow: 0 1px 0 0 #BBB;
+ }
+  /*/======= special for facebook ========/*/
+ 
+ .fbBtnProp{
+    color: #fff;
+    font-size: 14px;
+	font-weight: bold;
+	line-height:24px;
+	height:26px;
+	padding:0 5px 0 14px;
+    background: #6a88bd; /* Old browsers */
+	background: linear-gradient(top,  #6a88bd 0%,#587ab8 100%); /* W3C */
+	border:1px solid #6a88bd;
+    }	
+.fbBtnProp:hover{
+    color: #fff;
+    background: #5876ab; /* Old browsers */
+	background: linear-gradient(top,  #5876ab 0%,#4b6daa 100%); /* W3C */
+	border:1px solid #5876ab;
+    }	    
+.bgFbImage{
+    display:inline-block;
+    width:22px;
+    height:16px;
+    background:url(http://images.globes.co.il/images/site2/images/fbIconBtn.png) no-repeat;
+    vertical-align:middle;
+ }

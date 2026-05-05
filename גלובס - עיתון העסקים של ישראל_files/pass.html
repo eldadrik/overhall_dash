@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<!-- saved from url=(0051)https://www.globes.co.il/news/passmadadim/pass.aspx -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	
+	<title>פס המדדים</title>
+	<link href="./pass(1).css" rel="stylesheet" type="text/css">
+        <link href="./items.css" rel="stylesheet" type="text/css">
+    
+
+        <script src="./jquery.min(1).js.download"></script>
+        <script>
+            $(document).ready(function () {
+                $(window).resize(function () {
+                    $('#p_items_box').css('width', ($(window).innerWidth() - 160) + 'px');
+                });
+                
+                $('#p_items_box').css('width', ($(window).innerWidth() - 160) + 'px');
+
+                $(parent.document.body).bind('click', function (e) {
+                    if (!(parent.mouseOverFeed || parent.mouseOverTik)) {
+                        parent.CloseAllOpenWindows();
+                    }
+                });
+            });
+
+         function show_pass_tooltip(flag, action) 
+	 {
+                var tooltip = parent.document.getElementById("pass_tooltip");
+                
+		if(action==1)
+		    {
+		    tooltip.style.display = "block";
+		    var tooltipspan = parent.document.getElementById("pass_tooltip_span");
+		    switch (flag) 
+			{
+			case 1:
+			    tooltipspan.innerHTML = "כלים  פיננסים";
+			    tooltip.style.right = "10px";
+			    break;
+			case 2:
+			    tooltipspan.innerHTML = "סוכן החדשות שלך";
+			    tooltip.style.right = "30px";
+			    break;
+			case 3:
+			    tooltipspan.innerHTML = "תיק השקעות אישי";
+			    tooltip.style.right = "80px";
+			    break;
+			}
+		    }
+		else
+		    tooltip.style.display = "none";
+
+            }
+        </script>
+    </head>
+    <body marginwidth="0" marginheight="0">
+	 
+	    <div id="p_btm">
+		    
+            <a id="tools_btm" style="cursor:pointer" onclick="parent.pass_open_mainbox(1);parent.collector_feeder.send({&#39;group&#39;:&#39;pass&#39;,&#39;seq&#39;:1});" onmouseover="show_pass_tooltip(1,1);" onmouseout="show_pass_tooltip(1,0);">כלים</a>
+		    <a id="rss_btm" style="cursor:pointer" onclick="parent.pass_open_mainbox(2);parent.collector_feeder.send({&#39;group&#39;:&#39;pass&#39;,&#39;seq&#39;:2});" onmouseover="show_pass_tooltip(2,1);" onmouseout="show_pass_tooltip(2,0);">פיד</a>
+		    <a id="portfoilio_btm" style="cursor:pointer" onclick="parent.pass_open_mainbox(3);parent.collector_feeder.send({&#39;group&#39;:&#39;pass&#39;,&#39;seq&#39;:3});" onmouseover="show_pass_tooltip(3,1);" onmouseout="show_pass_tooltip(3,0);">תיק אישי</a>
+	    </div>
+	
+	    <div id="p_items_box" style="float: right; width: 1361px;">
+            <iframe loading="lazy" id="pasMadadimIframe" style="width:100%;" frameborder="0" src="./pas_2012.html">
+
+           
+
+
+        </div>
+         
+    </body>
+</html>
+
+
+</iframe></div></body></html>

@@ -1,0 +1,1058 @@
+﻿//var xmlhttp=false;
+
+
+var protocol_and_host = get_protocol_and_host()
+var isBitcoin = getParameterByName("bitcoin");
+
+function getParameterByName(name) {
+    var url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+function get_protocol_and_host() {
+    var caller_from_querystring = location.search.replace(/.*&caller=([^&]*).*/, '$1')
+	if (caller_from_querystring.match(/www\.maariv\.co\.il/i)) {return '//www.globes.co.il'}
+	return caller_from_querystring.length < location.search.length ? location.protocol + '//' + caller_from_querystring : ''
+}
+// alert(protocol_and_host)
+var iGlobalCounter = 0; //needed for stoping the GetAjaxDataAndDraw
+
+var sFinanceServiceURL = "/portal/scripts/globalfinancedata_new.ashx?continent=";
+
+var sGraphURL = "https://graph70.globes.co.il/graphs3.5/SChart.aspx?width=298&height=95&symbol="; //&feeder=0&style=w&exchange=";
+
+var sDelim = "^";
+var sDelim1 = "~";
+
+var sTaTabName = "ta";
+var sWSTabName = "ws";
+var sUSATabName = "usa";
+var sEuropeTabName = "europe";
+var sAsiaTabName = "asia";
+var sCCTabName = "currencies+commodities";
+var sDigitalCurr = "digitalCurrencies";
+
+var iTabCount = 6;
+var iItemCount = 4;
+var iInstrumentNameLength = 10;
+var sQuotesReplaceSign = "~~";
+
+
+//Create HTTPRequest
+var xmlhttp = (window.ActiveXObject) ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest()
+
+function objIndex(instrumentId,last,percentage){
+    this.id = instrumentId;
+    this.last = last;
+    this.percentage = percentage;
+    this.mark = false;
+}
+var arrIndex = new Array();
+function PopulateArray(continent,type,rowNumber ,instrumentID,last,percentage)
+{
+    if( arrIndex.length-1 < rowNumber) {
+        arrIndex[rowNumber] = new objIndex(instrumentID,last,percentage)
+    }
+    else {
+        if(arrIndex[rowNumber].id == instrumentID ) {
+            if(arrIndex[rowNumber].last!=last || arrIndex[rowNumber].percentage!=percentage) {
+                arrIndex[rowNumber].mark = true;
+            }
+            arrIndex[rowNumber].last = last
+            arrIndex[rowNumber].percentage = percentage;
+        }
+    }
+}
+function Marker(marker_id, isDefault)
+{
+    var oName = document.getElementById("tdName_" + marker_id)
+    var oPercentage = document.getElementById("tdPercentage_" + marker_id)
+    var oLast =  document.getElementById("tdLast_" + marker_id)
+    var oArrow =  document.getElementById("tdArrow_" + marker_id)
+
+    if(oName==null) return;
+    var oNameClassName = oName.className
+
+    if(isDefault && oNameClassName!="") {  //unmark
+        if(oName.className=="TrayTopRightTD2") {
+            oPercentage.className = "TrayTopLeftTD2";
+           oLast.className = "TrayBottomLeftBlackTD2" ;
+           oArrow.className = "TrayBottomLeftBlackTD2" ;
+        }
+        else{
+            oPercentage.className = "TrayTopLeftTDOff2";
+            oLast.className = "";
+            oArrow.className = "";
+        }
+    }
+    else{   //mark
+        if(oNameClassName=="TrayTopRightTD2") {//selected item
+            oPercentage.className = "TrayTopLeftTDMark2";
+            oLast.className = "TrayBottomLeftBlackTDMark2";
+            oArrow.className = "TrayBottomLeftBlackTDMark2";
+        }
+        else {                                  //not selected items
+            oPercentage.className = "TrayTopLeftTDOffMArk2";
+            oLast.className = "TrayTopLeftTDOffMArk2";
+            oArrow.className = "TrayBottomLeftBlackTDMark2";
+        }
+    }
+
+}
+function CheckPopulate()
+{
+    for(var i=0; i<arrIndex.length;i++)
+    {
+        if(arrIndex[i].mark == true)
+        {
+            Marker(i,false);
+            setTimeout('Marker('+i+',true)',700);
+            arrIndex[i].mark = false;
+        }
+    }
+}
+
+
+function setDefaultTab()
+{
+    for(var itab = 1; itab <= iTabCount; itab++)
+    {
+        var sName = "tab1_inner" + itab;
+        //if(itab == 1)document.getElementById(sName).className = "G_PremiumTabsOn";
+        //else document.getElementById(sName).className = "G_PremiumTabsOff";
+        if (document.getElementById(sName) == null) { continue }
+        if (itab == 1) document.getElementById(sName).className = "none";
+        else document.getElementById(sName).className = "none";
+    }
+}
+
+var showTabFlag = "1";
+
+function selectTab(sContinent, sType, isDefault, tabID, tab) {
+	if (arguments.length < 5) {tab = 1}
+	showTabFlag = tabID;
+
+	setTimeout("GetSelectedFinanceData('" + sContinent + "','" + sType + "' , " + isDefault + " , " + tabID + " , '" + tab + "')", 400);
+}
+
+//Get Array data
+function GetSelectedFinanceData(sContinent, sType, isDefault, tabID, tab) {
+
+    if (document.getElementById('divSponsLink')) document.getElementById('divSponsLink').innerHTML = "";
+
+	if (showTabFlag == tabID) {
+		try {e_counter.count(sContinent, 'GetSelectedFinanceData', 'ta') } catch (ex) {}
+		SetActiveTabPointer(tab)
+		iGlobalCounter++;
+
+		var sArrRes = null;
+		document.getElementById('Graph_div_1_id').style.visibility = "visible";
+		document.getElementById("imgGraph").style.display = "";
+		document.getElementById("divPlaceHolder").style.display="none";
+		setDefaultTab();
+		document.getElementById("hidContinent").value = sContinent;
+	//	document.getElementById("divPortfolio").innerHTML = "";
+
+	//	var dp = document.getElementById("divPortfolio")
+		if (tabID == 1 || tabID == 2 || tabID == 4) {
+			document.getElementById('tab1_inner1').innerHTML = "מדדים";
+			document.getElementById('tab1_inner2').innerHTML = "פעילות";
+			document.getElementById('tab1_inner3').innerHTML = "עולות";
+			document.getElementById('tab1_inner4').innerHTML = "יורדות";
+			if (tabID == 1) {document.getElementById('tab1_inner5').innerHTML = "התיק שלי";}
+			if (tabID == 2 || tabID == 4) {document.getElementById('tab1_inner5').innerHTML = "ישראליות";}
+        }
+        else if (tabID == 5)
+        {
+            document.getElementById('tab1_inner1').innerHTML = "מדדים";
+            document.getElementById('tab1_inner2').innerHTML = "";
+            document.getElementById('tab1_inner3').innerHTML = "";
+            document.getElementById('tab1_inner4').innerHTML = "";
+            document.getElementById('tab1_inner5').innerHTML = "";
+
+        }
+		else if(tabID == 6)
+		{
+		   // document.getElementById('Graph_div_1_id').style.visibility = "hidden";
+		    document.getElementById('divSponsLink').innerHTML = "coinmarketcap.com";
+
+ 
+		    document.getElementById('tab1_inner1').innerHTML = "";  
+		    document.getElementById('tab1_inner2').innerHTML = "";
+		    document.getElementById('tab1_inner3').innerHTML = "";
+		    document.getElementById('tab1_inner4').innerHTML = "";
+		    document.getElementById('tab1_inner5').innerHTML = "";
+		}
+		else {
+			document.getElementById('tab1_inner1').innerHTML = "מט\"ח";
+			document.getElementById('tab1_inner2').innerHTML = "";
+			document.getElementById('tab1_inner3').innerHTML = "";
+			document.getElementById('tab1_inner4').innerHTML = "";
+			document.getElementById('tab1_inner5').innerHTML = "";
+		}
+
+        for (var itab = 1; itab <= iTabCount; itab++) {
+            var sMainTabId = "tab" + itab + "_" + itab;
+          //console.log(sMainTabId)
+            if (document.getElementById(sMainTabId) == null) { continue }
+			if (itab == tabID) {
+				document.getElementById(sMainTabId).className = "Finance_Selected";
+			} else {
+				document.getElementById(sMainTabId).className = ""; 
+			}
+		}
+		try{
+			switch(sContinent) {
+				case sTaTabName:
+					sArrRes = globalfinance_arrIndicesTA;  //array from .js file
+					break;
+				case sWSTabName:
+					sArrRes = globalfinance_arrIndicesWS;  //array from .js file
+					break;
+				case sUSATabName:
+					sArrRes = globalfinance_arrIndicesUSA;  //array from .js file
+					break;
+				case sCCTabName:
+					sArrRes = [] // globalfinance_arrCC;  //array from .js file
+					break;
+				case sEuropeTabName:
+					sArrRes = globalfinance_arrIndicesEurope;  //array from .js file
+					break;
+				 case sAsiaTabName:
+					sArrRes = globalfinance_arrIndicesAsia;  //array from .js file
+					break;
+			    case sDigitalCurr:
+			        sArrRes = globalfinance_arrDigitalCurrencies;
+			        break;
+			}
+		} catch(ex){
+		    sArrRes = new Array();
+		    console.log(ex);
+		}
+        if (((sContinent == sTaTabName || sContinent == sWSTabName || sContinent == sEuropeTabName) && sType == 'IndicesItem')
+			|| (sContinent == sCCTabName)
+		) {
+		//	alert('dit (' + sType + ',' + tabID + ',0,1)')
+			DrawInnerTab(sType,tabID,0,1)
+		}
+		else if (sContinent == sDigitalCurr)
+		{
+		    DrawDigitalCurrencies(sArrRes);
+		}
+		else {
+			if(sArrRes != null) {
+			//	alert('drd(' + sContinent + ',' + isDefault + ',0)')
+				DrawResultData(sArrRes,sContinent,isDefault,0, sType)
+			}
+		}
+		ChangeFinancialTabClass(document.getElementById('tab1_inner1').parentNode.parentNode)
+	}
+}
+
+function ChangeBorderColor(tab_name,id)
+{
+    for(var itab = 1; itab <= iTabCount; itab++)
+    {
+       try
+       {
+           var sMainTabId = tab_name + itab;
+           if (document.getElementById(sMainTabId) == null) { continue }
+           if(itab == id){document.getElementById(sMainTabId).className = "G_WhiteBGColor";}
+           else{document.getElementById(sMainTabId).className = "G_GrayBGColor"; }
+       }
+       catch(e){}
+    }
+}
+
+function SetDefaultBorderColor(tab_name)
+{
+    for(var itab = 1; itab <= iTabCount; itab++)
+    {
+       try
+       {
+            var sMainTabId = tab_name + itab;
+            if (document.getElementById(sMainTabId) == null) { continue }
+            if(itab == 1){document.getElementById(sMainTabId).className = "G_WhiteBGColor";}
+            else{document.getElementById(sMainTabId).className = "G_GrayBGColor"; }
+       }
+       catch(e){}
+    }
+}
+
+//Draw Name,Graph,Last,PercentageChange,Flag
+function ShowAllData(sSymbol,sFeeder,sLastPrice,rowID,sPercentage,sFlag,sCountry, sName, sBursa)
+{
+    try
+    {
+      
+		var GraphURL = sGraphURL
+		if (sBursa == 'forex') {GraphURL = GraphURL.replace(/\/schart\.aspx/i,'/cchart.aspx')}
+        var sGraphSource = GraphURL + sSymbol +  (sFeeder != "0" ? "&exchange=" + sBursa : "") + "&feeder=" + sFeeder + "&style=fp&chartcolor=edf4f9";
+
+        
+        
+
+
+		//console.log(sGraphSource);
+
+
+		if (sSymbol != "") {           
+            document.getElementById("imgGraph").src = sGraphSource;
+            document.getElementById("imgGraph").onerror = function () {                
+                this.src = "https://images.globes.co.il/images/Site/Finance/Graph_NoData300x80.gif";
+            }
+		}
+        if (sName != "") {
+            document.getElementById("imgGraph").title = "גרף " + sName // + '\n' + sGraphSource;
+            document.getElementById("imgGraph").alt = "גרף " + sName // + '\n' + sGraphSource;
+        }
+        var sLastStyle = "OrangeTextB12";
+        //if(parseFloat(sPercentage) < 0) sLastStyle = "OrangeTextB";
+
+        sCountry = sCountry.replace(sQuotesReplaceSign,"\"");
+        if(sFlag == "israel") sCountry = "ישראל";
+
+        for(var j=0; j < 5; j++)
+        {
+
+             var sTDName = "tdName_" + j;
+             var sTDPercentage =  "tdPercentage_" + j;
+             //var sTDFlag = "tdFlag_" + j;
+             var sTDLast = "tdLast_" + j;
+            var sTDArrow = "tdArrow_" + j;
+            var sTDTrade = "tdTradeStage_" + j;
+
+            try
+            {
+                if(j == rowID)
+                {
+                    try{
+                        //document.getElementById(sTDFlag).innerHTML = "<img src='/images/finance/flags/" + sFlag + ".gif' width='15' title='" + sCountry + "' height='11' border='0'>";
+                        //document.getElementById(sTDFlag).className = 'TrayBottomRightTD';
+                        if (document.getElementById(sTDName)) document.getElementById(sTDName).className = 'TrayTopRightTD2';
+                        if (document.getElementById(sTDPercentage)) document.getElementById(sTDPercentage).className = 'TrayTopLeftTD2';
+                        if (document.getElementById(sTDTrade)) document.getElementById(sTDTrade).className = 'TrayTopLeftTD2';
+
+
+                        if (sLastStyle == "OrangeTextB12")sLastStyle = 'TrayBottomLeftBlackTD2';
+                        else sLastStyle = 'TrayBottomLeftGreenTD2';
+
+                        //document.getElementById(sTDLast).innerHTML = sLastPrice;
+                        if (document.getElementById(sTDLast)) document.getElementById(sTDLast).className = sLastStyle;
+                        if (document.getElementById(sTDArrow)) document.getElementById(sTDArrow).className = sLastStyle;
+                        
+                        //document.getElementById(sTDLast).style.height = "20px";
+                    }
+                    catch(e){}
+                }
+                else
+                {
+
+                    try{
+                        //document.getElementById(sTDFlag).innerHTML = "";
+                        //document.getElementById(sTDFlag).className = "";
+                        //document.getElementById(sTDLast).innerHTML = "";
+                        if (document.getElementById(sTDLast)) {
+                            document.getElementById(sTDLast).className = "";
+                            document.getElementById(sTDLast).style.height = "0px";
+                        }
+                        if (document.getElementById(sTDArrow)) document.getElementById(sTDArrow).className = "";
+
+                        if (document.getElementById(sTDName)) document.getElementById(sTDName).className = 'TrayTopRightTDOff2';
+                        if (document.getElementById(sTDPercentage)) document.getElementById(sTDPercentage).className = 'TrayTopLeftTDOff2';
+                        if (document.getElementById(sTDTrade)) document.getElementById(sTDTrade).className = '';
+                    }
+                    catch (e) {}
+                }
+            }
+            catch(e){}
+        }
+    }
+    catch(e){}
+}
+
+// Get Array From .js file
+function getResultArray(sContinent,sType)
+{
+    var arrRes = null;
+    try
+    {
+        ////////////////////////////////TA////////////////////////////////////
+        if(sContinent == sTaTabName  && sType == "IndicesItem")arrRes = globalfinance_arrIndicesTA;
+        if(sContinent == sTaTabName  && sType == "WorkingItem")arrRes = globalfinance_arrWorkingItemTA;
+        if(sContinent == sTaTabName  && sType == "IncreaseItem")arrRes = globalfinance_arrIncreaseItemTA;
+        if(sContinent == sTaTabName  && sType == "DecreaseItem")arrRes = globalfinance_arrDecreaseItemTA;
+
+        ////////////////////////////////WS////////////////////////////////////
+        if(sContinent == sWSTabName  && sType == "IndicesItem")arrRes = globalfinance_arrIndicesWS;
+        if(sContinent == sWSTabName  && sType == "WorkingItem")arrRes = globalfinance_arrWorkingItemWS;
+        if(sContinent == sWSTabName  && sType == "IncreaseItem")arrRes = globalfinance_arrIncreaseItemWS;
+        if(sContinent == sWSTabName  && sType == "DecreaseItem")arrRes = globalfinance_arrDecreaseItemWS;
+
+        ////////////////////////////////USA////////////////////////////////////
+        if(sContinent == sUSATabName  && sType == "IndicesItem")arrRes = globalfinance_arrIndicesUSA;
+        if(sContinent == sUSATabName  && sType == "WorkingItem")arrRes = globalfinance_arrWorkingItemUSA;
+        if(sContinent == sUSATabName  && sType == "IncreaseItem")arrRes = globalfinance_arrIncreaseItemUSA;
+        if(sContinent == sUSATabName  && sType == "DecreaseItem")arrRes = globalfinance_arrDecreaseItemUSA;
+
+        ////////////////////////////////EUROPE////////////////////////////////////
+        if(sContinent == sEuropeTabName  && sType == "IndicesItem")arrRes = globalfinance_arrIndicesEurope;
+        if(sContinent == sEuropeTabName  && sType == "WorkingItem")arrRes = globalfinance_arrWorkingItemEurope;
+        if(sContinent == sEuropeTabName  && sType == "IncreaseItem")arrRes = globalfinance_arrIncreaseItemEurope;
+        if(sContinent == sEuropeTabName  && sType == "DecreaseItem")arrRes = globalfinance_arrDecreaseItemEurope;
+
+        ////////////////////////////////ASIA////////////////////////////////////
+        if(sContinent == sAsiaTabName  && sType == "IndicesItem")arrRes = globalfinance_arrIndicesAsia;
+        if(sContinent == sAsiaTabName  && sType == "WorkingItem")arrRes = globalfinance_arrWorkingItemAsia;
+        if(sContinent == sAsiaTabName  && sType == "IncreaseItem")arrRes = globalfinance_arrIncreaseItemAsia;
+        if(sContinent == sAsiaTabName  && sType == "DecreaseItem")arrRes = globalfinance_arrDecreaseItemAsia;
+    }
+    catch(e){arrRes = new Array();}
+    return arrRes;
+}
+
+//Draw Inner Tabs
+function SetFinanceBorderColor(tab_id) { 
+//	alert("SetFinanceBorderColor " + tab_id)
+//	return
+	for(var itab = 1; itab <= iTabCount; itab++) {
+		try {
+            var sTabName = "tab1_inner" + itab;
+            if (document.getElementById(sTabName) == null) { continue }
+			if (itab == tab_id){
+				document.getElementById(sTabName).className = "none";
+			} else{
+				document.getElementById(sTabName).className = "none";
+			}
+		}
+		catch(e){}
+	}
+}
+
+function DrawPortfolioMessage()
+{
+    var strActiveTable = '<iframe src="/pay/login.asp?mode=financeblock&p_backTo=/portal/portfolio.aspx?fid=1954" width="100%" height=100 frameborder=0></iframe>'
+    document.getElementById("divDataTable").style.display="none";
+    document.getElementById("divPlaceHolder").innerHTML = strActiveTable;
+    document.getElementById("imgGraph").style.display="none";
+    document.getElementById("divPlaceHolder").style.display="";
+
+}
+var gf_my_portfolio_querystring = (new Date()).getTime()
+
+function DrawInnerTab(sType,id,isPortfolio,innerTabId)
+{
+//	alert('DrawInnerTab ' + sType + ' ' + id)
+    innerTabId = arguments.length > 3 ? innerTabId : id
+    iGlobalCounter++;
+    SetFinanceBorderColor(innerTabId);
+    var sContinent = document.getElementById("hidContinent").value
+
+    if ((sContinent == 'ta'  || sContinent == 'usa' || sContinent == 'asia') && isPortfolio == 1) {
+		
+		var url = protocol_and_host + '/news/gf_my_portfolio.aspx?' + gf_my_portfolio_querystring
+	//	alert('kuku ' + url)
+		document.getElementById("divDataTable").style.display = 'none'
+		document.getElementById("imgGraph").parentNode.style.display = 'none'
+		var divPlaceHolder = document.getElementById("divPlaceHolder")
+		divPlaceHolder.innerHTML = '<iframe src="' + url + '" width="100%" height="100%" frameborder="0" scrolling="no"></iframe>'
+		divPlaceHolder.style.display = 'block'
+		return
+
+		/*
+        if (user_id != "") {
+			sFullUrl = sFinanceServiceURL + sContinent + "&type=" + sType + "&uid=" + user_id + "&sid=" + today.getTime();
+		} else {
+			return DrawPortfolioMessage();
+		}
+		*/
+    }
+
+
+    document.getElementById("divDataTable").innerHTML = ''
+	document.getElementById("imgGraph").parentNode.style.display = 'block'
+    document.getElementById("imgGraph").src = "https://images.globes.co.il/images/site/Loading300x80.gif"
+
+    var today = new Date()
+    var sFullUrl = sFinanceServiceURL + sContinent + "&type=" + sType + "&sid="+ today.getTime();
+    document.getElementById("imgGraph").style.display = "block";
+    document.getElementById("divPlaceHolder").style.display = "none";
+    if((sContinent == 'ws' || sContinent == 'europe') && isPortfolio == 1)
+    {
+        sFullUrl = sFinanceServiceURL + sContinent + "&type=workingisrael&sid="+today.getTime();
+    }
+    else if (sContinent == 'ta' || sContinent == 'ws' || sContinent == 'europe') 
+    {
+        sFullUrl = sFinanceServiceURL + sContinent + "&type=" + sType + "&sid=" + today.getTime(); //set the time in the GetAjax function
+    }
+    else if(sContinent == sCCTabName)
+    {
+        sFullUrl = sFinanceServiceURL + sContinent + "&sid=" + today.getTime(); //set the time in the GetAjax function
+    }   
+    else  // if not portfolio(not Tab 5)
+    {       
+        var arrResult = getResultArray(sContinent,sType);
+        DrawResultData(arrResult, sContinent, 1, 0, sType);
+        return;
+    }
+
+    GetAjaxDataAndDraw(sContinent,sType,sFullUrl,iGlobalCounter);
+
+
+}
+
+
+function GetAjaxDataAndDraw(sContinent,sType,url,currCounter)
+{
+    xmlhttp.abort();
+    var today =  new Date()
+    url = url.substring(0,url.indexOf("&sid=")+5) + today.getTime();
+    if(currCounter != iGlobalCounter) {return }
+    if(
+		//((sContinent == 'ta' || sContinent == 'ws' ) && sType == 'IndicesItem')
+        sContinent == 'ta' || sContinent == 'ws' || sContinent == 'europe' || sContinent == sCCTabName
+       
+	) {
+           var secToNextTime = 1000 + ((60 - new Date().getSeconds()) % 30) * 1000
+           setTimeout('GetAjaxDataAndDraw("' + sContinent + '","' + sType +'","'+ url + '",'+ iGlobalCounter + ')', secToNextTime)
+	}
+//	alert(" *** " + url)
+	xmlhttp.open("GET", url + '&ggfd.hp.js', true);
+	xmlhttp.onreadystatechange = function() {
+        if ( xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+            document.getElementById("imgGraph").style.display="";
+            document.getElementById("divPlaceHolder").style.display="none";
+            DrawResultData(xmlhttp.responseText,sContinent,1,1,sType);
+    	    }
+    	}
+
+	if(xmlhttp && xmlhttp != null) {
+		xmlhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+		xmlhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; language=he");
+	//	xmlhttp.setRequestHeader("Content-Length", "0");
+		xmlhttp.send(null);
+    }
+}
+
+//Get UserID From Cookie For User Portfolio Data
+function GetUserID()
+{
+   var result;
+   if (document.cookie.length>0)
+   {
+        try { result = ReadCookieData("UserID")}catch(e){}
+   }
+   else result = "";
+   return result;
+}
+
+function DrawDigitalCurrencies(arr) {
+
+    //return;
+
+    var sRes = "<table border='0' cellpadding='0' cellspacing='0' width='300'>";
+
+    var sDefaultSymbol = "";
+    var sDefaultLast = "";
+    var sDefaultPersentage = "";
+
+   // console.log("DrawDigitalCurrencies: " + arr.length);
+
+    for(var i=0; i<arr.length; i++)
+    {
+        var symbol = arr[i][0];
+        var sInstrumentID = arr[i][1];
+        var last = arr[i][2];
+        var percentage = arr[i][3];
+        var name = arr[i][4];
+        var shortName = name.length == 0 ? symbol : ( name.length > 21 ? name.substr(0, 21) : name);
+        name = (name.length > 0) ? name : symbol;
+
+
+
+        var sfeeder = 0;
+        var sFlag = "";
+        var sCountry = "";
+        var sGraphName = "";
+        var sBursa = "forex";
+
+        if (i == 0)
+        {
+            sDefaultSymbol = symbol;
+            sDefaultLast = last;
+            sDefaultPersentage = percentage;
+        }
+
+        
+		var sResUrl = protocol_and_host + "/portal/instrument.aspx?InstrumentID=" + sInstrumentID + (sfeeder == "1" ? "&Feeder=1" : "")
+        sRes += "<tr onclick=\"window.open('" + sResUrl + "','_top','')\""
+				+ " id='tr_" + i + "' class='trFinanceData' style='cursor:pointer;' onmouseover='ShowAllData(\"" + symbol + "\"," + sfeeder + ",\"" + last + "\"," + i + "," + percentage + ",\"" + sFlag + "\",\"" + sCountry + "\",\"" + name + "\",\"" + sBursa + "\")'>"
+                +	"<td height=17 id='tdName_" + i + "' style='padding-right:2px;border-bottom:solid 1px #f2f2f2;' align=right>"
+            + "<span title='" + name + "' class='FontSize12'>" + shortName + "</span>"
+                +	"</td>"
+                +	"<td width=80 id='tdLast_" + i + "' align='right' style='border-bottom:solid 1px #f2f2f2;'>" +  ColorLast(last, percentage) + "</td>"
+                + "<td width=80 height=17 id='tdPercentage_" + i + "' align='right' style='border-bottom:solid 1px #f2f2f2;direction:ltr;'>" + ColorValue(percentage) + "</td>"
+                +	"<td valign='top'></td>"
+                +	"<td width='20' id='tdArrow_" + i + "' style='border-bottom:solid 1px #f2f2f2;'>"
+                +		"<img src='https://images.globes.co.il/images/site/icon_go_14x7.gif' />"
+                +	"</td>"
+                +	"</tr>"
+
+    }
+
+    sRes += "</table>";
+
+    document.getElementById("divDataTable").innerHTML = sRes;
+
+    ShowAllData(sDefaultSymbol, 0, sDefaultLast, 0, sDefaultPersentage, "", "", "", sBursa);
+}
+
+//Get Data From Array Or Ajax Request (split data array)
+function DrawResultData(arrInput,sContinent,isDefault,isAjaxResult,sType) {
+    var sRes = ["<table border='0' cellpadding='0' cellspacing='0' width='300'>"]
+    var sResWithTradeStages = ["<table border='0' cellpadding='0' cellspacing='0' width='300'>"]
+	var sRes_contains_tr = false
+	var numAfterDot = 2;
+	var sfeeder = 1;
+
+	var sDefaultSymbol = "";
+	var sDefaultFeeder = "";
+
+	var sDefaultCountry = "";
+	var sDefaultFlag = "";
+	var sDefaultLast = "";
+	var sDefaultPercentage = "";
+	var sDefaultName = "";
+	var sDefaultBursaName = "";
+	var sDefaultBursa = "";
+    var arrItemsIds = [];
+
+    var isBase = false;
+    var isTheoretical = false;
+
+    if (sContinent == sTaTabName || sContinent == 'forex') { sfeeder = 0 }
+
+    var isUserHasRealTime = (self != top && typeof (user_properties) != 'undefined' && ('-' + user_properties.ids + '-').indexOf('-14-') > -1)
+    var isRealTime = sContinent != 'ta' || sType == 'IndicesItem' || isUserHasRealTime;
+
+
+    if (sContinent == "ta" && typeof tase_work_datetime != 'undefined') {
+        isBase = isBetweenHours(tase_work_datetime, -1, sType, isRealTime);
+        isTheoretical = isBetweenHours(tase_work_datetime, 1, sType, isRealTime) ;
+    }
+        
+    
+
+	var arrValueResult = arrInput;
+    if (isAjaxResult == 1) { arrValueResult = arrInput.split(sDelim); }
+
+
+
+    var flagTradeStageIcon = false;
+
+	for(var i=0; i < arrValueResult.length && i < iItemCount; i++) {
+		try {
+			var sArrString = arrValueResult[i];
+			var sName = "";
+			var sSymbol = "";
+			var sPercentage = "";
+			var sLast = "";
+			var sFlag = "";
+			var sCountry = "";
+			var sInstrumentID = "";
+			var sBursaName = "";
+			var sFullName = "";
+			var sBursa = "";
+			var sPageName = "instrument"
+            var flagsImgs = "";
+			var gtoSymbol = "";
+            var timestamp = "";
+            var tradeStage = "";
+            var equityState
+
+			if (sArrString != null) {
+				if (isAjaxResult == 1) {
+					try{sArrResult = sArrString.split(sDelim1);}catch(e){}
+					try{sName = sArrResult[0]; }catch(e){}
+					if (sName == 'NDX 100') sName = 'נאסד"ק 100';
+					try{sPercentage = sArrResult[1];}catch(e){}
+					try{sSymbol = sArrResult[2];}catch(e){}
+					try{sLast = sArrResult[3];}catch(e){}
+					try{sFlag = sArrResult[4];}catch(e){}
+					try{sCountry = sArrResult[5].replace("\"",sQuotesReplaceSign);}catch(e){}
+					try{sInstrumentID = sArrResult[6];}catch(e){}
+					try{sBursaName =  sArrResult[7];}catch(e){}
+					try{sBursa = ('' + sArrResult[8]).toLowerCase();}catch(e){}
+					try{timestamp = ('' + sArrResult[9]);}catch(e){}
+                    try { gtoSymbol = ('' + sArrResult[10]); } catch (e) { }
+                    try { tradeStage = (sArrResult[11] != null ? '' + sArrResult[11] : ""); } catch (e) { }
+                    
+					
+					if(sBursa == 'forex' && isOldData(timestamp) ) {
+						sLast = "--"; 
+						sPercentage = "";
+					}
+					sfeeder = sBursa == 'forex' || sBursa == 'tase' ? 0 : 1
+					try{sFullName = sArrResult[0].replace("-"," ");}catch(e){}
+					if (sInstrumentID == '373853' && sfeeder == 1) {
+						iInstrumentNameLength = 18
+					} else {
+						
+						iInstrumentNameLength = 18
+					}
+                    try {
+						function short_name() {
+							if (sInstrumentID == '66707' && sfeeder == 1) {return "דאו ג'ונס"}
+							if (sInstrumentID == '10463' && sfeeder == 0) {return 'דולר/שקל'}
+							if (sInstrumentID == '10432' && sfeeder == 0) {return 'אירו/דולר'}
+							if (sInstrumentID == '10426' && sfeeder == 0) {return 'אירו/שקל'}
+							if (sInstrumentID == '539349' && sfeeder == 1) {return 'נפט'}
+							if (sInstrumentID == '539375' && sfeeder == 1) {return 'זהב'}
+							return sName.substr(0,iInstrumentNameLength)
+						}
+						sName = short_name(sName,sfeeder,sInstrumentID)
+						sName = sName.replace("-"," ");
+					} catch(e) {}
+
+                    if(sContinent == "currencies+commodities" ) {
+                        var short = sSymbol.substring(0, 3);
+                        var long = sSymbol.substring(3, 6);
+                        flagsImgs = '<img src="' + currencySigns[short][2] + '" width=16 title="'+short+'"  /><img src="' + currencySigns[long][2] + '" width=16 title="'+long+'" />&nbsp;';
+                    }
+					try {
+					    if (sContinent == "ta" && sType == "IndicesItem" ) {
+					        PopulateArray(sContinent, sType, i, sInstrumentID, sLast, sPercentage)					       
+					    }
+					} catch (e) { alert("in catch" + e.description) }
+
+					
+
+				} else {
+                    try {
+                        sName = sArrString[0];//.substr(0, iInstrumentNameLength);
+                        sName = sName.replace("-", " ");
+                    } catch (e) { }
+					try{sSymbol = sArrString[1];}catch(e){}
+					try{sPercentage = sArrString[2];}catch(e){}
+					try{sLast = sArrString[3];}catch(e){}
+					try{sFlag = sArrString[4];}catch(e){}
+				//	var sCountry = sArrString[5].replace("\"","&#034;");
+					try{sCountry = sArrString[5].replace("\"",sQuotesReplaceSign);}catch(e){}
+					try{sInstrumentID = sArrString[6];}catch(e){}
+					try{sBursaName = sArrString[7];}catch(e){}
+                    try { sBursa = sArrString[8]; } catch (e) { }
+                    try { gtoSymbol = ('' + sArrResult[9]); } catch (e) { }
+                    try { tradeStage = ('' + sArrResult[11]); } catch (e) { }
+					try{sFullName = sArrString[0].replace("-"," ");}catch(e){}
+                }
+
+				sPercentage = RoundNum(sPercentage.toString());
+				var sTempPercentage = sPercentage;
+				var sGraphName = sFullName.replace(/\"/g,"``").replace("'","`")
+				var linkTitle = sSymbol + "-" + sFullName + (sBursaName.match(/[א-ת]/) ? " , בורסת " + sBursaName.replace(/\"/g,"``").replace("'","`") : "")
+
+                if (isNaN(sPercentage)
+                    || isBase
+                    || (isTheoretical && (tradeStage == " " || tradeStage == "B"))) { // && isAjaxResult == 0
+					sTempPercentage = 0;sPercentage = "<span style='font:12px arial;color:#000000;'>---</span>";
+				} else {
+					sPercentage = ColorValue(sPercentage);
+                }
+
+                sName = sName.length > 21 ? sName.substr(0, 21) : sName;
+
+	            arrItemsIds.push(sInstrumentID);
+
+				var sResUrl = protocol_and_host + "/portal/instrument.aspx?InstrumentID=" + sInstrumentID + (sfeeder == "1" ? "&Feeder=1" : "")
+				
+
+                var objInst = new Object();
+                objInst.sResUrl = sResUrl;
+                objInst.sSymbol = sSymbol;
+                objInst.sfeeder = sfeeder;
+                objInst.sLast = formatRateValue(sLast, sType, sBursa) ;
+                objInst.sTempPercentage = sTempPercentage;
+                objInst.sFlag = sFlag;
+                objInst.flagsImgs = flagsImgs;
+                objInst.sCountry = sCountry;
+                objInst.sGraphName = sGraphName;
+                objInst.sBursa = sBursa;
+                objInst.sName = sName;
+                objInst.linkTitle = linkTitle;
+                objInst.sPercentage = sPercentage;
+                objInst.gtoSymbol = gtoSymbol;                
+                objInst.tradeStageHtml = GetTradeStageImgHtml(tradeStage, sfeeder,isBase,isTheoretical,i);
+
+                //if (sContinent == 'ta' && tradeStage != undefined && tradeStage != "T"  )
+                if (objInst.tradeStageHtml != '')
+                    flagTradeStageIcon = true;
+
+                sRes.push(BuildRow(i, objInst));
+
+                sResWithTradeStages.push(BuildTradeStageRow(i, objInst));
+
+
+			//	sRes.push("<tr style='cursor:pointer;' id='trLastAndFlag_" + i + "'><td style='padding-right:3px;' width=300 id='tdFlag_" + i + "'></td></tr>")
+				sRes_contains_tr = true
+
+				if (isDefault==1 && i==0) {
+					sDefaultSymbol= sSymbol;
+					sDefaultFeeder= sfeeder;
+					sDefaultCountry = sCountry;
+					sDefaultFlag = sFlag;
+					sDefaultLast = sLast;
+					sDefaultPercentage = sTempPercentage;
+					sDefaultName =  sGraphName;
+					sDefaultBursaName = sBursaName;
+					sDefaultBursa = sBursa;
+				}
+			}
+		} catch(e) {}
+	}
+
+    sRes.push("</table>")
+    sResWithTradeStages.push("</table>")
+
+	if (!sRes_contains_tr) {
+
+		if (sType=='IsraelWorking' && ( sContinent == sTaTabName || sContinent==sUSATabName || sContinent==sAsiaTabName)) {
+			   sRes.push('<tr><td style="font-size:14px;">'
+					+	'<div style="padding-top:20px;padding-bottom:20px;">'
+					+	'<img src="//images.globes.co.il/images/site/portfolio/Pic_Portfolio_Invest_60x60.png" width=60 height=60 align=right hspace=16 alt=""/>'
+					+	'<div style="padding:10px;font-size:14px;">'
+					+ 'עדיין לא פתחת תיק השקעות בגלובס? <br/><a href="/portal/portfolio.aspx?fid=1954" target="_parent">לפתיחה לחץ כאן</a></td><tr>'
+					+	'</div></div>'
+				)
+			   document.getElementById("imgGraph").style.display = "none"
+		} else {
+			document.getElementById("imgGraph").src = "https://images.globes.co.il/images/Site/Finance/Graph_NoData140.gif"
+		}
+	}
+    document.getElementById("divDataTable").innerHTML = flagTradeStageIcon ? sResWithTradeStages.join('') : sRes.join('');
+	document.getElementById("divDataTable").style.display = ''
+
+	if (isDefault == 1) {
+		ShowAllData(sDefaultSymbol,sDefaultFeeder,sDefaultLast,0,sDefaultPercentage,sDefaultFlag,sDefaultCountry,sDefaultName,sDefaultBursa );
+	}
+    CheckPopulate();
+
+    try {
+        if (typeof parent.financeInwiserTabClick == 'function') {
+            parent.financeInwiserTabClick(sContinent, arrItemsIds);
+        }
+    } catch (e) { }
+}
+
+function BuildRow(i,obj) {
+    return "<tr onclick=\"window.open('" + obj.sResUrl + "','_top','')\""
+        + " id='tr_" + i + "' class='trFinanceData' style='cursor:pointer;' onmouseover='ShowAllData(\"" + obj.sSymbol + "\"," + obj.sfeeder + ",\"" + obj.sLast + "\"," + i + "," + obj.sTempPercentage + ",\"" + obj.sFlag + "\",\"" + obj.sCountry + "\",\"" + obj.sGraphName + "\",\"" + obj.sBursa + "\")'>"
+        + "<td height=17 id='tdName_" + i + "' style='padding-right:2px;border-bottom:solid 1px #f2f2f2;' align=right>"
+        + obj.flagsImgs
+        + "<span title='" + obj.linkTitle + "' class='FontSize12'>" + obj.sName + "</span>"
+        + "</td>"
+        + "<td width=65 id='tdLast_" + i + "' align='right' style='border-bottom:solid 1px #f2f2f2;'>"
+        + ColorLast(obj.sLast, obj.sTempPercentage)
+        + "</td>"
+        + "<td width=65 height=17 id='tdPercentage_" + i + "' align='right' style='border-bottom:solid 1px #f2f2f2;'>" + obj.sPercentage + "</td>"
+        + "<td valign='top'></td>"
+        + "<td width='20' id='tdArrow_" + i + "' style='border-bottom:solid 1px #f2f2f2;'>"
+        + "<img src='https://res.cloudinary.com/globes/image/upload/v1771413220/Digital/icons/arrows_tfsab8.svg' />"
+        + "</td>"
+        + "</tr>"
+}
+function BuildTradeStageRow(i, obj ) {    
+   
+    return "<tr onclick=\"window.open('" + obj.sResUrl + "','_top','')\""
+        + " id='tr_" + i + "' class='trFinanceData' style='cursor:pointer;' onmouseover='ShowAllData(\"" + obj.sSymbol + "\"," + obj.sfeeder + ",\"" + obj.sLast + "\"," + i + "," + obj.sTempPercentage + ",\"" + obj.sFlag + "\",\"" + obj.sCountry + "\",\"" + obj.sGraphName + "\",\"" + obj.sBursa + "\")'>"
+        + "<td height=17 id='tdName_" + i + "' style='padding-right:2px;border-bottom:solid 1px #f2f2f2;' align=right>"
+        + obj.flagsImgs
+        + "<span title='" + obj.linkTitle + "' class='FontSize12'>" + obj.sName + "</span>"
+        + "</td>"
+        + "<td width=55 id='tdLast_" + i + "' align='right' style='border-bottom:solid 1px #f2f2f2;'>"
+        + ColorLast(obj.sLast, obj.sTempPercentage)
+        + "</td>"
+        + "<td width=50 height=17 id='tdPercentage_" + i + "' align='right' style='border-bottom:solid 1px #f2f2f2;'>" + obj.sPercentage + "</td>"
+        + "<td valign='center' width='52' id='tdTradeStage_" + i+ "' >" + obj.tradeStageHtml + "</td>"
+        + "<td width='15' id='tdArrow_" + i + "' style='border-bottom:solid 1px #f2f2f2;'>"
+        + "<img src='https://res.cloudinary.com/globes/image/upload/v1771413220/Digital/icons/arrows_tfsab8.svg' />"
+        + "</td>"
+        + "</tr>"
+}
+
+function GetTradeStageImgHtml(tradeStage, feeder, isBaseStage, isTheoreticalStage,i) {
+    var tradeStageSigns = feeder == 0 ? taTradeStageSigns : hulTradeStageSigns;
+    if (feeder == 0) {
+        if (tradeStage == "P1") tradeStage = "P";
+        else if (tradeStage == " " || tradeStage == "B") {
+            if (isBaseStage) { tradeStage = "B"; }
+            else if (isTheoreticalStage) { tradeStage = "TB"; }
+            else tradeStage = "E";
+        }
+    }
+
+    if (tradeStage == "T" || tradeStageSigns[tradeStage] == undefined)
+        tradeStage = "";
+           
+    var tradeStageImg = tradeStageSigns[tradeStage] != undefined ? tradeStageSigns[tradeStage][2] : '';
+    var tradeStageText = tradeStageSigns[tradeStage] != undefined ? tradeStageSigns[tradeStage][1] : '';
+    var tradeStageAlt = tradeStageSigns[tradeStage] != undefined ? tradeStageSigns[tradeStage][0] : '';
+    if (tradeStageImg != '' && tradeStageText != '' && tradeStageAlt != '')
+        return "<img src='" + tradeStageImg + "' title='" + tradeStageAlt + "' width='10px' style='top:2px;left:2px; position:relative;' /><span title='" + tradeStageAlt+"'>" + tradeStageText + "</span>";
+    return '';
+}
+
+
+function isOldData(timestamp){
+	var today = (new Date()).toISOString().split('T')[0];
+	var day = (new Date()).getDay() 
+	if(day >= 1 && day <= 5){
+		var tDate = timestamp.split(' ')[0]
+		if(tDate != today)
+			return true;
+	}
+	return false;
+}
+//Round number: 2 digits after dot
+function RoundNum(sPercentage)
+{
+    var numAfterDot = 2;
+    var ind = sPercentage.indexOf(".");
+    sPercentage = Math.round(parseFloat(sPercentage.substr(0,ind + numAfterDot + 2)) * Math.pow(10,numAfterDot)) / Math.pow(10,numAfterDot);
+
+    if(sPercentage.toString().indexOf(".") == -1)sPercentage = sPercentage.toString() + ".00";
+
+    var arrPercentage = sPercentage.toString().split(".");
+    if(arrPercentage.length == 2)
+    {
+       var sBeforeDot = arrPercentage[0];
+       var sAfterDot = arrPercentage[1];
+       if(sAfterDot.length == 1) sAfterDot += "0";
+       sPercentage = sBeforeDot + "." + sAfterDot;
+    }
+    return sPercentage;
+}
+
+//Get Color Styles
+function ColorValue(value)
+{
+   var sValue = ""
+   var sSign = "";
+    var sClass = "";
+    var absValue = Math.abs(value);
+    if (value > 0) {
+        color = "#009900";
+        sClass = "green" + (absValue > 5 ? " bggreen" : "");
+        sSign = "+";
+    } else if (value < 0) {
+        color = "#CC0000";
+        // sSign = "-";
+        sClass = "red" + (absValue > 5 ? " bgred" : "")
+    }
+    else {
+        color = "#000000";
+        sClass = "nopchange";
+    }
+   sValue = value
+ 
+    //value = "<h4 dir='ltr' style='white-space:nowrap; font-size:12px; font-weight:normal;'><span style='color:" + color + ";'>" + sSign + sValue + "%" + "<span></h4>";
+    value = "<h4 dir='ltr' style='white-space:nowrap; font-size:12px; font-weight:normal;'><span class='" + sClass + "'>" + sSign + sValue + "%" + "<span></h4>";
+   return value;
+}
+
+function ColorLast(last,percentage)
+{
+   var color="";
+   if (percentage>0){
+       color = "#009900";
+   }else{
+       color = "#CC0000";
+   }
+   //var value = "<span dir='ltr' style=\"white-space:nowrap;font:11px arial;color:" + color + "\">" + last + "</span>";
+   var value = "<h4 dir='ltr' style='white-space:nowrap; font-size:12px; font-weight:normal;'>" + last + "</h4>";
+   return value;
+}
+
+
+
+function isBetweenHours(d, extraH, sType, isRT) {
+    var baseDate = new Date(d);
+    // מחשבים את תחילת הטווח (X + 8 שעות)
+    var extraMinutes = !isRT ? 15 : 0;
+    var d1 = new Date(baseDate.getTime() + (extraH * 60 * 60 * 1000) + (extraMinutes * 60 * 1000));
+    var d2 = new Date(baseDate.getTime() + (extraMinutes * 60 * 1000));
+
+    var now = new Date();
+
+    // בדיקה אם זמן נוכחי נמצא בין התאריך של ההתחלה לבין תוספת הזמן
+    var isBetween = false;
+    if (extraH > 0)
+        return now < d1 && now > d2;
+    if (extraH < 0)
+        return now > d1 && now < d2;
+
+    return false;
+}
+
+function formatRateValue(number, sType, sBursa) {
+    var sTypeId = sType == "-" ? "20" : (sType == "IndicesItem" ? "11" : "6")    
+
+    var fRate = parseFloat(number)
+    var typeId = Number(sTypeId)
+    if (isNaN(fRate))
+        return number;
+
+    if (sTypeId == "20")
+        return parseFloat(number).toFixed(4);
+
+    if (sBursa == 'tase') {
+        if (typeId == 15 || typeId == 44) { //options
+            return format_integer(number)
+        }
+
+        if (fRate > 10000) {
+            var iRate = parseInt(number)
+            return format_integer(iRate)
+        }
+    }
+    return format_float(fRate);
+}
+function format_integer(inum) {
+    return new Intl.NumberFormat('en-US', { style: 'decimal' }).format(inum);
+}
+function format_float(fnum) {
+    var inum = parseInt(fnum)
+    var intPartString = new Intl.NumberFormat('en-US', { style: 'decimal' }).format(inum);
+    if (fnum % 1 > 0) {
+        var floatPartString = fnum.toString().replace(/(\d*)(\.\d{1,2})(\d*)/, "$2")
+        return intPartString + floatPartString;
+    }
+    return intPartString;
+}
+
+
+
+var currencySigns = new Object();
+currencySigns["EUR"] = ["€", "אירו", "https://res.cloudinary.com/globes/image/upload/v1771419233/Digital/icons/16/_European_Union_1_wpxhbn.png"];
+currencySigns["USD"] = ["$", "דולר", "https://res.cloudinary.com/globes/image/upload/v1771419231/Digital/icons/16/us_1_lmfgsa.png"];
+currencySigns["JPY"] = ["¥", "ין", "https://res.cloudinary.com/globes/image/upload/v1771419230/Digital/icons/16/jp_1_pn1kh8.png"];
+currencySigns["ILS"] = ["₪", "שקל", "https://res.cloudinary.com/globes/image/upload/v1771419229/Digital/icons/16/il_1_nbrfgd.png"];
+currencySigns["GBP"] = ["£", 'ליש"ט', "https://res.cloudinary.com/globes/image/upload/v1771419227/Digital/icons/16/gb_vxmsxe.png"];
+currencySigns["CHF"] = ["CHF", 'פרנק שוויצרי', "https://res.cloudinary.com/globes/image/upload/v1771419226/Digital/icons/16/ch_i1fwgw.png"];
+
+var  taTradeStageSigns = new Object();
+taTradeStageSigns["L"] = ["מסחר בשער נעילה(TAL)", "נעול", "https://res.cloudinary.com/globes/image/upload/v1757933151/Digital/icons/portal-1/Property_1_lock_owhguf.svg"];
+taTradeStageSigns["B"] = ["שער בסיס", "בסיס", "https://res.cloudinary.com/globes/image/upload/v1757933151/Digital/icons/portal-1/Property_1_bedtime_iuzjtn.svg"]
+taTradeStageSigns["E"] = ["סגירה - לאחר סיום מסחר", "סגור","https://res.cloudinary.com/globes/image/upload/v1757933151/Digital/icons/portal-1/Property_1_bedtime_iuzjtn.svg"]
+taTradeStageSigns["C"] = ["טרום נעילה", "טרום נ", "https://res.cloudinary.com/globes/image/upload/v1765878424/Digital/icons/%D7%90%D7%99%D7%99%D7%A7%D7%95%D7%A0%D7%99%D7%9D_ktv5oo.svg"]
+taTradeStageSigns["TB"] = ["טרום פתיחה-שער בסיס", "טרום פ", "https://res.cloudinary.com/globes/image/upload/v1765889962/ICN_sun2_zvcxma.svg"]
+taTradeStageSigns["P"] = ["שער תאורטי", "תאורטי", "https://res.cloudinary.com/globes/image/upload/v1765889962/ICN_sun2_zvcxma.svg"]
+taTradeStageSigns["S"] = ["הפסקה זמנית במסחר", "הפסקה", "https://res.cloudinary.com/globes/image/upload/v1757933151/Digital/icons/portal-1/Property_1_stop_circle_eflpdp.svg"]
+
+
+var hulTradeStageSigns = new Object();
+hulTradeStageSigns["E"] = ["סגור", "סגור", "https://res.cloudinary.com/globes/image/upload/v1757933151/Digital/icons/portal-1/Property_1_bedtime_iuzjtn.svg"]

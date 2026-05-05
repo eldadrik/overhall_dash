@@ -1,0 +1,410 @@
+
+<!-- saved from url=(0053)https://www.globes.co.il/news/cache/pas_2012.html?v=7 -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1255">
+		
+		<meta http-equiv="refresh" content="300">
+		<style type="text/css">
+
+
+
+            @font-face {
+                font-family: 'almoniDL400';
+                font-weight: 400; /*(regular)*/
+                font-style: normal;
+                src: url('https://images.globes.co.il/Static/fonts/almoni2019/almoni-neue-regular-aaa.woff2') format('woff2');
+            }
+
+            
+
+			/*-----------------*/
+            /* GLOBAL CSS      */
+            /*-----------------*/
+            .gray {
+                color: #3d3d3d;
+            }
+            .red {
+                color: #C00 !important;
+            }
+            .green {
+                color: #458b00;
+            }
+            .bggreen .p_change {
+                color: #458b00;
+            }
+
+            .bgred .p_change {
+                color: #C00;
+            }
+            .bgsilver .p_change {
+                color: #989898;
+            }
+            /*-----------------*/
+            /* ITEMS           */
+            /*-----------------*/
+            .p_price, .p_change{direction:ltr !important;float:right;}	
+            .p_change{float:left;}
+            .p_items {
+                height: 33px;
+                font-family: arial;
+                font-size: 14px;
+                direction: rtl;
+                padding: 0px 2px;
+                font-weight: bold;
+                border-right: 1px solid #b3b3b3;
+                background: #fef5f0;
+                cursor: pointer;
+            }
+                .p_items p {
+                    display: block;
+                    height: 17px;
+                    margin: 0 0 2px;
+                    overflow: hidden;
+                    text-align: center;
+                    font-size: 14px;
+                    width: 100%;
+                    font-family: 'almoniDL400', arial;
+                }
+            .p_data {
+                display: block;
+                border-radius: 5px 5px 0px 0px;
+                font-size: 12px !important;
+                padding: 0px 2px;
+                overflow: hidden;
+                height: 20px;
+ 
+            }
+            /*-----------------*/
+            /* BUTTONS         */
+            /*-----------------*/
+            ul.p_row_btm {
+                border: 1px solid #ccc;
+                border-left: none;
+                border-top: 0px;
+                width: 20px; /*21*/
+                height: 36px; /*33px;*/
+                float: right;
+                overflow: hidden;
+                margin: -2px 0 0 0;
+                padding: 0px;
+   
+            }
+            ul.p_row_btm li{list-style:none;}
+                ul.p_row_btm a {
+                    border-top: 1px solid #CCC;
+                    display: block;
+                    width: 100%;
+                    height: 10px;
+                    line-height: 9px;
+                    text-align: center;
+                    font-size: 10px;
+                 
+                    color: #333;
+                    text-decoration: none;
+                    padding: 0px 0 0 0;
+                    margin: 0px;
+              
+                }	
+            ul.p_row_btm a:hover,ul.p_row_btm .selected_row{
+	            color:#000;
+	            text-decoration:none;
+	            font-weight:bold;
+	            width:100%;
+	            
+	        }
+		</style>
+         
+	</head>
+	<body style="margin:0 0 0 0;overflow: hidden;font-family:arial; background-color:#ffffff;">
+	<div id="description" style="position:absolute;z-index:100;display:none"></div>
+	<script>
+	var tablewidth
+	function on(side) {return 'https://img6.globes.co.il/Images/site2/mddim/icon_ON_' + side + '_10x10.gif'}
+    function changecurrentset(s) {
+		currentset = s
+		var control_buttons = document.getElementsByName("control_button")
+		for(var i = 0; i < control_buttons.length ;i++) {
+			var cb = control_buttons[i];
+			cb.className = "";
+		}
+		document.getElementById(s + '.left').className = 'selected_row';
+		var div = document.getElementById('skelton.div')
+		populate(true,[],false)
+	}
+	function c_instrument(set,td,id,name,url,serial,description, listTypeID, linkType) {
+		this.set = set
+		this.td = td
+		this.id = id
+		this.name = name
+		this.url = url
+		this.serial = serial
+		this.description = description
+		this.listTypeID = listTypeID;
+		this.linkType = linkType;
+	}
+	c_instrument.prototype.in_currentset = function() {return this.set == '*' || this.set == currentset}
+	var is_wide = location.search.match(/width=narrow/) ? false : document.body.offsetWidth > 969
+	var fcc     = 'https://www.globes.co.il/Finance/Currency/Currency.asp'
+	var ggfiil  = 'https://www.globes.co.il/globessites/globes/finance/instruments/instrumentslist.aspx'
+	var fii     = 'https://www.globes.co.il/Finance/Instrument/Instrument.asp'
+	var ggfii   = 'https://www.globes.co.il/globessites/globes/finance/instruments/instrument.aspx';
+	var madad   = 'https://www.globes.co.il/news/madad.aspx';
+	var instlnk = 'https://www.globes.co.il/news/instrument.aspx';
+	var upper = 0 , middle = 0 , lower = 0
+	var instruments = new Array()
+
+    // set 1
+	instruments[instruments.length] = new c_instrument('upper', upper++, 'usd/nis'    , 'דולר/שקל'            , fii + '?instrumentid=10463&feeder=0&lang=HE&tab=1', instruments.length, ['', 'השינוי המוצג הוא מול שע"ח יציג אחרון', '&nbsp;'], 0, 'Currency')
+	instruments[instruments.length] = new c_instrument('upper', upper++, 'eur/nis'    , 'אירו/שקל'            , fii + '?instrumentid=10426&feeder=0&lang=HE&tab=1', instruments.length, ['', 'השינוי המוצג הוא מול שע"ח יציג אחרון', '&nbsp;'], 0, 'Currency')
+	instruments[instruments.length] = new c_instrument('upper', upper++, 'eur/usd'    , 'אירו/דולר'           , fii + '?InstrumentID=10432&Feeder=0&Lang=HE', instruments.length, null, 0, 'Instrument')
+	instruments[instruments.length] = new c_instrument('upper', upper++, 'ta35'       , 'ת\"א 35'             , ggfiil + '?TypeID=3', instruments.length, null, 3, 'List')
+	instruments[instruments.length] = new c_instrument('upper', upper++, 'ta125'      , 'ת\"א 125'            , ggfiil + '?TypeID=4',instruments.length,null,4, 'List')
+	instruments[instruments.length] = new c_instrument('upper', upper++, 'nasdaq'     , 'נאסד\"ק 100'         , fii + '?InstrumentID=537926&Feeder=1&Lang=HE',instruments.length,null,0, 'Instrument')
+//	instruments[instruments.length] = new c_instrument('upper', upper++, 'nbi'        , 'נסדק ביוטכנולוגיה' , fii + '?InstrumentID=243786&Feeder=1&Lang=HE', instruments.length, null, 0, 'Instrument')
+	instruments[instruments.length] = new c_instrument('upper', upper++, 'bkx'        , 'נסד\"ק בנקים' , fii + '?InstrumentID=67763&Feeder=1&Lang=HE', instruments.length, null, 0, 'Instrument')
+//	instruments[instruments.length] = new c_instrument('upper', upper++, 'dj'         , 'דאו ג\'ונס'          , fii + '?InstrumentID=66707&Feeder=1&Lang=HE', instruments.length, null, 0, 'Instrument')
+	instruments[instruments.length] = new c_instrument('upper', upper++, 'ixic'       , 'נסד\"ק כללי'         , fii + '?InstrumentID=66772&Feeder=1&Lang=HE', instruments.length, null, 0, 'Instrument')
+//	instruments[instruments.length] = new c_instrument('upper', upper++, 'sp500'      , 'S&P 500'             , fii + '?InstrumentID=373853&Feeder=1&Lang=HE', instruments.length, null, 0, 'Instrument')
+//	instruments[instruments.length] = new c_instrument('upper', upper++, 'tnx'        , 'אג\"ח ארה\"ב 10 ש\'' , fii + '?InstrumentID=540527&Feeder=1&Lang=HE', instruments.length, ['אג\"ח ארה\"ב 10 ש\'', '- תשואה על אג"ח ממשלתיות אמריקאיות ל-10 שנים', 'הנתון בהשהיה של 20 דקות'], 0, 'Instrument')
+	instruments[instruments.length] = new c_instrument('upper', upper++, 'sox'        , 'SOX'                 , fii + '?InstrumentID=540414&Feeder=1&Lang=HE', instruments.length, ['', 'מדד סמיקונדקטור SOX', 'הנתון בהשהיה של 20 דקות'], 0, 'Instrument')
+//	instruments[instruments.length] = new c_instrument('upper', upper++, 'russel'     , 'RUSSEL 2000', madad + '?instrumentid=539273&feeder=1', instruments.length, ['', 'מדד Russel 2000', '&nbsp;'], -1, 'Madad')
+	instruments[instruments.length] = new c_instrument('upper', upper++, 'apple'      , 'Apple'               , fii + '?InstrumentID=539044&Feeder=1&Lang=HE', instruments.length, null, 0, 'Instrument')
+	instruments[instruments.length] = new c_instrument('upper', upper++, 'google'     , 'Google'              , fii + '?InstrumentID=539042&Feeder=1&Lang=HE', instruments.length, null, 0, 'Instrument')
+
+    // set 2
+	// instruments[instruments.length] = new c_instrument('middle', middle++, 'dax'      , 'דאקס 30'            , fii + '?InstrumentID=539269&Feeder=1&Lang=HE', instruments.length, ['דקס 30:', 'מדד מניות ראשי - הבורסה בגרמניה', 'הנתון בהשהיה של 20 דקות'], 0, 'Instrument')
+	instruments[instruments.length] = new c_instrument('middle', middle++, 'n100'     , 'יורונקסט 100'       , fii + '?InstrumentID=539330&Feeder=1&Lang=HE', instruments.length, ['יורונקסט 100:', 'מדד מניות ראשי - יורונקסט פריס', 'הנתון בהשהיה של 20 דקות'], 0, 'Instrument')
+    instruments[instruments.length] = new c_instrument('middle', middle++, 'cac'      , 'קאק 40'             , fii + '?InstrumentID=539270&Feeder=1&Lang=HE', instruments.length, ['קאק 40:', 'מדד מניות ראשי - הבורסה בצרפת', 'הנתון בהשהיה של 20 דקות'], 0, 'Instrument')
+	instruments[instruments.length] = new c_instrument('middle', middle++, 'nk225'    , 'ניקיי 225'          , fii + '?InstrumentID=539271&Feeder=1&Lang=HE', instruments.length, ['Nikkei 225', '- מדד מניות ראשי - הבורסה ביפן', 'הנתון בהשהיה של 20 דקות'], 0, 'Instrument')
+	instruments[instruments.length] = new c_instrument('middle', middle++, 'hangseng' , 'הנג-סנג'            , fii + '?InstrumentID=539267&Feeder=1&Lang=HE', instruments.length, ['Hang Sang', '- מדד מניות ראשי - הבורסה בהונג-קונג', 'הנתון בהשהיה של 20 דקות'], 0, 'Instrument')
+	instruments[instruments.length] = new c_instrument('middle', middle++, 'shanghai' , 'שנחאי'              , fii + '?InstrumentID=539501&Feeder=1&Lang=HE', instruments.length, ['Shanghai', 'מדד Shanghai SE Composite Index', 'הנתון בהשהיה של 20 דקות'], 0, 'Instrument')
+
+	instruments[instruments.length] = new c_instrument('middle', middle++, 'australia' , 'אוסטרליה'          , fii + '?InstrumentID=539312&Feeder=1&Lang=HE', instruments.length, ['AS51', 'מדד AS51', 'הנתון בהשהיה של 20 דקות'], 0, 'Instrument')
+	instruments[instruments.length] = new c_instrument('middle', middle++, 'singapur' , 'סינגפור'            , fii + '?InstrumentID=539313&Feeder=1&Lang=HE', instruments.length, ['FSSTI', 'מדד FSSTI', 'הנתון בהשהיה של 20 דקות'], 0, 'Instrument')
+	instruments[instruments.length] = new c_instrument('middle', middle++, 'india' , 'סנסקס 30'              , fii + '?InstrumentID=539503&Feeder=1&Lang=HE', instruments.length, ['SENSEX', 'מדד SENSEX', 'הנתון בהשהיה של 20 דקות'], 0, 'Instrument')
+	instruments[instruments.length] = new c_instrument('middle', middle++, 'bitcoin' , 'ביטקוין'             , fii + '?InstrumentID=204456&Lang=HE', instruments.length, ['Bitcoin', 'Bitcoin', null], 0, 'Instrument')
+
+	// instruments[instruments.length] = new c_instrument('middle', middle++, 'gold'     , 'זהב'                , ggfii + '?instrumentid=540983&feeder=1&lang=he&tab=1', instruments.length, ['זהב:', 'שער הזהב (אונקיה) - חוזה עתידי', 'הנתון בהשהיה של 10 דקות'], 0, 'Instrument')
+	// instruments[instruments.length] = new c_instrument('middle', middle++, 'minicrude', 'נפט'                , fii + '?InstrumentID=539021&Feeder=1&Lang=HE', instruments.length, ['נפט:', 'שער הנפט (חבית) בחוזה הקרוב לפקיעה', 'הנתון בהשהיה של 10 דקות'], 0, 'Instrument')
+	// instruments[instruments.length] = new c_instrument('middle', middle++, 'corn'     , 'תירס'               , ggfii + '?instrumentid=540457&feeder=1&lang=he&tab=1', instruments.length, ['תירס:', 'שער התירס (בושל) בחוזה הקרוב לפקיעה', 'הנתון בהשהיה של 10 דקות'], 0, 'Instrument')
+	// instruments[instruments.length] = new c_instrument('middle', middle++, 'rice'     , 'אורז'               , ggfii + '?instrumentid=540987&feeder=1&lang=he&tab=1', instruments.length, null, 0, 'Instrument')
+
+    instruments[instruments.length] = new c_instrument('middle', middle++, 'ftse100'  , 'פוטסי 100'          , fii + '?InstrumentID=539268&Feeder=1&Lang=HE', instruments.length, ['פוטסי 100:', 'מדד מניות ראשי - הבורסה בבריטניה', ' הנתון בהשהיה של 20 דקות'], 0, 'Instrument')
+    instruments[instruments.length] = new c_instrument('middle', middle++, 'gbp/usd'  , 'ליש\"ט/דולר'        , fii + '?InstrumentID=10442&Feeder=0&Lang=HE', instruments.length, null, 0, 'Instrument')
+    instruments[instruments.length] = new c_instrument('middle', middle++, 'usd/jpy'  , 'דולר/ין'            , fii + '?InstrumentID=10464&Feeder=0&Lang=HE', instruments.length, null, 0, 'Instrument')
+    instruments[instruments.length] = new c_instrument('middle', middle++, 'usd/chf'  , 'דולר/פרנק שוויצרי' , fii + '?InstrumentID=10462&Feeder=0&Lang=HE', instruments.length, null, 0, 'Instrument')
+
+    // set 3
+    instruments[instruments.length] = new c_instrument('lower', lower++, 'banks', 'בנקים 5', fii + '?InstrumentID=981&Feeder=0&Lang=HE', instruments.length, ['', 'מדד הבנקים 5', '&nbsp;'], -1, 'Instrument')
+    instruments[instruments.length] = new c_instrument('lower', lower++, 'gazneft', 'גז נפט', fii + '?InstrumentID=51905&Feeder=0&Lang=HE', instruments.length, ['', 'מדד גז נפט', '&nbsp;'], -1, 'Instrument')
+    instruments[instruments.length] = new c_instrument('lower', lower++, 'telbond', 'תל בונד 20', madad + '?instrumentid=23947', instruments.length, ['', 'מדד ת\"א תל בונד 20', '&nbsp;'], -1, 'Madad')
+    instruments[instruments.length] = new c_instrument('lower', lower++, 'nadlan15', 'ת\"א נדל\"ן', ggfiil + '?TypeID=97', instruments.length, null, 97, 'List')
+    instruments[instruments.length] = new c_instrument('lower', lower++, 'biomed', 'ת\"א ביומד', madad + '?instrumentid=43567', instruments.length, ['', 'מדד ת\"א ביומד', '&nbsp;'], -1, 'Madad')
+    instruments[instruments.length] = new c_instrument('lower', lower++, 'bluetech', 'ת\"א גלובל בלוטק', fii + '?InstrumentID=983&Feeder=0&Lang=HE', instruments.length, ['', 'מדד ת\"א גלובל בלוטק', '&nbsp;'], -1, 'Instrument')
+    instruments[instruments.length] = new c_instrument('lower', lower++, 'yeter50', 'ת\"א SME60', madad + '?instrumentid=11733', instruments.length, ['', 'מדד ת\"א SME60', '&nbsp;'], -1, 'Madad')
+    instruments[instruments.length] = new c_instrument('lower', lower++, 'teva', 'טבע', fii + '?InstrumentID=883&Feeder=1&Lang=HE', instruments.length, null, 0, 'Instrument')
+    instruments[instruments.length] = new c_instrument('lower', lower++, 'ratzio', 'רציו', instlnk + '?instrumentid=740', instruments.length, null, 0, 'Instrument2012')
+    instruments[instruments.length] = new c_instrument('lower', lower++, 'poalim', 'פועלים', fii + '?InstrumentID=706&Feeder=1&Lang=HE', instruments.length, null, 0, 'Instrument')
+    instruments[instruments.length] = new c_instrument('lower', lower++, 'chil', 'כיל', fii + '?InstrumentID=400&Feeder=1&Lang=HE', instruments.length, null, 0, 'Instrument')
+    instruments[instruments.length] = new c_instrument('lower', lower++, 'leumi', 'לאומי', fii + '?InstrumentID=501&Feeder=1&Lang=HE', instruments.length, null, 0, 'Instrument')
+    instruments[instruments.length] = new c_instrument('lower', lower++, 'bezeq', 'בזק', instlnk + '?instrumentid=120', instruments.length, null, 0, 'Instrument2012')
+
+    var bannerwidth = 71
+	var currentset = document.cookie.match(/barset=[a-z]+/)
+	currentset = currentset == null ? 'upper' : currentset.toString().substring(7)
+	if (currentset != 'middle' && currentset != 'lower') {currentset = 'upper'}
+	function control(side) {
+		function i(set,side,vspace,title, text) {
+			return '<li><a '
+			+	' title="' + title + '"'
+			+	' alt="' + title + '"'
+			+	' id="' + set + '.' + side + '"'
+			+	' name="control_button"'
+			+	' style="cursor:pointer"'
+			+	' onmouseover="changecurrentset(\'' + set + '\')"'
+			+	' >' + text + '</a></li>'
+		}
+		return '<ul class="p_row_btm">' + i('upper',side,0,'', '1') + i('middle',side,1,'', '2') + i('lower',side,0,'', '3') + '</ul>'
+	}
+	var small_min_width = 100;
+	var min_width = 140;
+	var tw = parseFloat(document.body.offsetWidth - 24);
+	var min_for_calc = (tw <= 1024) ? small_min_width : min_width;
+    var sw = parseFloat(min_for_calc);
+	var cw = parseFloat(tw / sw);
+	while (cw > parseInt(cw) && parseFloat(cw - parseInt(cw)) > 0.05) {
+	    sw++;
+	    cw = parseFloat(tw / sw);
+	}
+
+	var maxCellsCount = 13;
+	function skeleton(a) {
+	    var main = '<div id="items_div" style="overflow:hidden; width:' + parseInt(tw) + 'px"><table cellpadding="0" cellspacing="0" border="0" dir="rtl" id="pass_table_items" class="pass_table_items" style="width:' + (maxCellsCount * sw) + 'px;"><tr>';
+		var containerwidth = document.body.offsetWidth - (bannerwidth * 2)
+		var PassPositionLeft = bannerwidth + 5;
+		var widthOfControl = 14;
+		var widthOfDateAndTime = 50;
+		var tdwidth = tablewidth = Math.floor((containerwidth - (2 * widthOfControl) - widthOfDateAndTime) / (instruments.length / 3))
+		var divwidth = (instruments.length / 3) * tdwidth + (2 * widthOfControl) + widthOfDateAndTime;
+		var cellsCounter = 0;
+
+		for(var i in a) {
+		    if (a[i].in_currentset()) {
+		        main += '<td class="p_items" id="td.' + a[i].td + '" style="width:' + (sw - 5) + 'px;">&nbsp;</td>'
+		        cellsCounter++;
+			}
+        }
+		for (; cellsCounter < maxCellsCount; cellsCounter++) {
+		    main += '<td></td>';
+		}
+		main += '</tr></table></div>';
+		return '<table style="width:100%;height:33px" dir=rtl cellspacing=0 cellpadding=0 border=0 bordercolor=white>'
+		+	'<tr>'
+		+	'<td>'
+			+ '<DIV id="skelton.div" STYLE="border:0px solid black;background:#fff1e5 ">'
+			+	'<table id=skelton style="width:100%" dir=rtl cellspacing=0 cellpadding=0 border=0>'
+			+	'<tr>'
+				+	'<td style="width:21px;" id="td_of_btn" align=left>' + control('left') + '</td>'
+				+	'<td>' + main + '</td>'
+			+	'</tr>'
+			+	'</table>'
+			+	'</DIV>'
+		+	'</td>'
+		+	'</tr>'
+		+	'</table>'
+	} document.write(skeleton(instruments))
+	function inner_html(instrument,side) {
+		return '<table dir=rtl cellspacing=0 cellpadding=0 border=0>'
+		+	'<tr>'
+		+		(side == 'left' ? '<td><img src="https://img6.globes.co.il/Images/site2/mddim//icon_info_' + side + '_25x35.gif" width="25" height="35" alt="" ></td>' : '')
+		+		'<td align=right valign=middle style="background-color:#ffffff;border-' + side + ':0px solid #ffffff;padding-' + side + ':1em">'
+		+			'<span style="font-size:12px"><strong>' + instrument.description[0] + '</strong>'
+		+			'&nbsp;&nbsp;' + instrument.description[1] + '</span>'
+		+			'<br><span style="font-size:10px;">' + instrument.description[2] + '&nbsp;&nbsp;' + instrument.datetime +'</span>'
+		+		'</td>'
+		+		(side == 'right' ? '<td><img src="https://img6.globes.co.il/Images/site2/mddim/icon_info_' + side + '_25x35.gif" width="25" height="35" alt="" ></td>' : '')
+		+	'</tr><table>'
+
+	}
+	function close_description() {document.getElementById("description").style.display = 'none'}
+	function open_description(serial) {
+		var instrument
+		if (instruments.length < 21) {return}
+		for(var i in instruments) {
+			instrument = instruments[i]
+			if (serial == instrument.serial) {break}
+		}
+		if (instrument.description == null) {instrument.description = ['','','']}
+		var d = document.getElementById("description")
+		if (instrument.td < 4) {
+			d.style.left = null
+			d.style.right = document.body.clientWidth - (document.getElementById("skelton.div").offsetLeft + document.getElementById("td." + instrument.td).offsetLeft) + 3
+			d.innerHTML = inner_html(instrument,'left')
+		} else {
+			d.style.left = document.getElementById("skelton.div").offsetLeft + document.getElementById("td." + (instrument.td - 1)).offsetLeft - 3
+			d.style.right = null
+			d.innerHTML = inner_html(instrument,'right')
+		}
+		d.style.display = ''
+	}
+	function clicked(e,serial) {
+		var caller = e.target ? e.target : e.srcElement
+		if (caller.tagName == "IMG" && (caller.src.match(/EasyForex/i) || caller.src.match(/clal_forex/i))) {
+		//	window.open('http://classic.easy-forex.com/Gateway.aspx?gid=95528','easyforex')
+			window.open('http://www.clalforex.co.il/he/?tag=clalsite_hosot_glbs','clalforex')
+		} else {
+			//var inst = instruments[serial];
+			window.open(instruments[serial].url, 'instrument')
+            /*
+            if(inst.linkType == "Currency"){
+				window.open(instruments[serial].url,'instrument')
+			}else if(inst.linkType == "List"){
+				window.open(instruments[serial].url,'instrument')
+			}else if(inst.linkType == "Instrument"){
+				window.open(fii + '?InstrumentID=' + inst.instrumentid + '&Feeder=' + inst.feeder + '&Lang=HE' , 'instrument')
+			}else{
+				window.open(instruments[serial].url,'instrument')
+			}
+            */
+		}
+	}
+	var marker_id = 0
+	function marker(marker_id,background) {
+		var a = document.getElementsByTagName('TR')
+		for(var i=0; i < a.length ;i++) {if (a[i].getAttribute('name') == 'marker_' + marker_id) {a[i].style.backgroundColor = background}}
+	}
+	function markerColor(marker_id,Ccolor) {
+		var a = document.getElementsByTagName('TABLE')
+		for(var i=0; i < a.length ;i++) {if (a[i].getAttribute('name') == 'marker_' + marker_id) {a[i].style.color = Ccolor}}
+		var b = document.getElementsByTagName('TD')
+		for(var i=0; i < b.length ;i++) {if (b[i].getAttribute('name') == 'marker_' + marker_id) {b[i].style.color = Ccolor}}
+	}
+	function fill(data,instrument) {
+		var pecentageChange = parseFloat(data[2])
+		var color='#ffffff',sign='',src='changenone2',ch="&nbsp;",alt='ללא שינוי',BG="https://img6.globes.co.il/images/site2/mddim/bg_105x15_Grey.gif",BGColor="#666666"
+		if (pecentageChange > 0) {color = '#ffffff'; BGColor='#009900'; BG="https://img6.globes.co.il/images/site2/mddim/bg_105x15_Green.gif"; src = 'changeup2'; ch = '&#9650;'; sign = '+'; alt = "עולה"}
+		if (pecentageChange < 0) {color = '#ffffff'; BGColor='#cc0000'; BG="https://img6.globes.co.il/images/site2/mddim/bg_105x15_Red.gif";  src = 'changedown2'; ch = '&#9660;'; sign = '-'; alt = "יורד"}
+		var td = document.getElementById('td.' + instrument.td)
+
+		if (td != null) {
+		    td.innerHTML = '<p class="' + ((pecentageChange > 0) ? 'green' : ((pecentageChange == 0) ? 'gray' : 'red')) + '" onclick="clicked(event,' + instrument.serial + ');">' + instrument.name + '</p>'
+                    + '<div class="p_data bg' + ((pecentageChange > 0) ? 'green' : ((pecentageChange == 0) ? 'silver' : 'red')) + '" onclick="clicked(event,' + instrument.serial + ');">'
+					+ ' <div class="p_price">' + formated(instrument, data[1].replace(/(\.\d)0+$/, "$1").replace(/(\.\d\d*[1-9])0*$/, "$1")) + '</div>'
+					+ ' <div class="p_change">' + sign + (instrument.id == 'tnx' ? data[2].replace(/(\d{1})0*$/, "$1") : data[2] + '%').replace(/^\s*-/, '') + '</div>'
+					+ '&nbsp;</div>';
+		}
+	}
+	function in_list(x,l) {for(var i in l) {if (x == l[i]) {return i}} return -1}
+	function bin_list(x,l) {return in_list(x,l) > -1}
+	function formated(instrument,value) {
+		var a = value.split('.')
+		if (a.length < 2 || !bin_list(instrument.id,['-gold','usd/nis','eur/nis','eur/usd','usd/jpy'])) {return value}
+		return a[0] + '.' + a[1] + '0000'.substring(a[1].length)
+	}
+	function populate(unconditionally,populated,checkpopulated) {
+		for(var i in responseText) {
+			var rti = responseText[i].split(',')
+			if (rti[0].match(/^now:/)) {
+				try {	var a = rti[0].substring(4).replace(/^\s*/,'').split(' ')
+					//document.getElementById("datetime").innerHTML = a[0]+"<br>"+a[1];
+				} catch(ex) {}
+			}
+			for(var j in instruments) {
+				if (rti[0] == instruments[j].id && (instruments[j].in_currentset() || (checkpopulated && !populated[instruments[j].td])) && (unconditionally || instruments[j].source != responseText[i])) {
+					populated[instruments[j].td] = true
+					fill(rti,instruments[j])
+					instruments[j].datetime = rti[3].replace(/^\s*(\d+)\/(\d+)\/(\d+)/,"$3/$2/$1")
+					instruments[j].source = responseText[i]
+					var urli = rti[4].split('.');
+					instruments[j].instrumentid = urli[1];
+					instruments[j].feeder = urli[0];
+					break
+				}
+			}
+		}
+	//	if (!checkpopulated) {populate(unconditionally,populated,true)}
+		//marker(marker_id,"#ffe9d1")
+		//setTimeout('marker(' + (marker_id++) + ',"#ffffff")',4000)
+		markerColor(marker_id,"#eabeab")
+		setTimeout('markerColor(' + (marker_id++) + ',"#ffffff")',2000)
+	}
+	var responseText = []
+	var x = (window.ActiveXObject) ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest()
+	function refresh() {
+		x.abort();
+		setTimeout('refresh()', 1000 + ((60 - new Date().getSeconds()) % 30) * 1000);
+		x.open("GET", "/data/webservices/pas.ashx?set=" + currentset + '&' + (new Date()).getTime(), true);
+		x.onreadystatechange = function () { if (x.readyState == 4 && x.status == 200) { responseText = x.responseText.split('\n'); populate(false, [], false) } }
+		x.send(null);
+	} setTimeout('refresh()',400)
+	function reload(body_width) {
+		if (body_width != document.body.offsetWidth) {
+			location.href = location.href;
+		}
+	}
+	setTimeout('reload(' + document.body.offsetWidth + ')',1000)
+	setTimeout('window.onresize = function() {reload(null)}',1000)
+	changecurrentset('upper');
+    </script><table style="width:100%;height:33px" dir="rtl" cellspacing="0" cellpadding="0" border="0" bordercolor="white"><tbody><tr><td><div id="skelton.div" style="border:0px solid black;background:#fff1e5 "><table id="skelton" style="width:100%" dir="rtl" cellspacing="0" cellpadding="0" border="0"><tbody><tr><td style="width:21px;" id="td_of_btn" align="left"><ul class="p_row_btm"><li><a title="" alt="" id="upper.left" name="control_button" style="cursor:pointer" onmouseover="changecurrentset(&#39;upper&#39;)" class="selected_row">1</a></li><li><a title="" alt="" id="middle.left" name="control_button" style="cursor:pointer" onmouseover="changecurrentset(&#39;middle&#39;)" class="">2</a></li><li><a title="" alt="" id="lower.left" name="control_button" style="cursor:pointer" onmouseover="changecurrentset(&#39;lower&#39;)" class="">3</a></li></ul></td><td><div id="items_div" style="overflow:hidden; width:1337px"><table cellpadding="0" cellspacing="0" border="0" dir="rtl" id="pass_table_items" class="pass_table_items" style="width:1924px;"><tbody><tr><td class="p_items" id="td.0" style="width:143px;"><p class="red" onclick="clicked(event,0);">דולר/שקל</p><div class="p_data bgred" onclick="clicked(event,0);"> <div class="p_price">2.9472</div> <div class="p_change">-0.26%</div>&nbsp;</div></td><td class="p_items" id="td.1" style="width:143px;"><p class="red" onclick="clicked(event,1);">אירו/שקל</p><div class="p_data bgred" onclick="clicked(event,1);"> <div class="p_price">3.4422</div> <div class="p_change">-0.15%</div>&nbsp;</div></td><td class="p_items" id="td.2" style="width:143px;"><p class="red" onclick="clicked(event,2);">אירו/דולר</p><div class="p_data bgred" onclick="clicked(event,2);"> <div class="p_price">1.1684</div> <div class="p_change">-0.07%</div>&nbsp;</div></td><td class="p_items" id="td.3" style="width:143px;"><p class="green" onclick="clicked(event,3);">ת"א 35</p><div class="p_data bggreen" onclick="clicked(event,3);"> <div class="p_price">4523.2</div> <div class="p_change">+0.42%</div>&nbsp;</div></td><td class="p_items" id="td.4" style="width:143px;"><p class="green" onclick="clicked(event,4);">ת"א 125</p><div class="p_data bggreen" onclick="clicked(event,4);"> <div class="p_price">4467.07</div> <div class="p_change">+0.60%</div>&nbsp;</div></td><td class="p_items" id="td.5" style="width:143px;"><p class="red" onclick="clicked(event,5);">נאסד"ק 100</p><div class="p_data bgred" onclick="clicked(event,5);"> <div class="p_price">27651.82</div> <div class="p_change">-0.21%</div>&nbsp;</div></td><td class="p_items" id="td.6" style="width:143px;"><p class="red" onclick="clicked(event,6);">נסד"ק בנקים</p><div class="p_data bgred" onclick="clicked(event,6);"> <div class="p_price">166.06</div> <div class="p_change">-1.74%</div>&nbsp;</div></td><td class="p_items" id="td.7" style="width:143px;"><p class="red" onclick="clicked(event,7);">נסד"ק כללי</p><div class="p_data bgred" onclick="clicked(event,7);"> <div class="p_price">25067.8</div> <div class="p_change">-0.19%</div>&nbsp;</div></td><td class="p_items" id="td.8" style="width:143px;"><p class="red" onclick="clicked(event,8);">SOX</p><div class="p_data bgred" onclick="clicked(event,8);"> <div class="p_price">10534.66</div> <div class="p_change">-0.57%</div>&nbsp;</div></td><td class="p_items" id="td.9" style="width:143px;"><p class="gray" onclick="clicked(event,9);">Apple</p><div class="p_data bgsilver" onclick="clicked(event,9);"> <div class="p_price">280.14</div> <div class="p_change">0.00%</div>&nbsp;</div></td><td class="p_items" id="td.10" style="width:143px;"><p class="gray" onclick="clicked(event,10);">Google</p><div class="p_data bgsilver" onclick="clicked(event,10);"> <div class="p_price">383.22</div> <div class="p_change">0.00%</div>&nbsp;</div></td><td></td><td></td></tr></tbody></table></div></td></tr></tbody></table></div></td></tr></tbody></table>
+	
+
+</body></html>

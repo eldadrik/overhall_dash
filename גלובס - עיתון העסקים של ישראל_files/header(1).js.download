@@ -1,0 +1,520 @@
+﻿
+if (location.href.match(/alerts.aspx/i) || location.href.match(/managealerts.aspx/i)) { $("#feed2").addClass("active"); }
+else{
+    if (location.href.match(/news\/home.aspx\?fid=10041/i)) { $("#list").addClass("active"); }
+    else {
+         if (location.href.match(/news\/home.aspx\?fid=11381/i)) { $("#readingHistory").addClass("active"); }
+        else {
+             if (location.href.match(/myNewsletters.aspx/i)) { $("#newsletter").addClass("active"); }
+             else if (location.href.match(/aboutMyGlobes.aspx/i)) { $("#aboutMyGlobes").addClass("active"); }
+        
+        }
+    }
+}
+            
+             var stickyOffset = $('.sticky').length > 0 ? $('.sticky').offset().top + 40 : 0;
+
+             $(window).scroll(function () {
+                 $("#searchFW").removeClass("showS");
+                 $(".search, .searchIcon").removeClass("addClose");
+                 $(".searchFWWr").removeClass('fixed');
+                 $('.user_name').removeClass('on');
+                 //$('.user_links').hide();
+                 $('.userWrNew').hide();
+                
+
+                 var sticky = $('.sticky'),
+                     scroll = $(window).scrollTop();
+
+                 if (scroll >= stickyOffset+30) sticky.addClass('fixed');
+                 else sticky.removeClass('fixed');
+        
+             });
+
+  
+
+             $(document).ready(function () {
+
+                    if (typeof (user_id) == 'undefined' || user_id == 0) {
+                        $('.userLink').removeClass('connected');
+                    } else {               
+                        $('.userLink').addClass('connected');
+                    }
+
+                     $("form").submit(function () {
+                         var regex = /redmail/i;
+                             if (location.href.match(regex) == null){
+                                 zdSearch('13');
+                             return false;
+                         }                         
+                     });
+
+
+                     $(".menuIcon").click(function () {
+                         openMegaMenu();
+
+                         //$("body").css("pointer-events", "none");
+                         //$("#megaMenu").css("pointer-events", "auto");
+
+                     });
+                     $(".closeMegaMenu").click(function () {
+                         closeMegaMenu();
+                     });
+
+
+                     
+                    // $(window).scroll(function (event) {
+                         //closeMegaMenu();
+              
+                    // });
+
+
+
+                     $(document).mouseup(function (e) {
+
+                         //if (!$(".menuIcon").is(e.target) && $("body").hasClass("menuOpen")) {
+                             //toggleMenu();
+                             //$("body").css("pointer-events", "all");
+                        // }
+
+                        // $(".closeMegaMenu").click(function () {
+                         //    toggleMenu();
+                       //  });
+
+                        // if ($("body").hasClass("menuOpen")) {
+                       //      var container = $("#megaMenu");
+                       //      if (!container.is(e.target) && container.has(e.target).length === 0) {
+                         //        toggleMenu();
+                       //      }
+                       //  }
+                          
+
+                         if (!$(".btnLM").is(e.target) && !$(".btnLM").is(e.target.parentElement)) {
+                             $(".userWrNew").hide();
+                             // $(".user").removeClass("on");
+                         }
+
+                         if (!$(".user_name_fixed").is(e.target) && !$(".user_name_fixed").is(e.target.parentElement)) {
+                            // $(".user_links_fixed").hide();
+                             $(".user").removeClass("onn");
+                         }
+
+                         if (!$(".guestDiv").is(e.target) && !$(".guestDiv").is(e.target.parentElement)) {
+                             //$(".guestLinks").hide();
+                            // $(".guestDiv").removeClass("on");
+                         }
+                         if (!$(".myglobesDiv").is(e.target) && !$(".myglobesDiv").is(e.target.parentElement)) {
+
+                             
+                           //  $(".myglobes_user_links").hide();
+                           //  $(".myglobesDiv").removeClass("on");
+                         }
+
+                         $(".menuRow a").click(function () {
+                             new_event_h('Menu_side', 'Click_on_menu_text_button_' + $(this).html().replace(/'/g, '').replace(/ /g, "-"));                             
+                         });
+                         $(".megaMenuInner a.my-globes, .megaMenuInner a.red-mail").click(function () {
+                             new_event_h('Menu_side', 'Click_on_menu_image_button_' + $(this).attr("class"));
+                         });
+                         $(".myglobesDiv a.my-globes").click(function () {
+                             new_event_h('Menu_top', 'Click_on_menu_image_button_my-globes');
+                         });
+                         $(".main-menu a").click(function () {
+                             new_event_h('Menu_top', 'Click_on_menu_text_button_' + $(this).html().replace(/'/g, '').replace(/ /g, "-"));
+                         });
+                         $(".top-left-header .user.user_name").click(function () {
+                             new_event_h('Menu_top', 'Click_on_menu_text_button_user-name');
+                         });
+
+                     });
+
+
+                     $(".search").click(function () {
+
+                         $(this).toggleClass("addClose");
+                        $("#searchFW").toggleClass("showS");
+
+                         $("#sBtn").removeClass("active");
+                         $("#query_for_site").focus();
+                         $("#article").addClass("z");
+                     });
+
+                     $(".searchIcon").click(function () {
+
+                         $(this).toggleClass("addClose");
+                         $(".searchFWWr").toggleClass("fixed");
+                         $("#searchFW").toggleClass("showS");
+
+                         $("#sBtn").removeClass("active");
+                         $("#query_for_site").focus();
+                         $("#article").addClass("z");
+              
+                     });
+
+                   
+
+                     $(".menuIcon").click(function () {
+                         SetSearchType(1, 0, true);
+                         $('#query_for_site').val('');
+                         $('#searchInput').val('');
+                         new_event_h('Menu', 'Open_Menu');
+                     });
+
+
+                     $("#query_for_site").keyup(function () {
+                         if ($("#query_for_site").val().length == 0)
+                             $("#sBtn").removeClass("active");
+                         else
+                             $("#sBtn").addClass("active");
+
+                         if (flagOpenWidget == false) {
+                             $("#zd_search_md_input_wrapper .zd-auto-complete-content").hide()
+                         } else {
+                             $("#zd_search_md_input_wrapper .zd-auto-complete-content").show()
+                         }
+                     });
+
+                     $("#sBtn").click(function () {
+                         var searchVal = $("#query_for_site").val();
+                         if (searchVal.trim().length == 0) {
+                             return false;
+                         }
+                         if ($("#site_search_selector").val() == "11") {
+                             location.href = "/portal/search.aspx?searchType=exact&searchQuery=" + escape(searchVal) + "&id=7"
+                         } else {
+                             zdSearch('13');
+                         }
+                     });
+
+
+                     //$("#menu span.userWr").html(getLoginString());
+					 //console.log($(".top-left-header")[0])
+                     $(".top-left-header").prepend(getLoginString(false));
+					 //console.log($(".top-left-header")[0])
+                     $(".menuLeft").html(getLoginString(true));
+
+                     $(".user_name").click(function () {
+                        // $(".user_links").toggle();
+                        //  $(this).toggleClass("on");
+                        });
+
+
+                 // new 
+
+                 $(".top-left-header .btnLM").click(function () {
+                     $(".userWrNew").toggle();
+                     //top_btn_purchase
+                    
+                 });
+                 $(".menuLeft .btnLM").click(function () {
+                     $(".userWrNew").toggle();
+
+                 });
+
+                 
+
+
+                     $(".user_name_fixed").click(function () {
+                       //  $(".user_links_fixed").toggle();
+                         $(this).toggleClass("onn");
+                     });
+
+                     $(".guestDiv").click(function () {
+                       //  $(".guestLinks").toggle();
+                         //$(this).toggleClass("on");
+                     });
+                     $(".myglobesDiv").mouseover(function (e) {
+                         // clickables.hide_all()
+                         // clickables.show('GlobesSheli')
+                     })
+                     $(".myglobesDiv").click(function (e) {
+                        console.log(e)
+                        var toggle = true
+                        var t = e.target
+                        while (t) {
+                            console.log(t)
+                            if (typeof(t.id) == 'string' && t.id.match(/myghelp\d+/i)) { toggle = false; break }
+                            t = t.parentNode
+                        }
+                        if (toggle) {
+                           // clickables.hide_all()
+                           //  $(".myglobes_user_links").toggle()
+                        }
+                        //$(this).toggleClass("on");
+                     });
+
+                     $("a.top_btn_purchase").click(function(){
+                         ga('send', 'event', 'Paywall', 'Purchase', 'Clicked to Purchase - Upper Buttom');
+                         new_event_h('Purchase', 'Click_to_purchase_button_personal_zone');
+                     });
+                     $("a.minui").click(function () {
+                         new_event_h('Purchase', 'Click_to_purchase_button_menu');
+                     });
+
+                     $("ul.myglobes_user_links.clickable li a, ul.myglobes_links li a").click(function () {
+                         var innerText = $(this).html()
+                         new_event_h('screen_view', innerText);
+                     });
+                     
+
+
+                     if (window.innerWidth < 1200) {
+                         var id = $('.mainHeader').attr('id');
+                         if (id == 'article' || id == 'mador') {
+                             $(".userReadList, .userTik").html("");               
+                         }
+                     }
+
+                     if ($("#iframeBar").length == 0) {
+                        $("#megaMenu").addClass("nopass");
+                    }
+
+                 });
+
+                 $(window).resize(function () {
+                     if (window.innerWidth < 1200) {
+                         var id = $('.mainHeader').attr('id');
+                         if (id == 'article' || id == 'mador') {
+                             $(".userReadList, .userTik").html("");
+                         }
+
+                     } else {
+                         $(".userTik").html("תיק אישי");
+                         $(".userReadList").html("רשימת קריאה");
+                     }
+                 });
+
+                 function openMegaMenu() {
+                 $("#megaMenu").addClass("openMenu")
+                 //$(".menuIcon").toggleClass("openM");
+                 $("body").addClass("menuOpen");
+                 //$(".userWr").toggleClass("add");
+                 //$("#menu .s").toggle();
+                 //$("#article").toggleClass("z");
+                 //$("#searchFW").hide();
+             }
+        
+                 function closeMegaMenu() {
+                     $("#megaMenu").removeClass("openMenu")
+                     $("body").removeClass("menuOpen");
+                 }
+
+
+             function guestAB() {
+                 //var x = Math.floor(Math.random() * 10) + 1;
+                 //var guestHtml = "";
+                 //if (x > 5) {
+                 //    guestHtml = "<a class=\"connect\" href=\"javascript:connector.signin();\"  id='Login_connect_Span'>התחברות</a>";
+                 //} else {
+                 guestHtml = "<div class='guestDiv btnLM'><span>" + (typeof (user_name) == "string" ? user_name : "אורח") + "</span></div>"
+                     + '<div class=userWrNew style="display:none">'
+                     + '<ul class="myglobes_user_links clickable">'
+                     + '<li title=""  class="HeaderUserFeed"><a href="/news/personal_zone/Alerts.aspx">נושאים שמעניינים אותי</a></li>'
+                     + '<li title=""  class="HeaderUserArticleList"><a href="/news/home.aspx?fid=10041">כתבות ששמרתי</a></li>'
+                     + '<li title=""  class="HeaderUserNewsLetter"><a href="/news/personal_zone/myNewsletters.aspx">הניוזלטרים שלי</a></li>'
+                     + '<li title=""  class="HeaderUserHistory"><a href="/news/home.aspx?fid=11381">ספריית הכתבות שקראתי</a></li>'
+                     + '<li title=""  class="HeaderUserPortfolio"><a href="/portal/portfolio.aspx">תיק ההשקעות שלי</a></li>'
+                     + '</ul>'
+                     + '<ul class="guestLinks">'
+                                + '<li title="" class="HeaderUserLogin"><a href=\"javascript:connector.signin();\">התחברות</a></li>'
+                                + '<li title="" class="HeaderUserRegister"><a href=\"javascript:connector.register_and_signin();\">יצירת חשבון</a></li>'
+                                //+ '<li title="" class="HeaderUserSubscribe"><a href="/news/m/purchase/tz.aspx">הפעלת מינוי דיגיטל</a></li>'
+                     + '<li title="" class="HeaderUserNewsLetter"><a href="/news/client_service/clients_service.aspx">מרכז העזרה</a></li>'
+                     + '<li title=""  class="HeaderUserAbout"><a href="/news/personal_zone/aboutmyglobes.aspx">אודות</a></li>'
+                     + '</ul>' 
+                     + '</div>'
+                 
+                 return guestHtml;
+             }
+
+
+             function getLoginString(is_fixed) {
+                 var suscribe = (!user_properties.paywall) ? '<li title="" class="HeaderUserSubscribe  separator"><a href="/news/m/purchase/tz.aspx">הפעלת מינוי דיגיטלי</a></li>' : "";
+                 var myGlobes = my_globes();
+                 if (typeof (globesPWTester) == "undefined") globesPWTester = false;
+                 var ClickToPaywall = (!globesPWTester) ? "" : "<a href='/news/m/purchase/' class='top_btn_purchase'>לרכישת מינוי</a>"
+                 if (typeof user_id != 'undefined' && user_id > 0) {
+                     var t = typeof (user_name) == 'string' && user_name.match(/[a-zא-ת]{2}/i) ? user_name : login_id
+                     if (t.indexOf('@') > 0) { t = t.split('@')[0] }
+                     if (t.length > 17) { t = t.substr(0, 17) + "..." }
+                     var classSeffix = is_fixed ? "_fixed" : "";
+                     var menu = '<div class="btnLM user user_name' + classSeffix + '"  title="אזור אישי"><span>' + t + '</span></div>'
+                         + '<div class=userWrNew style="display:none">'
+                         + '<ul class="myglobes_user_links clickable">'
+                         + '<li title=""  class="HeaderUserFeed"><a href="/news/personal_zone/Alerts.aspx">נושאים שמעניינים אותי</a></li>'
+                         + '<li title=""  class="HeaderUserArticleList"><a href="/news/home.aspx?fid=10041">כתבות ששמרתי</a></li>'
+                         + '<li title=""  class="HeaderUserNewsLetter"><a href="/news/personal_zone/myNewsletters.aspx">הניוזלטרים שלי</a></li>'
+                         + '<li title=""  class="HeaderUserHistory"><a href="/news/home.aspx?fid=11381">ספריית הכתבות שקראתי</a></li>'
+                         + '<li title=""  class="HeaderUserPortfolio"><a href="/portal/portfolio.aspx">תיק ההשקעות שלי</a></li>'
+                         + '<li title=""  class="HeaderUserAbout"><a href="/news/personal_zone/aboutmyglobes.aspx">אודות</a></li>'
+                         + '</ul>'
+                            + '<ul class="user_links' + classSeffix +'">'                                                                               
+                                        + show_user_product()                                        
+                                        + '<li title="" class="HeaderUserUpdate separator"><a href="/news/personal_zone/ManageAccount.aspx">הגדרות חשבון</a></li>'
+                                        + '<li title="" class="HeaderUserService"><a href="/news/client_service/clients_service.aspx">מרכז העזרה</a></li>'
+                                        + "<li title='' class='HeaderUserDisconnect'><a onclick=\"try{localStorage.removeItem('glsup')}catch(ex){}\" href='/pay/rlogin.asp?disconnect'>התנתקות</a></li>"
+                         + suscribe     
+                         + '</ul>'
+                         + '</div>'
+
+                     
+                     if (!user_properties.paywall) { menu += myGlobes + ClickToPaywall; }
+                     else {                         menu += myGlobes;                     }
+
+                     return menu;
+                 }
+                 return guestAB() + myGlobes + ClickToPaywall;
+
+             }
+             
+
+
+
+function my_globes() {
+    var myglobesDivClicked_version = (new Date()).getTime()
+    var r = ['<div class="myglobesDiv">'
+        + '<span class="my-globes btnLM" >&nbsp;</span>'
+                 //  was myglobes_user_links clickable
+            ]
+    if (
+        (location.pathname.match(/article/) || location.pathame == '/' || (typeof (MasterHomePage) == 'boolean' && MasterHomePage == true))
+        //&& clickables.is_active('GlobesSheli') // window.localStorage.getItem('myglobesDivClicked') != myglobesDivClicked_version
+    ) {
+        r.push('<style>.myglobesDiv.on #myGHelp {display:none !important} .myglobes_links li a:hover {color:#000 !important} .myglobes_links li {list-style: none; padding:0 !important;}.myglobes_links li a { font-size:18px!important; text-align:right;  background: #fff9f4; padding: 0 30px 16px 0;} .myglobes_links li:hover { background: #fff9f4; }.myglobes_links {z-index:9; margin:14px 0 4px 0; }.myglobesDiv {    height: 80px;top: 23px;} .myglobesDiv:hover #myGHelp {display:block}	#myGHelp { border: solid 2px #951740; position:absolute;background: #fff9f4;  top: 55px;left: 0;   z-index: 11111111111;padding: 30px 40px;	width:426px; }  	#myGHelp h2 { display:inline;font-size: 35px;  font-weight: normal;  font-family: almoniTzar500;line-height: 40px;} 	#myGHelp img {      position: relative;            top: -8px;   vertical-align: bottom;      margin-right: 3px; width:180px;} 	#myGHelp p {text-align: right; color: #1a1a1a; font-size:18px;    font-family: almoniDL400;} 	#myGHelp .thnx {background-color: #97133f;      color: #fff;    font-family: almoniDL400;  line-height:18px;  font-size: 18px;    padding: 12px 30px;    text-decoration: none; margin:0 auto; display:block;text-align: center;}#myGHelp a:hover {color:#fff}	#myGHelp:after {content: "";position: absolute; top: -15px !important; left: 28px; width: 0; height: 0;   border-left: 15px solid #0000;  border-right: 15px solid #0000;    border-bottom: 15px solid #fff9f4; } #myGHelp:before {content: "";position: absolute;top: -18px;left: 26px; width: 0; height: 0; border-left: 17px solid #0000;    border-right: 17px solid #0000;    border-bottom: 17px solid #97133f; } </style>'
+            + '<div id="myGHelp" hidden >'
+                + '<h2> כלי חדש לניהול זמן: </h2 >'
+                + '<img src="https://res.cloudinary.com/globes/image/upload/v1768307867/Digital/icons/2026/myGlobesSmall_mfkmfg.svg" >'
+                + '<br/><h2> מה שמעניין אותך. מתי שמענייין אותך</h2 >'
+                + '<ul class="myglobes_links" >'
+                    + '<li title= "" class="HeaderUserFeed" > <a href="/news/personal_zone/Alerts.aspx">התראות בנושאים שמעניינים אותי</a></li>'
+                    + '<li title= "" class="HeaderUserArticleList" > <a href="/news/home.aspx?fid=10041">הכתבות ששמרתי</a></li>'
+                    + '<li title= "" class="HeaderUserNewsLetter" > <a href="/news/personal_zone/myNewsletters.aspx">הניוזלטרים שלי</a></li>'
+                    + '<li title= "" class="HeaderUserHistory" > <a href="/news/home.aspx?fid=11381">ספריית הכתבות שקראתי</a></li>'
+                    + '<li title= "" class="HeaderUserPortfolio" > <a href="/portal/portfolio.aspx">תיק ההשקעות שלי</a></li>'
+                + '</ul>'
+            + '<a class="thnx" > מעולה, תודה </a>'
+            + '</div >'
+        )
+    }
+    r.push('<style>#myGHelp2 { border: solid 2px #951740; position:absolute;background: #fff9f4;  top: 60px;left: 0;   z-index: 111;padding: 44px;	width:370px; }  	#myGHelp2 h2 { display:inline;font-size: 37px;  font-weight: normal;  font-family: almoniTzar500;line-height: 1; margin-bottom: 24px; } 	#myGHelp2 img {     vertical-align: bottom;      margin-right: 3px; } .img5 {background: url("https://res.cloudinary.com/globes/image/upload/v1768307914/Digital/icons/2026/icn_saved_articles_uqyatc.svg");  width: 200px;    height: 200px;    margin: 0 auto;}	#myGHelp2 p {text-align: right; color: #1a1a1a; font-size:18px;    font-family: almoniDL400;} .secTxt {    width: 280px; margin: 10px auto;} .secTxt img {    vertical-align: middle !important;                 border-radius: 4px; box-shadow: 0 0 4px 0 rgba(0,0,0,0.23); border: solid 1px #d4d4d4;    background: #fff;    padding: 4px 6px;    margin: 0 3px;}	#myGHelp2 .thnx {background-color: #97133f;      color: #fff;    font-family: almoniDL400;  line-height:18px;  font-size: 18px;    padding: 12px 30px;    text-decoration: none; margin:0 auto; display:block;text-align: center;}#myGHelp2 a:hover {color:#fff}	#myGHelp2:after {content: "";position: absolute; top: -15px !important; left: 28px; width: 0; height: 0;   border-left: 15px solid #0000;  border-right: 15px solid #0000;    border-bottom: 15px solid #fff9f4; } #myGHelp2:before {content: "";position: absolute;top: -18px;left: 26px; width: 0; height: 0; border-left: 17px solid #0000;    border-right: 17px solid #0000;    border-bottom: 17px solid #97133f; }</style><div id=myGHelp2 hidden><div class="img5"></div><h2>הכתבה נשמרה ב"כתבות ששמרתי"</h2>  <p class="secTxt"> ניתן לגשת לכתבות ששמרת דרך לחיצה על הכפתור          <img src="https://res.cloudinary.com/globes/image/upload/v1768303051/Digital/icons/2026/myGlobesBig_xkcqqw.svg">         בסרגל העליון      <p><a class="thnx" href="/news/home.aspx?fid=10041">לצפייה בכתבות ששמרתי</a></div>'
+        + '<style>#myGHelp4 { border: solid 2px #951740; position:absolute;background: #fff9f4;  top: 60px;left: 0;   z-index: 111;padding: 44px;	width:400px; }  #myGHelp4 .notNow { margin:10px auto 0; text-align:center; color:#000 !important; font-size:16px}	#myGHelp4 h2 { display:inline;font-size: 37px;  font-weight: normal;  font-family: almoniTzar500;line-height: 1; margin-bottom: 24px; } #myGHelp4 .myL {  vertical-align: middle;    margin-right: 5px;                    zoom: 65%;        margin-top: -21px;}	#myGHelp4 .myL2 {     vertical-align: bottom;      margin-right: 3px; } #myGHelp4 .imgG {background: url("https://res.cloudinary.com/globes/image/upload/v1768307777/Digital/icons/2026/icn_followed_subjects_rt33jg.svg");  width: 200px;    height: 200px;    margin: 0 auto;}	#myGHelp4 p {text-align: right; color: #1a1a1a; font-size:18px;    font-family: almoniDL400;} .secTxt4 { margin: 10px auto;} .secTxt4 .myL2 {    vertical-align: middle !important;                 border-radius: 4px; box-shadow: 0 0 4px 0 rgba(0,0,0,0.23); border: solid 1px #d4d4d4;    background: #fff;    padding: 4px 6px;    margin: 0 3px;}	#myGHelp4 .thnx {background-color: #97133f;      color: #fff;    font-family: almoniDL400;  line-height:18px;  font-size: 18px;    padding: 12px 30px;    text-decoration: none; margin:0 auto; display:none;text-align: center;}#myGHelp4 a:hover {color:#fff}	#myGHelp4:after {content: "";position: absolute; top: -15px !important; left: 28px; width: 0; height: 0;   border-left: 15px solid #0000;  border-right: 15px solid #0000;    border-bottom: 15px solid #fff9f4; } #myGHelp4:before {content: "";position: absolute;top: -18px;left: 26px; width: 0; height: 0; border-left: 17px solid #0000;    border-right: 17px solid #0000;    border-bottom: 17px solid #97133f; }</style>'
+        + '<div id=myGHelp4 hidden>'
+        + '<div class="imgG" ></div>'
+        + '<h2> הנושא נוסף ל"נושאים שמעניינים אותי"</h2>'
+        + '<p class="secTxt4" >'
+        + ' לצפייה בכתבות וניהול הנושאים, יש ללחוץ על כפתור '
+        + '<img class="myL2" src= "https://res.cloudinary.com/globes/image/upload/v1768303051/Digital/icons/2026/myGlobesBig_xkcqqw.svg" >'
+        + ' בסרגל העליון '
+        + '</p>'
+        + '<p><a class="thnx" href=>לכתבות בנושאים שמעניינים אותי</a></p > <p>'
+        + '<a class="notNow" href= "" > לא עכשיו, תודה</a >'
+        + '</div>'
+        + '</div>'
+        )
+    return r.join('')
+}
+
+function show_user_product() {
+	var premium_products = [
+		{ ids: [8,35], name: 'עיתון דיגיטלי', link: '/news/home.aspx?fid=2701' },
+		{ ids: [12], name: 'Stocks Online', link: '/portal/instrument.aspx?instrumentid=979&mode=composition&rt=1' },
+		{ ids: [13], name: 'Options Online', link: '/portal/optionlist/?TypeID=15&tabid=3' },
+		{ ids: [14], name: 'Tel-Aviv Online', link: '/portal/instrument.aspx?instrumentid=979&mode=composition&rt=1' }
+	]
+	try {
+		console.log('show_user_product',premium_products)
+		var premiumProductIds = user_properties.ids.split('-')
+		var productsHTML = []
+		for (var i = 0; i < premiumProductIds.length; i++) {
+			var productId = premiumProductIds[i];
+			for (var p = 0; p < premium_products.length; p++) {
+				for(var j=0; j < premium_products[p].ids.length ;j++) {
+					if (premium_products[p].ids[j] == productId) {
+						productsHTML.push('<li class="HeaderUserProduct' + productId + '"><a ' + " onmousedown=\"_gaq.push(['_trackEvent', 'תפריט ראשי', 'ניווט', 'המוצרים שלי - " + premium_products[p].name + "', undefined, false]);\"" + ' href="' + premium_products[p].link + '#fromelement=toplinks">' + premium_products[p].name + '</a></li>')
+						premium_products[p].ids = [] // disable duplication
+					}
+				}
+			}
+		}
+		return productsHTML.join('')
+	} catch(ex) {console.log(ex); return ''}
+}
+
+function new_event_h(eventName, userAction) {
+    dataLayer.push({ 'event': eventName, 'eventInfo': { 'action_screen': location.pathname, 'user_action': userAction } });
+}
+
+
+/*
+
+var ll = console.log.bind(this);
+var menuH = 0;
+var iHiddenMenuItemsCount = 0;
+var headerClass = "";
+
+$(function () {
+    var mm = $("#menu");
+    menuH = $("#menu .main-menu").height();
+    buildMainMenu(menuH);
+
+    $(window).scroll(function () {
+
+        if (headerClass != mm.get(0).className) {
+            headerClass = mm.get(0).className;
+            buildMainMenu(menuH);
+        }
+        
+    });
+
+    $(window).resize(function () {
+        buildMainMenu(menuH);
+    });
+
+});
+
+function buildMainMenu(menuH)
+{
+    var arrHiddenItems = [];
+
+    $("#menu .main-menu>a").each(function (i, o) {
+        var pp = $(o).position().top;
+
+        if (pp > menuH) {
+
+            if ($.inArray($(o), arrHiddenItems) == -1) {
+                arrHiddenItems.push($(o));
+            }
+        }
+        else {
+            if ($.inArray($(o), arrHiddenItems) !== -1) {
+
+                arrHiddenItems = $.grep(y, function (value) {
+                    return value != $(o);
+                });
+            }
+        }
+    });
+    
+    if (iHiddenMenuItemsCount != arrHiddenItems.length) {
+        iHiddenMenuItemsCount = arrHiddenItems.length;
+
+        rebuildDDLMenu(arrHiddenItems);
+    }
+}
+
+function rebuildDDLMenu(arr) {
+
+    var p = $("#menu .moreItems");
+    p.empty();
+
+    $(arr).each(function (i, o)
+    {
+        $('<a>', {
+            text: $(o).text(),
+            href: $(o).attr("href"),
+            class: $(o).attr("class"),
+            nodeid: $(o).attr("nodeid")
+        }).appendTo(p);
+    });
+}
+*/

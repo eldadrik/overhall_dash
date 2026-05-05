@@ -1,0 +1,474 @@
+﻿if (typeof (anonymouse_from_mail) == "undefined") anonymouse_from_mail = false;
+if (typeof (abtest_value) == "undefined") abtest_value = "";
+if (typeof (globesPWTester) == "undefined") globesPWTester = false;
+if (typeof (MasterHomePage) == "undefined") MasterHomePage = false;
+if (typeof (sContentGroup2) == "undefined") sContentGroup2 = "";
+if (typeof (IsArticleOpen) == "undefined") IsArticleOpen = false;
+if (typeof (paywall_counter) == "undefined") paywall_counter = 0;
+if (typeof (IsPaywall) == "undefined") IsPaywall = "";
+if (typeof (IsProductionServer) == "undefined") IsProductionServer = true;
+if (typeof (user_type_piano) == "undefined") user_type_piano = "anon";
+if (typeof (bCOMMERCIAL_PROJECT) == "undefined") bCOMMERCIAL_PROJECT = sFolderDynasty.indexOf('-4049-') > -1 || sFolderDynasty.indexOf('-921-') > -1;
+
+
+var sFolderDynasty = '';
+var anonCookieName = "glb_anon_block";
+
+if (typeof (FolderDynasty) == 'string') {
+    sFolderDynasty = "-" + FolderDynasty + "-";
+}
+
+function HidefirstText(isAnon)
+{
+    //if (isAnon || user_id % 2 != 0)
+    return;
+    if (isAnon)
+    {
+        $('.fade').css('display', 'none');
+        $('.project_subTitle').css('display', 'none');
+        $('#pianoBlock').addClass("hideB");
+        $('#coteret_SubCoteretText').css('display', 'none');
+        $('.artBigImage').css('display', 'none');
+        $('.articleB').css('display', 'none');
+        $('article h2, .mainArticle').css('display', 'none');
+        $('.mainSecArt').css('display', 'none');
+    }    
+}
+
+function BlockedByGlobes(obj)
+{
+    return;// disable for now
+    if (is_unsubscriber) return;
+
+    var head = document.getElementsByTagName('head')[0], link = document.createElement('link');
+    link.type = 'text/css'; link.rel = 'stylesheet';
+    link.href = "/news/Cache/piano/alt_piano.css?v=2";
+    head.appendChild(link);
+    var str = "<section class='bannerWR'><div class='banner'><h1 class='banner__title pc'>רוצים להמשיך לקרוא?</h1><p class='banner__description'> </p><p class='banner__description'>לקריאת כתבות נוספות רכשו מינוי  <strong>החל מ-5.90 ₪ בחודש הראשון</strong><br> ותיהנו מגישה מלאה ובלתי מוגבלת לאתר</p><p></p><a target='_top' href='https://www.globes.co.il/news/m/purchase/?backto=from-session-stogare' external-event='blocked-purchase' class='banner__btn red'>רכישת מינוי</a><p></p><p> כבר מנויים? <a href='javascript:void(0);' external-event='showlogin' class='banner__link red'>התחברו</a></p><div class='gray'> למה חשוב לשלם על תוכן    <div class='tooltipWr'><span></span> <i></i>  <div class='tooltip'>   <b class='close'></b>     <strong> למה חשוב לשלם על תוכן?</strong>       <p> למילים יש ערך ולעיתונות “חינם” יש מחיר: בפרטיות, בזמן ובקליקבייט. כי כשלא משלמים על המוצר, אתם המוצר.&nbsp;         </p><p>המנוי לגלובס מממן עיתונות מקצועית שמחויבת לאיכות ולקוראים: בדיקת עובדות, זיהוי מגמות ותובנות שמקדמות החלטות ולא הסחות.           </p><p>בגלובס, משלמים על איכות ומקבלים ערך.       </p></div>     </div> </div></div></section> ";
+    obj.innerHTML = str;
+    HidefirstText(false);
+}
+function up_paywall() {
+	if (user_properties == null || typeof(user_properties) != 'object') {return true}
+	return user_properties.paywall == true ? true : false
+}
+function SetPianoMode() {
+    if (up_paywall() || (IsProductionServer && !globesPWTester)) return false;
+
+    if (!bCOMMERCIAL_PROJECT && (MasterHomePage || sContentGroup2 == "Folder" || sContentGroup2 == "Article" || sContentGroup2 == "Clip")
+        && (!sFolderDynasty.match(/-(11326|1630|1502|10107|)-/)))
+        //&& (sFolderDynasty == "-2-" || sFolderDynasty.match(/-(585|594|607|821|829|845|1225|2007|3220|3266|3312|3314|4385|3587|9010|9758|9917|10559)-/)))
+    {
+        return true;
+    }
+    return false;
+}
+
+if (typeof (bPianoActivePage) == "undefined") {
+    var bPianoActivePage = SetPianoMode();
+}
+
+if (IsPaywall != "True") IsArticleOpen = true;
+
+function pianoOpenArticle(str) { // called from piano
+    console.log("paywall = {'open by piano!!':'','user_id':'" + user_id + "',str=" + str + "}");
+    if (!IsArticleOpen) {        IsArticleOpen = true;        get_all_article(did);    }    
+}
+
+
+if (typeof (hj) != "undefined" && user_type == "paywall") {
+    hj('trigger', 'digital_subscriber');
+}
+
+if (bPianoActivePage) {
+    
+    if (!up_paywall()) {
+        if (!bCOMMERCIAL_PROJECT && (location.pathname.match(/article\.aspx/i) || MasterHomePage || (sContentGroup2 == "Folder" && !is_mobile))) {                
+
+            if (user_properties.accepts_cookies) {
+                if (!is_mobile)
+                {
+                    var pixelBottom = sFolderDynasty.match(/-(8764)-/) ? "0" : "33";
+                    document.write("<style>#pianoBottomBanner { position: fixed; width: 100%; bottom: 0; right: 0; margin-bottom: " + pixelBottom + "px; z-index:11111111; }</style>");
+                    document.write("<div id='pianoBottomBanner'></div>");
+                }
+                else
+                {
+                    if (location.pathname.match(/article\.aspx/i))
+                    {
+                        document.write("<style>#pianoBottomBanner { position: fixed; width: 100%; bottom: -303px; right: 0; margin-bottom: 53px; z-index:1111111; transition: all 1s ease-out; }</style>");
+                    }
+                    else
+                    {
+                        document.write("<style>#pianoBottomBanner, #pianoBottomBannerHPPP { position: fixed; width: 100%; bottom: -303px; right: 0; margin-bottom: 0px; z-index:1111111; transition: all 1s ease-out; }</style>");
+                    }
+                    if (MasterHomePage)
+                    {
+                        document.write("<div id='pianoBottomBannerHPPP'></div>");
+                    }
+                    else
+                    {
+                        document.write("<div id='pianoBottomBanner'></div>");
+                    }
+
+                    var showPiano = false;
+                    if (!showPiano) {
+                        $(window).scroll(function () {
+                            if (!showPiano && $(window).scrollTop() >= 250) {
+                                $('#pianoBottomBanner').css('bottom', '0');
+                                showPiano = true;
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+        if (location.href.match(/article\.aspx/i)) { sessionStorage.setItem('backToUrl', location.href) }
+
+        if (user_id > 0) {                       
+            console.log("paywall = {'paywall_counter':'" + paywall_counter + "','user_id':'" + user_id + "'}");
+        }
+        else {
+            console.log("paywall = {'subscribe':'guest!!!!','user_id':'" + user_id + "'}");
+        }
+    }
+    else {
+        console.log("paywall = {'subscribe':'subscribe!!!!','user_id':'" + user_id + "'}");        
+        
+        if (location.pathname.match(/article\.aspx/i) && !IsArticleOpen) { IsArticleOpen = true; get_all_article(did); }
+    }
+
+    // p i a n o
+
+    var glbUserID = user_id
+    var glbUserEmail = login_id
+    var dtEpoch = Math.round(new Date().getTime() / 1000);
+
+    // piano
+    var pianoKeyId = true || IsProductionServer ? "//experience.tinypass.com/xbuilder/experience/load?aid=jy008Nm8kb" : "//sandbox.tinypass.com/xbuilder/experience/load?aid=8kXqHRlHh2";
+
+    (function (src) {
+        var a = document.createElement("script");
+        a.type = "text/javascript";
+        a.async = true;
+        a.src = src;
+        var b = document.getElementsByTagName("script")[0];
+        b.parentNode.insertBefore(a, b)
+    })(pianoKeyId);
+
+
+
+    tp = window["tp"] || [];
+
+    tp.push(["addHandler", "customEvent", function (event, b, c, d) {
+        console.log(event.eventName)        
+        var paramsData = event.params.data;
+        var jsonData = JSON.parse(event.params.data);
+        console.log('event param: b=', b, '  c=', jsonData.c, '  d=', jsonData.d, 'event.params.data: ', event.params.data)
+        
+        
+        //if(jsonData != null) {
+        //    if(localStorage.getItem("pianoEventData") != null)
+        //        localStorage.removeItem("pianoEventData");
+        //    localStorage.setItem("localStorage", paramsData);
+        //}
+
+        switch (event.eventName) {
+            case 'globes-revalidate':                
+                connector.showValidationWithAlert()
+                break;
+            case 'globes-reload':
+                top.location.reload();
+                //document.location.href = document.location.href;
+                break;
+            case 'globes-login':
+                pbc_event('Paywall', 'Registration', 'Clicked to Signin General Signin')
+                new_event('Register', 'registered', null, null, null, null, 'click_on_already_digital_subscriber', null, null);
+                
+                if (true || !is_mobile) {
+                    connector.signin({'gaParameter3Prefix' : 'Paywall', 'gaParameter4Suffix' : 'General Signup'});
+                }
+                else {
+                    document.location.href = "/news/m/login/login.aspx?from=Paywall&backTo=" + encodeURI(document.location.href);
+                }                
+                break;
+            case 'globes-register':
+                pbc_event('Paywall', 'Registration', 'Clicked to Signup - General Signup')
+                new_event('Register', 'guest', null, null, sContentGroup1, null, 'click_to_register_general_piano_banner', null, null);
+                if (true || !is_mobile)
+                {
+                    connector.register_and_signin({"gaParameter3Prefix" : "Paywall", "gaParameter4Suffix" : "General Signup"});
+                }
+                else
+                {
+                    document.location.href = "/news/m/login/login.aspx?from=Paywall&action=register&gaparam=general&backTo=" + encodeURI(document.location.href);
+                }
+                break;
+            case 'blocked-register':
+                pbc_event('Paywall', 'Registration', 'Clicked to Signup - blocked article')
+                new_event('Register', 'guest', null, null, null, null, 'click_to_register_after_blocked', null, null);
+
+                setCookie(anonCookieName, "1:" + did, 1000);
+                
+                if (true || !is_mobile)
+                {
+                    connector.register_and_signin({ "gaParameter3Prefix": 'Paywall', "gaParameter4Suffix": "blocked article", "pianoParamC": jsonData.c, "pianoParamD": jsonData.d});
+                }
+                else
+                {
+                    document.location.href = "/news/m/login/login.aspx?from=Paywall&action=register&gaparam=blocked&pianoParamC=" + jsonData.c + "&pianoParamD=" + jsonData.d +"&backTo=" + encodeURI(document.location.href);
+                }
+                break;
+            case 'print-registered':
+                pbc_event('Paywall', 'Registration', 'buttons - יש לי מינוי למהדורה המודפסת')                
+                new_event('Register', user_id > 0 ? 'registred' : 'guest', null, null, null, null, 'click_on_already_print_subscriber', null, null);
+                break;
+
+            case 'globes-general-signup':
+                pbc_event('Paywall', 'Registration', 'Clicked to Signup - General Signup')
+                break;
+            case 'globes-general-purchase':
+                pbc_event('Paywall', 'Registration', 'Clicked to Purchase - General Purchase')
+                break;
+            case 'blocked-purchase':
+                pbc_event('Paywall', 'Purchase', 'Clicked to Purchase - Blocked Article')
+                new_event('Purchase', null, null, null, sContentGroup1, null, 'Click_to_purchase_button_blocked_' + user_id == 0 ? 'free_article' : 'registered_article');
+
+                setCookie(anonCookieName, "3:" + did, 1000);     
+
+                break;
+            case 'globes-purchase':
+                pbc_event('Paywall', 'Registration', 'buttons - אני רוצה לרכוש מינוי')
+                new_event('Purchase', null, null, null, sContentGroup1, null, 'Click_to_purchase_button_home_screen_banner');
+                break;
+            case 'why-globes':
+                pbc_event('Paywall', 'Registration', 'buttons - למה גלובס')
+                break;
+            case 'showlogin':
+                pbc_event('Paywall', 'Registration', 'buttons - כבר נרשמתי');
+
+                setCookie(anonCookieName, "2:" + did, 1000);
+
+                if (true || !is_mobile) {
+                    connector.signin({"gaParameter3Prefix" : 'Paywall'});
+                }
+                else {
+                    document.location.href = "/news/m/login/login.aspx?from=Paywall&backTo=" + encodeURI(document.location.href);
+                }                
+                break;                
+            case 'purchase-monthly':
+                pbc_event('Paywall', 'Purchase', 'Choose packages - Monthly')
+                break;
+            case 'purchase-yearly':
+                pbc_event('Paywall', 'Purchase', 'Choose packages - digital')
+                break;
+            case 'purchase-weekend':
+                pbc_event('Paywall', 'Purchase', 'Choose packages - weekend')
+                break;
+            case 'realTime_purchase_60':
+                new_event('Real_time_finance', user_id > 0 ? 'registred' : 'guest', null, null, null, null, 'Click_on_purchase_real_time_package_60');
+                break;
+            case 'realTime_purchase_153':
+                new_event('Real_time_finance', user_id > 0 ? 'registred' : 'guest', null, null, null, null, 'Click_on_purchase_real_time_package_153');
+                break;
+            case 'realTime_purchase_154':
+                new_event('Real_time_finance', 'digital', null, null, null, null, 'Click_on_purchase_real_time_package_154');
+                break;
+        }
+    }]);
+
+
+    if (location.pathname.match(/article\.aspx/i)) {
+        try {
+            tp.push(["setContentCreated", document.querySelector("meta[property='article:published_time']").getAttribute("content")]);
+        }
+        catch (ex) { }
+
+        tp.push(["setContentAuthor", sub_sf_author]);
+        tp.push(["setTags", sContentKeywords]);
+        tp.push(["setCustomParam", "type", "premium", "content"])
+    }
+    tp.push(["setContentSection", sContentGroup1]);
+    tp.push(["setContentIsNative", true]);
+    tp.push(["setZone", "Web"]);
+    tp.push(["setCustomVariable", "userState", user_type_piano]); //_acct_type == 'paid' && user_properties.paywall == false ? 'lgdin' : _acct_type
+    tp.push(["setCustomVariable", "COMMERCIAL_PROJECT", bCOMMERCIAL_PROJECT]);
+    tp.push(["setCustomVariable", "paywall_counter", paywall_counter]);
+    tp.push(["setCustomVariable", "IsPaywallTester", globesPWTester]);
+    tp.push(["setCustomVariable", "IsMobile", is_mobile]);
+    tp.push(["setCustomVariable", "anonymouse_from_mail", anonymouse_from_mail]); // need to be 'yes'
+    tp.push(["setCustomVariable", "abtest_value", abtest_value]);
+    tp.push(["setCustomVariable", "globes_section", sContentGroup1]);
+    tp.push(["setCustomVariable", "is_unsubscriber", is_unsubscriber]);
+    // user_profile - blocked_by_analist
+    tp.push(["setCustomVariable", "user_profile", user_properties.profiles]);
+    tp.push(["setCustomVariable", "user_installed_app", (typeof (user_properties.installed_app) == "undefined") ? false : user_properties.installed_app]);
+
+    if (glbUserID > 0) {
+        $.get("/news/ashx_handlers/piano.ashx?getuserref=true&IsProductionServer=" + IsProductionServer, function (data) {
+            tp.push(["setUserRef", data]);
+        });
+    }
+    else {
+        tp.push(["setUserRef", ""]);
+    }
+
+}
+
+
+document.cookie = "__adblocker=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+var setNptTechAdblockerCookie = function (adblocker) {
+    var d = new Date();
+    d.setTime(d.getTime() + 60 * 5 * 1000);
+    document.cookie = "__adblocker=" + (adblocker ? "true" : "false") + "; expires=" + d.toUTCString() + "; path=/";
+};
+var script = document.createElement("script");
+script.setAttribute("async", true);
+script.setAttribute("src", "//www.npttech.com/advertising.js");
+script.setAttribute("onerror", "setNptTechAdblockerCookie(true);");
+document.getElementsByTagName("head")[0].appendChild(script);
+
+function guestArticlesCounter(storageName) {
+    var dt = new Date()
+    var articlesCounter = typeof (localStorage.getItem(storageName)) == 'string' ? localStorage.getItem(storageName) : '0-0-0'
+    var a = articlesCounter.split('-')
+    if (a.length != 3 || a[0] != dt.getFullYear() || a[1] != dt.getMonth() || isNaN(parseInt(a[2]))) {
+        localStorage.setItem(storageName, dt.getFullYear() + '-' + dt.getMonth() + '-1');
+        return 1
+    }
+    var a2 = parseInt(a[2])
+    localStorage.setItem(storageName, dt.getFullYear() + '-' + dt.getMonth() + '-' + (a2 + 1));
+    return a2 + 1
+}
+
+if (location.pathname.match(/article\.aspx/i)) {
+    if (bPianoActivePage)
+    {
+        var kindOfContent = FolderDynasty.indexOf('-4049-') > 0 ? 'paid' : 'organic';
+        var sContent = document.getElementById("pianoBlock");
+        /**/
+        if (user_id > 0 && paywall_counter >= 7 && sContent) {
+            BlockedByGlobes(sContent);
+            
+            //get_all_article(did);
+                $.post("/news/ashx_handlers/userStat/AddUserBlockedArticle.ashx", { "did": did, "blockedByGlobes": true }, function (res) { console.log(res) });                                
+        }
+        /**/
+        window.setTimeout(function () {
+            var guestCounter = guestArticlesCounter('blockedArticlesCounter')
+            
+            if (sContent && !IsArticleOpen) {
+                if (sContent.innerHTML.length < 10) {
+                    IsArticleOpen = true;
+                    console.log("paywall = piano do not run!!! open by us.");
+                    if (user_id > 0) {
+                        ga('article.send', 'event', "paywall_Log", "piano do not run for register user", paywall_counter);
+                        if (paywall_counter > 6)
+                        {                            
+                            //BlockedByGlobes(sContent);
+                            //$.post("/news/ashx_handlers/userStat/AddUserBlockedArticle.ashx", { "did": did, "blockedByGlobes" : true }, function (res) { console.log(res) });
+                            ga('article.send', 'event', "paywall_Log", "piano do not run for register user blocked by Us!!", paywall_counter);
+                            new_event('Read_article', (is_subscriber ? 'print' : 'digital') + '_subscriber', 'Subscriber_article_' + subscriberCounter , subscriberCounter, sContentGroup1, kindOfContent, 'Read_registered_article - "piano do not run for register user blocked by Us!!', 'Registered_article_' + paywall_counter, typeof word_count != 'undefined' ? word_count : '');
+                        }
+                        else {
+                            get_all_article(did);
+                        }
+                    }
+                    else {
+                        ga('article.send', 'event', "paywall_Log", "piano do not run for anon user", "-");
+                        new_event('Read_article', 'guest', 'Guest_article_' + guestCounter, null, sContentGroup1, kindOfContent, 'Read_free_article - piano do not run for anon user', 'Free_article_' + guestCounter, null);
+                        get_all_article(did);
+                    }                    
+                    
+                } else { // blocked by piano
+                    //show_mid_tabbola_content();
+                   pbc_event('Paywall', user_id > 0 ? 'Purchase' : 'Registration', 'Blocked Article ' + guestCounter , '', { nonInteraction: true }) 
+                   if (user_id > 0 || (typeof unvalidated_user_id != 'undefined' && unvalidated_user_id > 0)) {
+                       $.post("/news/ashx_handlers/userStat/AddUserBlockedArticle.ashx", { "did" : did }, function(res) { console.log(res) });
+                   }
+
+                   if (user_id > 0) {
+                       ga('article.send', 'event', "paywall_Log", "piano blocked article for register user", paywall_counter);
+                       new_event('Read_article','registered', 'Blocked_registered_article_' + paywall_counter, null, sContentGroup1, null, 'Blocked_registered_article', null, null); 
+                       new_event('Registered_blocked', 'registered', 'Blocked_registered_article_' + paywall_counter, paywall_counter, sContentGroup1, kindOfContent, null, null, null); 
+                   }
+                   else {
+                       HidefirstText(true);
+                       if (typeof unvalidated_user_id != 'undefined' && unvalidated_user_id > 0) {
+                            ga('article.send', 'event', "paywall_Log", "piano blocked article for unvalidated user", paywall_counter);
+                       }
+                       ga('article.send', 'event', "paywall_Log", "piano blocked article for anon user", "-");
+                       new_event('Read_article', 'guest', 'Blocked_Guest_article_' + guestCounter, null, sContentGroup1, kindOfContent, 'Blocked_free_article', 'Blocked_free_article_' + guestCounter, null);
+                       new_event('Guest_blocked', 'guest', 'Blocked_Guest_article_' + guestCounter, null, sContentGroup1, kindOfContent, null, 'Blocked_free_article_' + guestCounter, null);
+                   }
+                }
+            } else { // not blocked
+                if (user_id == 0) {
+                    pbc_event('Paywall', 'Registration', 'Free Article ' + guestCounter, '', { nonInteraction: true })
+                    new_event('Read_article', 'guest', 'Guest_article_' + guestCounter, null, sContentGroup1, kindOfContent, 'Read_free_article', 'Free_article_' + guestCounter, null);
+                }
+                if (user_id > 0) {
+                    
+                    if (user_properties.paywall == true) {
+                        var subscriberCounter = guestArticlesCounter('SubscribedArticlesCounter');
+                        pbc_event('Paywall', 'Purchase', 'Subscribed Article ' + subscriberCounter, '', { nonInteraction: true })
+                        new_event('Read_article', (is_subscriber ? 'print' : 'digital') + '_subscriber', 'Subscriber_article_' + subscriberCounter , null, sContentGroup1, kindOfContent, 'Read_registered_article', 'Registered_article_' + paywall_counter, typeof word_count != 'undefined' ? word_count : '');
+                    } else {
+                        pbc_event('Paywall', 'Purchase', 'Registered Article ' + (parseInt(paywall_counter) + 1), '', { nonInteraction: true })
+                        new_event('Read_article', 'registered', 'Registered_article_' + paywall_counter, paywall_counter, sContentGroup1, kindOfContent, 'Read_registered_article', 'Registered_article_' + paywall_counter, typeof word_count != 'undefined' ? word_count : '');
+
+                        $("#pianoBlock .banner a.banner__btn.green").click(function () {
+                            if (paywall_counter < 10) {
+                                try { new_event('Purchase', null, null, null, sContentGroup1, null, null, 'Click_to_purchase_button_counting_banner_' + (10 - parseInt(paywall_counter)), null); } catch (e) { console.log('new_event(Click_to_purchase_button_counting_banner_)') }
+                            }
+
+                        });
+                    }
+                }
+            }
+        }, 3000);
+    }
+    else {
+        var sContent = document.getElementById("pianoBlock");
+        if (sContent) {
+            if (sContent.innerHTML.length < 10) {
+                IsArticleOpen = true;
+                console.log("paywall = open by us.");
+                get_all_article(did);
+            }
+        } 
+    }    
+}
+
+function pbc_event(p1, p2, p3, p4, p5) {
+    p4 = p4 || '';
+    p5 = p5 || null;
+    console.log('pbc event', p1, p2, p3, p4, p5)
+    if (p5 != null)
+        ga('send', 'event', p1, p2, p3, p5);
+    else
+        ga('send', 'event', p1, p2, p3);
+}
+
+function new_event(eventName, user_status, reading_status_number,  No_of_articles_per_month, forder_name, kind_of_content,  user_action, kind_of_article, words_in_article  ) {    
+    var obj = { 'event': eventName, 'eventInfo': { 'action_screen': location.pathname, 'UserStatus': user_status, 'ReadingStatus': reading_status_number, 'FolderName': forder_name, 'No_of_articles_per_month': No_of_articles_per_month, 'Kind_of_content': kind_of_content, 'User_action': user_action, 'Kind_of_article': kind_of_article, 'Amount_of_words_in_article': words_in_article } }
+
+   var cleanObj = JSON.stringify(obj, function (key, value) {
+        if (value == null)
+            return undefined;
+        return value;
+    });
+    dataLayer.push(JSON.parse(cleanObj));
+ }
+
+function setCookie(name,value,days) {
+    var expires = "";
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days*24*60*60*1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
+

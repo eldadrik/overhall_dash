@@ -1,0 +1,376 @@
+
+/* alert("1777973308132 * 1771620737413,1,0,, * 1777928400000") */
+
+var IsProductionServer = true; /* && globesPWTester != "1" */
+var globesPWTester = true;
+
+var user_id = 0; /*  */
+var abtest_value = '';
+var unvalidated_user_id = 0;
+var login_id = '\u05d0\u05d5\u05e8\u05d7';
+var paywall_counter = 0;
+var user_read_doc = false;
+var is_subscriber = false;
+var is_unsubscriber = false;
+
+
+var user_name = '\u05d0\u05d5\u05e8\u05d7';
+var last_name = '';
+var nick_name = '';
+/*  */
+var user_properties = {
+	is_validated: false
+	,digital_suspended : false
+	,ids: ''
+	,noad: false
+	,digital: false 
+	,weekend: false
+	,paywall: false 
+	,realtime: false 
+	,can_use_adblocker: false
+	,company_id : 0
+	,profiles : ''
+	,b2b_organization : ''
+	,b2b_department : ''
+	
+	,web_purchase : false
+	,app_purchase : false
+	,industry_category : ''
+	,industry_department : ''
+	,nls : []
+	,maavaron : true
+	,authenticated_mobile : ''
+	
+};
+
+var user_type_piano = 'anon';
+var user_type = is_subscriber ? 'subscriber' 
+			: user_properties.digital && user_properties.paywall ? 'digital' 
+				: user_properties.paywall ? 'paywall' 
+					: user_properties.digital ? 'digitalonly' 
+						: user_id > 0 ? 'registered' : 'guest'
+;
+if (location.host.match(/^m\.globes\.co\.il$/i)) {location.href = location.href.replace(/\/\/m.globes.co.il\//i,'//www.globes.co.il/')}
+var IsHomePage = location.pathname == '/' || location.href.match(/\/news\/home\.aspx\?fid=2$/i);
+var dcCountry = null;
+var is_pas_on = true;
+var use_last_call = true;
+var win_or_mac_or_linux = navigator.platform.match(/^win\d+/i) || navigator.platform.match(/^mac/i) || navigator.platform.match(/^linux/i);
+var recently_passived = localStorage_supported && localStorage.adblockerStatus == 'passive' && localStorage.adblockerPassivedDateime > 1776763708133;
+var excluded_dc_ids = [];
+var dfp_urls_to_exclude = [/globes_desktop_2018\/300x250\/ros_300x250_[45]/,/Bar_madadim/i];
+
+if (typeof(FolderDynasty) == 'string' && FolderDynasty.match(/-4049-/)) {dfp_urls_to_exclude.push(/jumbo/i)}
+if (!win_or_mac_or_linux || recently_passived) {dfp_urls_to_exclude.push(/slide/i)}
+
+var Is_Almond_On = false;
+var Is_Millon_On = false;
+
+var Vilon_Version = '?version=2_24022011';
+var Is_VirtualWeb_On = false;
+var is_mobile = navigator.appVersion.match(/(iphone|mobile)/i)
+/* !navigator.appVersion.match(/win/i) && !navigator.appVersion.match(/x11/i)
+	&& (!navigator.appVersion.match(/mac/i) || navigator.appVersion.match(/like mac/i))
+	&& (!navigator.appVersion.match(/linux/i) || navigator.appVersion.match(/android/i))
+*/
+var ENSite =  location.href.match(/\/en\//i) || location.search.match(/[\?&]lang=en/i) ? true : false;
+if (!ENSite) {dfp_urls_to_exclude.push(is_mobile ? /globes_desktop/i : /globes_mobileweb/i)}
+var dc_server = 'true';
+var disable_e_counter = false;
+
+/* https://www.globes.co.il/ */
+
+var cta_offset = 0 * 60 * 60 * 1000; /* milliseconds */
+var bo_time = new Date();
+
+var ta_time = new Date(2026,4,5,12,28,28);
+var server_datetime = new Date(2026,4,5,12,28,28);
+var remote_address = '1.1.1.251';
+var local_address = '2';
+var sCastTVParams = 'dfp_timeout=6&VAST=2';
+var localStorage_supported = (function() {
+	try {
+		var t = 't_' + (new Date()).getTime();
+		localStorage.setItem(t,t);
+		localStorage.removeItem(t);
+		return true;
+	} catch(e) { return false }
+})()
+
+//  if time for sekindo: 08:00-13:00, 18:00-01:00
+function in_list(item,list) {for(var i=0; i < list.length ;i++) {if (item == list[i]) {return i}} return -1}
+function bin_list(item,list,separator) {
+	if (typeof(list) == 'string' && arguments.length == 3 && typeof(separator) == 'string') {list = list.split(separator)}
+	return in_list(item,list) > -1
+}
+
+
+var isChromium = window.chrome,
+vendorName = window.navigator.vendor,
+isOpera = window.navigator.userAgent.indexOf("OPR") > -1,
+isIEedge = window.navigator.userAgent.indexOf("Edge") > -1,
+isChromeFull = (isChromium !== null && isChromium !== "undefined" && vendorName === "Google Inc." && isOpera == false && isIEedge == false);
+
+var shalter = {
+	AddToWhiteList : typeof(FolderDynasty) == 'string' && FolderDynasty.match(/-4049-/) ? false : true
+	,aroundab : false
+	,after_logo : true /* IsHomePage */
+	,arti_media : true
+	,cornerFeedback : false
+	,CTArt : (false && isChromeFull) || Boolean(location.search.match(/CTArt=1/i))
+	,CTArtMonitor : (false && isChromeFull) || Boolean(location.search.match(/CTArtMonitor=1/i))
+	,CTArtMonitorVersion : "12"
+	,dfp : true /* 2 */
+	,DR : false
+	,edologic : false
+	,excellence : window.ActiveXObject ? false : true
+	,fbbs : true
+	,fidback : false
+	,Hiro : true
+	,hotjar : typeof(FolderDynasty) == 'string' && FolderDynasty.match(/-921-/) ? false : true
+	,hpNewPopup : ""
+	,inwizer : true
+	,linicom : false
+	,mador_pirsumi : true
+	,ShareIt : true	
+	,tailo : true
+	,veida_live : false
+	,without_popunder : false
+	,minute_video : false
+	,webeyez : false
+	,GOptimize : location.pathname.match(/^\/en\//i)? false : false
+	,hp2019TopStrip : true
+	,is_digital : false
+}
+
+
+
+excluded_dc_ids.push('*');
+if (shalter.dfp) {}
+if (shalter.edologic) {dfp_urls_to_exclude.push(/slide/i)}
+
+function getExlcBunner() {}
+
+var independence_day = {start : new Date('may 9 2011 20:00') , end : new Date('may 11 2011')}
+var memorial_day = {start : new Date('may 8 2011 17:30')}
+var Is_Desk_On = true;
+var Is_CastTimeDID = false;
+
+function position_holiday_icon() {
+	var hi = document.getElementById("holiday_icon");
+	if (hi.parentNode.id != "logoBlock") {
+		hi.parentNode.style.position = 'relative';
+		hi.style.top = "5px";
+		hi.style.right = "257px";
+	}
+	hi.style.display = 'block';
+}
+var Is_Nadlan_On = '';
+var near_logo = {}
+{
+
+
+	;
+	
+
+	var c = -2588;
+	if (c > 0 && c <= 100 && true ) {
+	//	c  = c < 10 ? "0" + c : c;
+		if (false /* live */) { c = 'LIVE' }
+		if (location.pathname == '/') {
+			near_logo.html = '<style>.logoWrap .veida img{top:15px!important;right:225px!important}.logoWrap{position:relative}</style>'
+				+ '<a class="elections" href="https://www.globes.co.il/news/%D7%A0%D7%99%D7%99%D7%93%D7%AA_%D7%94%D7%91%D7%97%D7%99%D7%A8%D7%95%D7%AA_%D7%A9%D7%9C_%D7%92%D7%9C%D7%95%D7%91%D7%A1.tag?from=header" >'
+					+ '<img'
+						+ ' width="226" height="60"'
+						+ ' style="position:absolute;top:3px;right:280px !important"'
+						+ ' alt="בחירות"'
+						+ ' src="https://images.globes.co.il/Images/NewGlobes/Misc/2019/globes_elections_van_site_header2-226x60.2019328T152004.png"'
+					+ '/>'
+				+ '</a>'
+		}
+	}
+}
+if (typeof(_sf_startpt) == 'undefined') {_sf_startpt = (new Date()).getTime()}
+var visit_counters = [6,0,1,1]
+
+
+if (false && location.protocol == 'https:') {
+	try{
+		var e = document.createElement("FORM");
+		var i = document.createElement("INPUT");
+		i.setAttribute('name',"referer");
+		i.setAttribute('value',location.href);
+		e.appendChild(i);
+		e.action = "https://" + location.host + "/news/ssl_redirector.aspx";
+		e.method = "POST";
+		document.body.appendChild(e);
+		e.submit();
+	} catch(ex) {}
+}
+var width_type = (function() {
+	try {
+		var inner_width = window.innerWidth > 0 ? window.innerWidth : Math.max(document.documentElement.clientWidth, document.body.clientWidth);
+		if (inner_width >= 1280) {return 'wide_1280+'}
+		if (inner_width >= 1024) {return 'medium_1024+'}
+        if (inner_width >= 800) {return 'small_800+'}
+	} catch(ex) {}
+	return 'narrow_800-'
+})()
+
+var inner_width = window.innerWidth > 0 ? window.innerWidth : Math.max(document.documentElement.clientWidth, document.body.clientWidth);
+var width_type_statistic = (function() {
+	try {
+		if (inner_width > 1600) {return 'wide'}
+		if (inner_width > 1100) {return 'medium'}
+	} catch(ex) {}
+	return 'narrow'
+})()
+var width_type_statistic_ABT = (function() {
+	try {
+		if (inner_width > 1600) {return 'wide'}
+        if (inner_width > 1549) {return 'medium_d'}
+        if (inner_width > 1489) {return 'medium_c'}
+        if (inner_width > 1399) {return 'medium_b'}
+		if (inner_width > 1200) {return 'medium_a'}
+	} catch(ex) {}
+	return 'narrow'
+})()
+var gl_abt = (function() {
+	var t = {}
+                    /*
+	try {
+		if (inner_width > 1300 && localStorage_supported) {
+            if (!localStorage.wt || localStorage.wtv!="4a17") {
+                localStorage.removeItem("wt");
+                localStorage.wtv="4a17";
+            }
+			if (localStorage.wt) {
+				t.wt = localStorage.wt;
+			} else {
+				var m = new Date().getMilliseconds();
+				localStorage.wt = t.wt = m < 500 ? 'narrow' : 'wide';
+			}
+		}
+	} catch(ex) {}
+                    */
+	return t
+})()
+var GA_ver = 3;
+var _gaq = _gaq || [];
+try {
+	slotRenderEnded_handlers.push(
+		function(e) {
+			try {
+				var url = e.slot.getAdUnitPath()
+			//	console.log((e.isEmpty == true ? '-' : '+') + ' ' + url)
+				if (e.isEmpty == true) {return}
+
+				if (url.match(/slide\.1\.hp/i)) {
+				//	console.log('gp ' + url)
+					_gaq.push(['7._trackEvent', 'bunners' ,'impression', 'slide.1.hp', undefined, true])
+				}
+				if (url.match(/spot\.1\.hp/i)) {
+				//	console.log('gp ' + url)
+					_gaq.push(['7._trackEvent', 'bunners' ,'impression', 'spot.1.HP', undefined, true])
+				}
+				if (url.match(/spot\.5\.hp/i)) {
+				//	console.log('gp ' + url)
+					_gaq.push(['7._trackEvent', 'bunners' ,'impression', 'spot.5.HP', undefined, true])
+				}
+				if (url.match(/spot\.2\.hp/i)) {
+				//	console.log('gp ' + url)
+					_gaq.push(['7._trackEvent', 'bunners' ,'impression', 'spot.2.HP', undefined, true])
+				}
+				if (url.match(/spot\.1\.nadlan/i)) {
+				//	console.log('gp ' + url)
+					_gaq.push(['7._trackEvent', 'bunners' ,'impression', 'spot.1.nadlan', undefined, true])
+				}
+				if (url.match(/Topbanner\.Capital_Market/i)) {
+				//	console.log('gp ' + url)
+					_gaq.push(['7._trackEvent', 'bunners' ,'impression', 'Topbanner.Capital_Market', undefined, true])
+				}
+
+			} catch(ex) {} 
+		}
+	)
+} catch(ex) {}
+
+if (location.hostname.match(/en\.globes\.co\.il/i) && !location.pathname.match(/^\/en\//i)) {
+	location.href = location.href.replace(/\/en\.globes\.co\.il\//i,'/www.globes.co.il/')
+}
+if (location.hostname.match(/www\.globes\.co\.il/i) && location.pathname.match(/^\/en\//i)) {
+	location.href = location.href.replace(/\/www\.globes\.co\.il\//i,'/en.globes.co.il/')
+}
+
+//var sTemp = new Image;
+//sTemp.src="http://80.70.128.80/images/NewGlobes/big_image_800/2018/ll800x392l.20181014T152241.jpg";
+
+//if (location.href.match(/^http:\/\/www.globes.co.il/i)) {location.href = location.href.replace(/^http/i,'https')}
+
+
+	var anonymouse_from_mail = user_id == 0 && location.search.match(/[\?&]did=\d+.*&from_mail=[^&]/) != null
+	var gsc_search = false
+	var IpTrafficFrom = "";
+
+
+// end-of-small 213.57.84.193
+
+if (location.host == 'home.globes.co.il') {location.href = location.href.replace(/^https?:\/\/home\.globes\.co\.il\//,'https://www.globes.co.il/')}
+var lastfid = (function(){
+	var a = location.search.match(/[\?&]fid=\d+/)
+	var fid = a ? a[0].split('=')[1] : 0
+	if (fid > 2) {document.cookie = 'lastfid=' + fid + '; expires=' + new Date(new Date().getTime() + 30 * 60 * 1000) + '; path=/'}
+	if (fid == 2 || location.pathname == '/' || location.pathname.match(/^\/portal\//i)) {document.cookie = 'lastfid=; expires=' + new Date() + '; path=/'}
+	var a = document.cookie.split(';').filter(e => e.match(/lastfid=\d+/))
+	return a.length > 0 ? a[0].match(/\d+/)[0] : 0
+})()
+
+if (typeof (MasterHomePage) == "undefined") MasterHomePage = false;
+
+if (location.href.match(/did=1001403671/)) {
+	document.write('<style>.Banner_in_Content {display:none} </style>')
+	dfp_urls_to_exclude.push(/Special_Category_In_Content_300x250_new/i)
+}
+if (location.href.match(/did=1001425260/)) {
+	function hide_update_1001425260() {$('.articleInfo .updatetime').css('visibility','hidden')}
+	for(var i=0; i < 20 ;i++) {setTimeout(hide_update_1001425260,i * 500 + 10)}
+}
+
+if (location.href.match(/\/article\.aspx\?did=1001413062/)) {
+	setTimeout(function(){$('#comp2').hide()},1000)
+	setTimeout(function(){$('#comp2').hide()},2000)
+	setTimeout(function(){$('#comp2').hide()},3000)
+	setTimeout(function(){$('#comp2').hide()},4000)
+	setTimeout(function(){$('#comp2').hide()},5000)
+}
+var loginver = (function() { /* 213.57.84.193 */
+	var lv = location.search.replace(/^\?/,'').split('&').find(e => e.match(/^loginver=\d*$/))
+//	alert('loginver ' + lv)
+	if (lv == 'loginver=2022') {localStorage.setItem('loginver_from_search','2022')}
+	if (lv == 'loginver=2021') {localStorage.setItem('loginver_from_search','2021')}
+	if (lv == 'loginver=') {localStorage.removeItem('loginver_from_search')}
+	var r = localStorage.getItem('loginver_from_search')
+	if (r == null) {
+		if (location.pathname.match(/\^en/i)) {return null}
+		//
+
+        var rndUser = Math.random() * 100;
+
+        //console.log("rndUser: " + rndUser);
+
+        if(rndUser > 0) {
+            localStorage.setItem("loginver_from_search","2022");
+            return 2022;
+        }
+	}
+	return r == 2022 ? 2022 : null
+})()
+var exclude_interstitial = false
+var loggedin_id = user_properties.authenticated_mobile.match(/\d+/) ? user_properties.authenticated_mobile : login_id
+
+//if (false && location.hostname.match(/www\.globes\.co\.il/i) ) {
+	//location.href = location.href.replace(/\/www\.globes\.co\.il\//i,'/www-globes-co-il.ezproxy.colman.ac.il/');
+//} 
+
+var Excluded_FolderDynasties = /-(921|1502|4049|15770)-/
+

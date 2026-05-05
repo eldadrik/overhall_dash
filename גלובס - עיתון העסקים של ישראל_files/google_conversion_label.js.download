@@ -1,0 +1,48 @@
+﻿var conversion_label = "";
+var sFolderDynasty = '';
+if (typeof (FolderDynasty) != 'undefined')
+    sFolderDynasty = "-" + FolderDynasty + "-";
+
+if (IsHomePage)
+    conversion_label = "k4ooCL_F_QEQ35eI6wM"; // homepage
+else if (location.href.match(/article\.aspx/i)) {
+    if (sFolderDynasty.indexOf('-585-') > -1) { // stock_market
+        conversion_label = "cAEXCO-__QEQ35eI6wM";
+    }
+    else if (sFolderDynasty.indexOf('-1225-') > -1) { // ws
+        conversion_label = "cAEXCO-__QEQ35eI6wM";
+    }
+    else if (sFolderDynasty.indexOf('-594-') > -1) { // hi_tech
+        conversion_label = "zTjICMfE_QEQ35eI6wM";
+    }
+    else if (sFolderDynasty.indexOf('-607-') > -1) { // nadlan
+        conversion_label = "MpFXCOfA_QEQ35eI6wM";
+    }
+    else if (sFolderDynasty.indexOf('-821-') > -1) { // netach
+        conversion_label = "m0LtCN_B_QEQ35eI6wM";
+    }
+    else if (sFolderDynasty.indexOf('-829-') > -1) { // din
+        conversion_label = "kFg8CM_D_QEQ35eI6wM";
+    }
+    else if (sFolderDynasty.indexOf('-3266-') > -1) { // career
+        conversion_label = "BCJXCNfC_QEQ35eI6wM";
+    }
+}
+else if (sFolderDynasty.indexOf('-3825-') > -1) { // alerts
+    conversion_label = "2qjCCLfG_QEQ35eI6wM";
+}
+if (conversion_label != "") {
+    /* <![CDATA[ */
+    var google_conversion_id = 1029835743;
+    var google_conversion_language = "en";
+    var google_conversion_format = "3";
+    var google_conversion_color = "666666";
+    var google_conversion_label = conversion_label;
+    var google_conversion_value = 0;
+    /* ]]> */
+
+    var script = document.createElement("script");
+    script.setAttribute("async", true);
+    script.setAttribute("src", "https://www.googleadservices.com/pagead/conversion.js");    
+    document.getElementsByTagName("head")[0].appendChild(script);
+}       

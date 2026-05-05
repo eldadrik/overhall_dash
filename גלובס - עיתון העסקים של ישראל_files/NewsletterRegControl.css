@@ -1,0 +1,480 @@
+﻿@font-face {
+    font-family: 'almoniDL700';
+    font-weight: 700; /*(bold)*/
+    font-style: normal;
+    src: url('/Static/fonts/almoni2019/almoni-neue-bold-aaa.eot');
+    src: url('/Static/fonts/almoni2019/almoni-neue-bold-aaa.eot?#iefix') format('embedded-opentype'), url('/Static/fonts/almoni2019/almoni-neue-bold-aaa.woff2') format('woff2'), url('/Static/fonts/almoni2019/almoni-neue-bold-aaa.woff') format('woff');
+}
+
+#NewsletterReg {
+    background-color: #ffeadb;
+    border: 1px solid #ffeadb;
+    border-radius: 5px;
+    height: 200px;
+    padding: 24px 32px;
+    box-sizing: border-box;
+    display: grid;
+    align-content: space-between;
+}
+
+
+#NewsletterReg .innerNl img {
+    float: left
+}
+
+
+.NewsletterRegWar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 27px;
+}
+
+#bnr2mail2 {
+    background: #f1e0d0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: -webkit-center;
+}
+
+    #bnr2mail2 .mob {display:none}
+    #bnr2mail2 a.desk {
+        width: 100%
+    }
+      #bnr2mail2 .t1 {
+        display: block;
+        margin: 0 auto
+    }
+      #bnr2mail2 .t2 {
+        width: 120px;
+        margin-left: 40px;
+        float: left;
+    }
+      #bnr2mail2 p {
+        font-size: 19px;
+        color: #000;
+        max-width: 275px;
+        line-height: 22px;
+        text-align: center;
+        font-family: 'almoniDL400';
+    }
+
+    #bnr2mail2 .t3 {
+        width: 100%;
+        max-height: 200px
+    }
+
+    #NewsletterReg .t1 {
+        width: 190px;
+        float: left
+    }
+
+#NewsletterReg h3, #NewsletterReg h3 .blue {
+    font-family: almoniTzar500;
+    font-size: 28px;
+    color: #000;
+    margin: 0;
+    font-weight: normal;
+
+}
+#NewsletterReg .innerNl h3 {
+    background: url(https://res.cloudinary.com/globes/image/upload/v1697455725/Digital/reva_yqf6jd.png) no-repeat 0 0;
+    width: 488px;
+    height: 81px;
+    display: block;
+    zoom: 55%;
+    margin-right: -14px !important;
+}
+
+    #NewsletterReg h3 .blue {
+        color: #1d00cc;
+    }
+
+#NewsletterReg p {
+    font-family: 'almoniDL400';
+    font-size: 18px;
+    line-height: 24px;
+    margin: 0 0 24px 0;
+}
+
+#NewsletterReg a {
+    font-size: 18px;
+    padding: 5px 20px;
+    font-family: 'almoniDL700';
+    justify-self: baseline;
+  
+    text-align: center;
+}
+
+    #NewsletterReg a.add {
+        border: solid 1px #c00;
+        color: #fff;
+        background: #c00;
+        cursor: pointer;
+    }
+
+        #NewsletterReg a.add:hover {
+            color: #fff;
+            background: #000;
+        }
+
+    #NewsletterReg a.activated {
+        background: #53917e;
+        color: white;
+        border: 1px #53917e solid;
+        cursor: initial;
+    }
+
+    #NewsletterReg a.remove {
+        font-family: 'almoniDL400';
+        color: red;
+        cursor: pointer;
+        display: none;
+    }
+#NewsletterReg  .errMsg {
+    color: #c00;
+    font-size: 14px
+}
+#NewsletterReg input#email {
+    border: solid 1px #555;
+    color: #000;
+    background: transparent;
+ 
+    font-size: 14px;
+    padding: 8px;
+    width: 35%;
+    margin-bottom: 5px;
+}
+
+    #NewsletterReg input#email.error {border:1px #c00 solid}
+
+#NewsletterReg  #kidumDiditalNp {
+    height: 100%;
+}
+
+#NewsletterReg  #kidumDigitalNp.item.kidumi a {
+    padding: 0 13px;
+    position: relative;
+}
+
+#NewsletterReg  .item.kidumi .kidumTitle {
+    position: absolute;
+    bottom: -1px;
+    right: 13px;
+    background: #fff9f4;
+    width: calc(100% - 26px);
+    text-align: center;
+    min-height: auto;
+    padding: 10px 0;
+    font-size: 18px;
+    font-family: 'almoniDL400';
+    margin: 0;
+}
+
+#NewsletterReg  #kidumDiditalNp.item.kidumi .kidumTitle {
+    bottom: 0px;
+    right: 13px;
+    width: calc(100% - 26px);
+}
+#NewsletterReg .item.kidumi .kidumTitle:after {
+    content: url(https://res.cloudinary.com/globes/image/upload/v1772026336/Digital/icons/icon-ArrowSmall_j0xgbl.svg);
+    margin-right: 5px;
+    margin-top: 1px;
+}
+#NewsletterReg #kidumDiditalNp img {
+    height: auto;
+}
+ 
+:has(#banner2) .bannerCenter #NewsletterRegWarHP {display:block}
+:has(#banner2) .bannerCenter #NewsletterRegWarHP #banner2 img {width:100%}
+
+
+
+@media only screen and (max-width:1050px) {
+    #NewsletterReg {
+        height: 245px;
+    }
+
+        #NewsletterReg h3 {line-height:1}
+}
+
+@media screen and (max-width: 768px) {
+    .innerControl #NewsletterReg {
+        height: auto;
+        width: calc(100% - 30px);
+        max-width: initial;
+        float: none;
+        margin: auto;
+        grid-gap: 26px;
+        border: 1px solid #b8cef9;
+        padding: 24px;
+        min-height: auto;
+    }
+
+        .innerControl #NewsletterReg a {
+            width: 100%;
+            margin: 0;
+            padding: 9px 0;
+            text-align: center;
+ 
+        }
+
+    #NewsletterReg p {
+        margin: 0;
+    }
+
+    .innerControl #NewsletterReg img {
+        float: none;
+    }
+
+    .innerControl #NewsletterReg a.activated {
+        background: #53917e;
+    }
+
+    #kidumDiditalNp.item.kidumi a {
+        padding: 0;
+        height: 100%;
+        background: transparent;
+        text-align: center;
+    }
+
+    #kidumDiditalNp .kidumTitle {
+        font-size: 6.5vw;
+        font-family: almoniTzar400,arial;
+    }
+
+    #NewsletterReg h3, #NewsletterReg h3 .blue {
+        font-size: 6.5vw;
+    }
+
+    
+}
+
+
+@media only screen and (max-width: 480px) {
+
+    #NewsletterReg input#email {
+        padding: 4% 2%;
+        width: 96%;
+        margin:20px 0 30px; 
+    }
+    #NewsletterReg {margin-bottom:30px !important}
+    #bnr2mail2 {
+        width: calc(100% - 30px);
+        margin: 0 auto;
+        background: #f6e8dd;
+    }
+
+
+            #bnr2mail2 .mob { display:block}
+            #bnr2mail2 .desk { display:none}
+
+
+            #bnr2mail2 .t1 {
+                float: none;
+                width: 100%
+            }
+ #bnr2mail2 .t2 {
+        float: none;
+        width: 200px;
+        margin: 20px auto !important;
+    }
+
+    #NewsletterReg  .innerNl h3 {
+        margin-right: 0 !important
+    }
+    #NewsletterReg  .errMsg {
+        display: block;
+        position: relative;
+        top: -72px;
+    }
+     }
+
+/*************/
+
+@font-face {
+    font-family: 'almoniTzar700';
+    font-weight: 700; /*(bold)*/
+    font-style: normal;
+    src: url('/Static/fonts/almoni-tzar/almoni-tzar-bold-aaa.eot');
+    src: url('/Static/fonts/almoni-tzar/almoni-tzar-bold-aaa.eot?#iefix') format('embedded-opentype'), url('/Static/fonts/almoni-tzar/almoni-tzar-bold-aaa.woff') format('woff2'), url('/Static/fonts/almoni-tzar/almoni-tzar-bold-aaa.woff2') format('woff');
+}
+
+:has(.fault) .NewsletterRegWar {
+    grid-template-columns: 1fr;
+}
+
+:has(.fault.dsk2) .NewsletterRegWar {
+    grid-template-columns: 1fr 1fr;
+}
+
+.fault {
+    display: flex;
+    background: #FEE7DC;
+    padding: 20px;
+    padding: 1vw;
+    justify-content: space-between;
+    border: 1px solid rgba(108, 7, 67, 0.20);
+}
+
+    .fault .fWr {
+        display: flex;
+        align-items: center;
+        gap: 15px
+    }
+
+    .fault .txt1 {
+        color: #282828;
+        font-size: 34px;
+        line-height: 100%;
+        font-family: almoniTzar700;
+        white-space: nowrap;
+    }
+
+    .fault .txt2 {
+        color: #282828;
+        font-size: 28px;
+        line-height: 100%;
+        font-family: almoniTzar400;
+        white-space: nowrap;
+    }
+
+    .fault.dsk {
+        display: grid;
+        padding: 16px;
+        max-width: 594px;
+        text-align: center;
+        place-items: center;
+        align-content: center;
+    }
+
+        .fault.dsk .fWr {
+            display: block
+        }
+
+        .fault.dsk .txt1 {
+            font-size: 30px;
+            white-space: normal
+        }
+
+        .fault.dsk .txt2 {
+            font-size: 26px;
+            white-space: normal
+        }
+
+    .fault.dsk2 {
+        display: grid;
+        padding: 15px;
+        max-width: 594px;
+        text-align: center;
+        place-items: center;
+        align-content: center;
+        width: calc(100% - 30px);
+        justify-content: center;
+    }
+
+        .fault.dsk2 .fWr {
+            display: block
+        }
+
+        .fault.dsk2 .txt1 {
+            font-size: 36px;
+            white-space: normal
+        }
+
+        .fault.dsk2 .txt2 {
+            font-size: 28px;
+            white-space: normal;
+            margin: 20px 0
+        }
+
+
+
+@media screen and (max-width: 1400px) {
+    .fault .txt1 {
+        font-size: 30px;
+    }
+
+    .fault .txt2 {
+        font-size: 26px;
+    }
+}
+
+@media screen and (max-width: 1240px) {
+    .fault .txt1 {
+        font-size: 26px !important;
+    }
+
+    .fault .txt2 {
+        font-size: 22px !important;
+    }
+}
+
+@media screen and (max-width: 1040px) {
+    .fault .txt1 {
+        font-size: 22px !important;
+    }
+
+    .fault .txt2 {
+        font-size: 18px !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .NewsletterRegWar {
+        width: calc(100% - 30px);
+        margin: 50px auto 10px;
+        grid-template-columns: 1fr !important;
+    }
+
+    .fault {
+        display: grid;
+        text-align: center;
+        place-items: center;
+        align-content: center;
+        padding: 23px !important;
+    }
+
+        .fault .fWr {
+            display: block
+        }
+
+        .fault .txt1 {
+            font-size: 30px !important;
+            white-space: normal !important
+        }
+
+        .fault .txt2 {
+            font-size: 24px !important;
+            white-space: normal !important;
+            margin: 10px 0 20px !important
+        }
+
+    #NewsletterRegWarHP img {
+        float: none;
+        width: auto !important;
+        margin-left: 0 !important;
+    }
+}
+
+
+
+#bnr2mail2 #NewsletterReg {background: none; width:100%; height: auto; border:0; text-align: right;}
+#bnr2mail2 {    background: #ffeadb;}
+
+#bnr2mail2---111 {    display: flex; align-items: center;}
+#bnr2mail2 p {text-align: right; max-width: auto;}
+ 
+#banner2 #NewsletterReg {height:65px; padding-top: 10px;}
+#banner2 #NewsletterReg p {margin-bottom: 0;}
+#banner2 #NewsletterReg input#email {width:20%; margin-bottom: 0;}
+#banner2 #NewsletterReg .t1 {    margin: 0;
+    width: 150px !important;
+    float: none;
+    margin-right: auto;}
+
+.emailText {display: flex; gap: 20px; align-items: center;}
+.emailText .t1 {margin-right: auto;}
+
+#NewsletterReg .innerNl img {margin-top: -15px;}

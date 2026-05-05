@@ -1,0 +1,11 @@
+function a_handler() {
+}
+function b_handler() {
+	document.write('<style>\n'
+		+ '#topWrap .mainArticle a img, #topWrap .TopArticles a img,#page-wrap .element1 img {transition: initial !important}\n'
+		+ '#page-wrap .element1 img:hover, #topWrap .mainArticle a img:hover, #topWrap .TopArticles a img:hover { transform: none !important}\n'
+		+ '</style>\n'
+	)
+}
+if (location.href.match(/\/?a$/)) {a_handler()}
+if (location.href.match(/\/?b$/)) {b_handler()}

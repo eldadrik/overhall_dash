@@ -1,0 +1,3801 @@
+﻿function datetime_in_range() {
+	var t = new Date();
+	for(var i = 0; i+1 < arguments.length ;i += 2) {
+		var since = new Date(arguments[i]);
+		var until = new Date(arguments[i+1]);
+		if (t.getTime() > since.getTime() && t.getTime() < until.getTime()) return 1;
+	} return 0;
+}
+var ta_daylight_saving_time = datetime_in_range('mar 26 2010 2:00','sep 12 2010 2:00'); // exchange_dst
+var ny_daylight_saving_time = datetime_in_range('mar 14 2010 2:00','nov 7 2010 2:00');
+var london_daylight_saving_time = datetime_in_range('mar 30 2008 8:00','oct 26 2008 8:00');
+var tokio_daylight_saving_time = 0; // always
+
+var tk_offset =   7 + tokio_daylight_saving_time - ta_daylight_saving_time;
+var ln_offset =  -2 + london_daylight_saving_time - ta_daylight_saving_time;
+var ny_offset = -7 + ny_daylight_saving_time - ta_daylight_saving_time;
+
+var ny_data = // http://www.nasdaq.com/about/schedule.stm
+[
+	"ניו יורק" ,
+	1,5,
+	9 * 60 + 30, 16 * 60,
+	ny_offset ,
+	[
+	"01.01.2007" , // New Year's Day
+	"02.01.2007" , // @@@ President Ford
+	"15.01.2007" , // Martin Luther King Jr.'s Birthday 
+	"19.02.2007" , // Presidents' Day
+	"06.04.2007" , // Good Friday
+	"28.05.2007" , // Memorial Day
+	"04.07.2007" , // Independence Day 
+	"03.09.2007" , // Labor Day
+	"22.11.2007" , // Thanksgiving Day 
+	"25.12.2007" , // Christmas Day 
+	"31.12.9999"   // end of time
+	]
+];
+
+
+var ta_data = [ // http://www.tase.co.il/TASE/AboutTASE/VacationSchedule/
+	"תל אביב" ,
+	0,4,
+	9 * 60,	17 * 60 + 30,
+	0,
+	[
+	"04.03.2007" , // פורים
+	"02.04.2007" , // פסח
+	"03.04.2007" ,
+	"08.04.2007" ,
+	"09.04.2007" ,
+	"23.04.2007" , // יום הזכרון
+	"24.04.2007" , // יום העצמאות
+	"22.05.2007" , // שבועות
+	"23.05.2007" , //
+	"24.07.2007" , // תשעה באב
+	"12.09.2007" , // ראש השנה
+	"13.09.2007" , //
+	"14.09.2007" , //
+	"21.09.2007" , // כיפור
+	"26.09.2007" , // סוכות
+	"27.09.2007" , //
+	"03.10.2007" , //
+	"04.10.2007" , //
+	"31.12.9999"
+   ]
+];
+
+
+
+function c_datetime() {
+	this.days = new function() {this.he = "ראשון,שני,שלישי,רביעי,חמישי,שישי,שבת".split(",")}
+	this.months = new function() {this.he = "ינוארן,פברואר,מרץ,אפריל,מאי,יוני,יולי,אוגוסט,ספטמבר,אוקטובר,נובמבר,דצמבר".split(",")}
+	this.fullYear = function(dt) {return 2000 + dt.getYear() % 100}
+	this.dt2hM = function(dt,s) {return dt.getHours() + s + mpad(100,dt.getMinutes())}
+	this.dt2dmy = function(dt,s) {return dt.getDate() + s + (dt.getMonth() + 1) + s + this.fullYear(dt)}
+	this.dt2DMy = function(dt,s) {return mpad(100,dt.getDate()) + s + mpad(100,dt.getMonth() + 1) + s + this.fullYear(dt)}
+	this.dt2he = function(dt) {return "יום " + this.days.he[dt.getDay()] + " " + dt.getDate() + " ב" + this.months.he[dt.getMonth()] + " " + this.fullYear(dt)}
+	this.dt2daydate = function(dt,fs,s) {return "<span style=\"position:relative;top:-1\">יום " + this.days.he[dt.getDay()] + ', </span><span style=\"font-size:' + fs + 'px\">' + this.dt2dmy(dt,s) + '</span>'}
+	this.add = function(p,a,dt) {
+		if (p == 'millisecond') {
+			dt.setTime(dt.getTime() + a)
+			return dt
+		}
+		if (p == 'second') {return this.add('millisecond',a * 1000,dt)}
+		if (p == 'minute') {return this.add('second',a * 60,dt)}
+		if (p == 'hour') {return this.add('minute',a * 60,dt)}
+		if (p == 'day') {return this.add('hour',a * 24,dt)}
+	}
+}
+
+
+
+function get_financial_links(g) {
+	function c_section(t,d) {
+		this.title = t
+		this.list = new Array()
+		for(var i in d) {this.list[this.list.length] = new c_titledata(d[i][0],d[i][1])}
+	}
+	var a = new Array()
+	var sr = g.url.fsr + '?'
+	a[a.length] = new c_section("הבורסה בת''א",[
+		 ["<b>אתר המעוף</b>",g.url.fm]
+		,["ציטוטי מניות", sr + "Feeder=0&TypeID=6&WhatType=1&strToSearch=א"]
+		,["נגזרת דולר", sr + "ExchangeID=45&Feeder=0&TypeID=18&WhatType=1"]
+		,["נגזרת אירו", sr + "ExchangeID=45&Feeder=0&TypeID=23&WhatType=1"]
+		,["נגזרת מעו''ף", sr + "ExchangeID=45&Feeder=0&TypeID=15&WhatType=1"]
+		,["מניות ת''א 25", sr + "Feeder=0&ExchangeID=45&SearchIdxInst=1&Lang=HE&WhatType=3&TypeID=3&IdxInstrumentID=979"]
+		,["מניות ת''א 100", sr + "Feeder=0&ExchangeID=45&SearchIdxInst=1&Lang=HE&WhatType=3&TypeID=4&IdxInstrumentID=980"]
+		,["כתבי אופציה", sr + "Feeder=0&ExchangeID=45&SearchIdxInst=0&Lang=HE&WhatType=1&TypeID=7"]
+		,["אופציות כיסוי", sr + "Feeder=0&ExchangeID=45&SearchIdxInst=0&Lang=HE&WhatType=1&TypeID=42"]
+	])
+	a[a.length] = new c_section("מט''ח",[
+		 ["<b>אתר המט''ח</b>", g.url.f + "/Currency/Currency.asp"]
+//		,["מט''ח-שערי חליפין",  g.url.gsgf + "/currencies/default.aspx"]
+
+
+		,["שערי חליפין", "/globessites/globes/finance/currencies/main.aspx?id=1&mode=1&strtosearch="]
+	//	,["שערים מצטלבים", "/globessites/globes/finance/currencies/main.aspx?id=2&mode=1&strtosearch="]
+	])
+	a[a.length] = new c_section("קרנות נאמנות",[
+		 ["<b>אתר הקרנות</b>", "http://funds.globes.co.il/funds/default.asp"]
+		,["רשימת קרנות", sr + "Lang=HE&Field=3&Direction=1&WhatType=1&TypeID=16&Feeder=0&strToSearch=א"]
+	])
+	a[a.length] = new c_section("בורסות בחו''ל",[
+		 ["מניות נאסד\"ק 100", sr + "Feeder=1&SearchIdxInst=1&Lang=HE&WhatType=3&TypeID=8&IdxInstrumentID=537926"]
+		,["מניות S&P 500", sr + "Feeder=1&SearchIdxInst=1&Lang=HE&WhatType=3&TypeID=10&IdxInstrumentID=373853"]
+		,["מניות דאו ג'ונס", sr + "Feeder=1&SearchIdxInst=1&Lang=HE&WhatType=3&TypeID=9&IdxInstrumentID=66707"]
+		,["מניות פוטסי 300", sr + "Feeder=1&SearchIdxInst=1&Lang=HE&WhatType=3&TypeID=16&IdxInstrumentID=539524"]	
+		,["מניות ניקיי 225", sr + "Feeder=1&SearchIdxInst=1&Lang=HE&WhatType=3&TypeID=17&IdxInstrumentID=539271"]	
+		,["מניות הנג סנג", sr + "Feeder=1&SearchIdxInst=1&Lang=HE&WhatType=3&TypeID=21&IdxInstrumentID=539267"]	
+		,["מניות סנסקס", sr + "Feeder=1&SearchIdxInst=1&Lang=HE&WhatType=3&TypeID=22&IdxInstrumentID=539503"]	
+		,["מניות S&P/ASX 50", sr + "Feeder=1&SearchIdxInst=1&Lang=HE&WhatType=3&TypeID=24"]	
+		,["ישראליות בניו יורק", sr + "Feeder=1&SearchIdxInst=1&Lang=HE&WhatType=3&TypeID=12&IdxInstrumentID="]
+		,["ישראליות באירופה", sr + "Feeder=1&WhatType=3&TypeID=14&SearchIdxInst=0&Lang=HE&IdxInstrumentID="]		
+		
+	])
+	a[a.length] = new c_section("מניות ארביטרז'",[["תל אביב  - ניו יורק", g.url.gsgf + "/arbitrage/arbitrage.aspx"]])
+	a[a.length] = new c_section("הברומטר",[["איתור מגמות לפי נפח פעילות", g.url.f + "/ActivityPages/Active_1_45_0.htm"]])
+	a[a.length] = new c_section("המלצות אנליסטים",[["טבלת המלצות אנליסטים", g.url.f + "/Analysts/SearchRecommend.asp"]])
+	a[a.length] = new c_section("נתוני חברות",[
+		 ["תקצירי דו''חות", g.url.f + "/market_data/FinancialReports.asp?lang=he"]
+		,["דו''חות S&P", "http://www.standardpoors.co.il/default.asp?pageName=HOME+PAGE&pageID=2"]
+		,["מידע עסקי D&B", "http://dbrisk.dundb.co.il/ns/ns_frames.asp?origin=3"]
+	])
+	a[a.length] = new c_section("אג''ח",[
+		 ["<b>אתר אפיקים סולידיים</b>",g.url.fb]
+		,["אג''ח להמרה", sr + "Feeder=0&ExchangeID=45&SearchIdxInst=0&Lang=HE&WhatType=1&TypeID=8&IdxInstrumentID="]
+		,["אגרות חוב", sr + "Feeder=0&ExchangeID=45&SearchIdxInst=0&Lang=HE&WhatType=1&TypeID=24&IdxInstrumentID="]
+		,["מ''קמים", sr + "Feeder=0&ExchangeID=45&SearchIdxInst=1&Lang=HE&WhatType=1&TypeID=17&IdxInstrumentID="]
+		,["נגזרת שחר", sr + "Feeder=0&ExchangeID=45&SearchIdxInst=1&Lang=HE&WhatType=1&TypeID=41&IdxInstrumentID="]
+
+	])
+	a[a.length] = new c_section("תעודות סל",[
+		 ["<b>אתר תעודות סל</b>", g.url.f + "/etf/"]
+		,["רשימת תעודות סל", "/globessites/globes/finance/instruments/search.aspx"]
+	])
+	a[a.length] = new c_section("מדדים",[
+		 ["מדדי המחירים", g.url.f + "/IndexPrice/begin.asp?lang=he"]
+		,["מדדי המניות", sr + "ExchangeID=45&Feeder=0&TypeID=11&WhatType=1"]
+		,["מדדי הענפים", sr + "ExchangeID=45&Feeder=0&TypeID=38&WhatType=1"]
+		,["מדדי אג''ח", sr + "ExchangeID=45&Feeder=0&TypeID=37&WhatType=1"]
+	])
+	var cd = g.url.fs + '/ConcentrationData.asp?'
+	var edd = g.url.fs + '/EndDayData.asp?'
+	a[a.length] = new c_section("סוף יום המסחר בת''א",[
+		 ["ריכוז תוצאות המסחר במניות", cd + "TableType=1&lang=HE"]
+		,["ריכוז תוצאות המסחר באג''ח", cd + "TableType=2&lang=HE"]
+		,["מניות בולטות במדד ת''א 100", edd + "TableType=1&lang=HE"]
+		,["מניות בולטות אחרות בת''א", edd + "TableType=2&lang=HE"]
+		,["אופציות בולטות", edd + "TableType=3&lang=HE"]
+		,["מחזורים בולטים בת''א 100", edd + "TableType=4&lang=HE"]
+		,["מחזורים בולטים נוספים", edd + "TableType=5&lang=HE"]
+		,["תשואות דיבידנד בולטות", edd + "TableType=6&lang=HE"]
+	])
+	a[a.length] = new c_section("חוזים עתידיים",[
+		 ["<b>אתר חוזים עתידיים</b>", g.url.ff]
+		,["רשימת חוזים עתידיים", sr + "Feeder=1&ExchangeID=72&SearchIdxInst=0&Lang=HE&WhatType=2&TypeID=62&IdxInstrumentID="]
+	])
+	return a
+}
+
+
+//This file is auto-Generated by \Finance\Shared\Scripts\BuildCombos.vbs
+function ExchangeArraySetup() { 
+	var dataArray = new Array(); 
+	dataArray[0] = new TypesFields("exchanges", "45", "TASE", "Tel Aviv", "בורסת תל	-	אביב", "0"); 
+	dataArray[1] = new TypesFields("exchanges", "11", "NASDAQ", "NY: Israeli + DJ30", "ניו-יורק: ישראליות + דאו ג'ונס", "1"); 
+	dataArray[2] = new TypesFields("exchanges", "1", "EUROPE", "Israeli in EUROPE", "ישראליות באירופה", "1"); 
+	return(dataArray); 
+}
+function TypeArraySetup() { 
+	var dataArray = new Array(); 
+	dataArray[0] = new TypesFields("types", "0", "45", "1", "6", "1", 	"Share", "מניה",  "",  "");
+	dataArray[1] = new TypesFields("types", "0", "45", "1", "40", "1", 	"ETF", "תעודות סל",  "",  "");
+	dataArray[2] = new TypesFields("types", "0", "45", "1", "24", "1", 	"Bonds", "אג''ח",  "",  "");
+	dataArray[3] = new TypesFields("types", "0", "45", "1", "41", "1", 	"Shachar Futures", "נגזרת שחר",  "",  "");
+	dataArray[4] = new TypesFields("types", "0", "45", "1", "11", "1", 	"Index", "מדד מניות",  "",  "");
+	dataArray[5] = new TypesFields("types", "0", "45", "1", "38", "1", 	"Index 	-	 sector", "מדד ענפי",  "",  "");
+	dataArray[6] = new TypesFields("types", "0", "45", "1", "37", "1", 	"Index 	-	 bond", "מדד אגרות חוב",  "",  "");
+	dataArray[7] = new TypesFields("types", "0", "45", "1", "7", "1", 	"Share warrant", "כתבי אופציה",  "",  "");
+	dataArray[8] = new TypesFields("types", "0", "45", "1", "8", "1", 	"Convertible bond", "אג''ח להמרה",  "",  "");
+	dataArray[9] = new TypesFields("types", "0", "45", "1", "15", "1", 	"Tel Aviv 35 index option", "נגזרת מעו''ף",  "",  "");
+	dataArray[10] = new TypesFields("types", "0", "45", "1", "18", "1", 	"Shekel/dollar option", "נגזרת דולר",  "",  "");
+	dataArray[11] = new TypesFields("types", "0", "45", "1", "23", "1", 	"Euro option", "נגזרת אירו",  "",  "");
+	dataArray[12] = new TypesFields("types", "0", "45", "1", "16", "1", 	"Fund", "קרן נאמנות",  "",  "");
+	dataArray[13] = new TypesFields("types", "0", "45", "1", "17", "1", 	"Short	-	term Treasury Bill", "מק''מ",  "",  "");
+	dataArray[14] = new TypesFields("types", "0", "45", "1", "19", "1", 	"Tel Aviv Banking index option", "נגזרת בנקים",  "",  "");
+	dataArray[15] = new TypesFields("types", "0", "45", "1", "35", "1", 	"Futures 3 Months 	-	 Futures ", "נגזרת ריבית",  "",  "");	
+	dataArray[16] = new TypesFields("types", "1", "4", "1", "6", "2", 	"Indices", "מדדים",  "",  "");
+	dataArray[17] = new TypesFields("types", "1", "4", "1", "2", "2", 	"Stocks", "מניה",  "",  "");
+	dataArray[18] = new TypesFields("types", "1", "72", "1", "62", "2", 	"Futures", "חוזים עתידיים",  "",  "");
+	dataArray[19] = new TypesFields("types", "1", "11", "1", "58", "2", 	"ETF", "תעודות סל",  "",  "");
+	
+	dataArray[20] = new TypesFields("types", "1", "77", "1", "63", "2", 	"Commodities", "סחורות",  "",  "");
+	dataArray[21] = new TypesFields("types", "1", "9", "1", "20", "2", 	"Currencies", "מט''ח-שערי חליפין",  "",  "");
+	
+	dataArray[22] = new TypesFields("types", "0", "45", "1", "42", "1", 	"Covered Warrants", "אופציות כיסוי",  "",  "");
+	return(dataArray); 
+} 
+
+if (typeof(Is_Almond_On)=="undefined") Is_Almond_On = true;
+
+function c_almond(p) {
+	this.parent = p
+	this.site = 1002
+	this.banners = new Array()
+	this.prefix = 'http://pbid.pro-market.net/engine'
+	this.get_site = function (collaboration,size,space) {
+		if (collaboration == 'discount' && size == 16 && space == 1) {return 103663}
+		if (collaboration == 'igud' && size == 16 && space == 1) {return 103486}
+		if (collaboration == 'meitav' && size == 16 && space == 1) {return 106584}
+		return this.site
+	}
+
+	function c_banner(p,serial,size,space,page,a) {
+		this.parent = p
+		this.serial = serial
+		this.size = size
+		this.page = page
+		this.space = space
+		this.id = 'aad_' + size + "_" + serial
+		this.local_ads = [['*','*','*','*']] // ['-*',9957,50,'*']
+		this.started = false
+		this.is_local = function() {
+			function is_match(m,v) {return m == '*' || m == v}
+			for(var i in this.local_ads) {
+				if (!is_match(this.local_ads[i][0],this.parent.site)) {continue}
+				if (!is_match(this.local_ads[i][1],this.size)) {continue}
+				if (!is_match(this.local_ads[i][2],this.space)) {continue}
+				if (!is_match(this.local_ads[i][3],this.page)) {continue}
+				return i
+			}
+			return -1
+		}
+		this.s16_handler = function() {
+			if (!location.href.match(/tapuz/i)) {return}
+			if (window.screen.availWidth < 1024) {return}
+			var iframe = document.getElementById(this.id)
+			var table = parent_by_tag(iframe,"TABLE")
+			if (table == null) {return}
+			var table = parent_by_tag(table,"TABLE")
+			if (table == null) {return}
+			if (table.width != '100%') {return}
+			iframe.style.width = '600px'
+			this.size = 407
+		}
+		this.src = function() {
+			// Is_Almond_On came from \serve\js\global\main.asp
+			if (!Is_Almond_On) return 'about:blank';
+			
+			if (this.size == 16) {this.s16_handler()}
+			return (this.is_local() > -1 ? this.parent.parent.url.s + "/ads/banner/redirector.asp" : this.parent.prefix)
+				+ '?site=' + this.parent.get_site(this.parent.parent.collaboration,this.size,this.space)
+				+ '+size=' + this.size
+				+ '+space=' + this.space
+				+ '+page=$' + this.page + '$'
+			//	+ '+distinct'
+				+ '+rnd=(' + (new Date()).getTime() + ')'
+				+ '+linktarget=$_blank$'
+		}
+		this.hide = function() {document.getElementById(this.id).style.visibility = 'hidden'}
+		this.blank = function() {if (!this.started) {document.getElementById(this.id).src = 'about:blank'}}
+		this.show = function() {
+			var b = document.getElementById(this.id)
+			if (!this.started) {
+				this.started = true
+				b.src = this.src()
+			}
+			b.style.visibility = 'visible'
+		}
+	}
+	this.add = function(size,space,page) {
+		var b = new c_banner(this,this.banners.length,size,space,page)
+		this.banners[this.banners.length] = b
+		return b
+	}
+	this.iframe = function(size,width,height,space,page) {
+		if (dc_handler) {return dc_handler.aIframe(size,width,height,space,page)}
+		if (arguments.length < 5) {page = 'www@globes:2'}
+		if (arguments.length < 4) {space = 10001}
+		var border = 0
+		var b = this.add(size,space,page)		
+		return '<iframe src="about:blank" id="' + b.id + '" name="banner_ad" style="visibility:hidden;width:'+width+'px;height:'+height+'px;border:'+border+'" marginwidth="0" marginheight="0" hspace="0" vspace="0" scrolling="no" frameborder="0"></iframe>'
+	}
+	this.blank = function() {for(var i in this.banners) {this.banners[i].blank()}}
+	this.start = function() {for(var i in this.banners) {this.banners[i].show()}}
+	this.start_banner = function(size,page,space) {
+		if (arguments.length < 3) {space = null}
+		if (arguments.length < 3) {page = null}
+		for(var i in this.banners) {
+			if (size != this.banners[i].size) {continue}
+			if (page != null && page != this.banners[i].page) {continue}
+			if (space != null && space != this.banners[i].space) {continue}
+			this.banners[i].show()
+		//	alert(document.getElementById(this.banners[i].id).src)
+			return
+		}
+	}	
+}
+
+
+
+function c_dropdown(p) {
+	this.parent = p
+	this.title = function(s,g) {
+		return  '<b>פורטל פיננסי</b>'
+	}
+	this.html = function(g) {
+		function dfs(t,n) {return g.finance.section_html(get_by_title(t,g.finance.sections),'150px',(arguments.length > 1) ? n : 0)}
+		function header() {
+			var td = ['<td width="25%" style="padding-right:','px" height=18 onmouseover="this.style.backgroundColor=\'#e5e5e5\'" onmouseout="this.style.backgroundColor=\'#efefef\'" nowrap><a href="javascript:g.links.','()" style="font:13px arial;color:black">','</a></td>']
+			return '<table border=0 cellpadding=0 cellspacing=0 style="border: 1px solid #ffffff;" width="100%">'
+			+	'<tr>'
+			+		merge(td,[14,'portfolio','תיק ההשקעות שלי'])
+			+		merge(td,[24,'newstracker','<b>גלובס NewsTracker</b>'])
+			+		merge(td,[24,'homepage','דף הבית'])
+			+		merge(td,[24,'finance','פורטל פיננסי'])
+			+	'</tr>'
+			+	'</table>'
+		}
+		return '<div style="position:absolute;margin:24px 23px 0 0;display:none" id="dropdown_menu_id">'
+			+'<table border=0 cellpadding=0 cellspacing=0>'
+		//	+ '<tr>'
+		//	+ 	'<td valign=middle style="border:5px solid #c1c1c1;background-color: #f0f0f0;">' + header() + '</td>'
+		//	+	'<td valign=top rowspan=2 background="' + g.url.ifim + '/Shadow_left.gif" style="filter:Alpha(opacity=70)"><img src="' + g.url.ifim + '/Shadow_corner.gif" width=14 height=14 border=0 style="filter:FlipV;"></td>'
+		//	+ '</tr>'
+			+ '<tr>'
+			+		'<td valign=top style="border:5px solid #C1C1C1;">'
+			+		'<table border=0 cellpadding=0 cellspacing=0 style="border-top: 1px solid #FFFFFF;" bgcolor="#FFFFFF">'
+			+		'<tr>'
+			+			'<td valign=top style="border-left: 1px solid #FFFFFF; border-right: 1px solid #FFFFFF;" width=150 align=right>'
+			+				dfs("הבורסה בת''א")
+			+				dfs("מט''ח")
+			+				dfs("קרנות נאמנות")
+			+			'</td>'
+			+			'<td valign=top style="border-left: 1px solid #FFFFFF;" width=150 align=right>'
+			+				dfs("בורסות בחו''ל")
+			+				dfs("מניות ארביטרז'")
+			+				dfs("המלצות אנליסטים")
+			+				dfs("נתוני חברות",1)
+			+			'</td>'
+			+			'<td valign=top style="border-left: 1px solid #FFFFFF;" width=150 align=right>'
+			+				dfs("אג''ח")
+			+				dfs("תעודות סל")
+			+				dfs("מדדים")
+			+			'</td>'
+			+			'<td valign=top style="border-left: 1px solid #FFFFFF;" width=150 align=right>'
+			+				dfs("סוף יום המסחר בת''א")
+			+				dfs("חוזים עתידיים")
+			+				dfs("הברומטר")
+			+			'</td>'
+			+		'</tr>'				
+			+		'</table>'
+			+	'</td>'
+			+	'<td valign=top background="' + g.url.ifim + '/Shadow_left.gif" style="filter:Alpha(opacity=70)"><img src="' + g.url.ifim + '/Shadow_corner.gif" width=14 height=14 border=0 style="filter:FlipV;"></td>'
+			+ '</tr>'
+			+ '<tr>'
+			+	 '<td valign=top colspan=2 align=left background="' + g.url.ifim + '/Shadow_bottom.gif" style="filter:Alpha(opacity=70)">'
+			+		'<table border=0 cellpadding=0 cellspacing=0 width="100%">'
+			+		'<tr>'
+			+			'<td align=right><img src="' + g.url.ifim + '/Shadow_corner.gif" width=14 height=14 border=0 style="filter:FlipH"></td>'
+			+			'<td align=left><img src="' + g.url.ifim + '/Shadow_corner.gif" width=14 height=14 border=0 style=""></td>'
+			+		'</tr>'
+			+		'</table>'
+			+	'</td>'
+			+ '</tr>'
+			+ '</table>'
+			+ '</div>'
+	}
+	this.controler = function(g) {
+		function vset(tagname,d) {
+			var all = document.getElementsByTagName(tagname)
+		//	alert(tagname + " " + all.length)
+			for (var i=0; i < all.length; i++) {
+				if (all[i].id == "cboTypes") {continue}
+				if (all[i].id != "ifrInstruments" && all[i].id != "ifrNYInstruments")
+					all[i].style.visibility =  "visible" 
+			}
+		}
+		function set_e(e,t,c,d) {
+			e.innerHTML=t;
+			e.currently=c;
+			var m = document.getElementById("dropdown_menu_id")
+			var t = document.getElementById("tdFinance")
+			
+			if(c == 'closed'){t.style.backgroundColor = '#f5f5f5'}
+			else{t.style.backgroundColor = '#d3d3d3'}
+			
+			var tagim = ['select','iframe']
+			for(var i in tagim) {vset(tagim[i],d)}
+			
+			m.style.display=d
+			if (d == 'block') {
+				m.style.left = (((document.body.offsetWidth/2)-265)+'px')
+			}
+		}
+		var e = document.getElementById("dropdown_anchor")
+		
+		if (e.currently == 'opened') {set_e(e,this.title('open',g),'closed','none')
+		} else {set_e(e,this.title('close',g),'opened','block')}
+	}
+}
+
+function c_finance(g) {
+	this.parent = g
+	this.sections = get_financial_links(g)
+	this.section_title = function(t,w,p,i) {
+		return '<table dir="rtl" cellpadding="0" cellspacing="0" border="0" style="font:11px arial;width:' + w + '">'
+			+ '<tr bgColor="#ffffff">'
+			+	'<td><img  width=0 ></td>'
+			+	'<td width="99%" style="text-align:right;padding-right:' + 3 + ';background-image:url(' + g.url.ifim + '/corner_transp.gif);background-repeat:no-repeat" align="absmiddle" nowrap><b>' + t + '</b></td>'
+			+ '</tr>'
+			+ '</table>'
+	}
+	this.section_html = function(s,w,n) {
+		function tr_list(a,n) {
+			var s = ""
+			for(var i in a) {
+				s += '<tr><td><img width="1" height="1"></td></tr>'
+				s += '<tr bgcolor="#ffffff" onmouseover="this.style.backgroundColor=\'#ffffff\'" onmouseout="this.style.backgroundColor=\'#ffffff\'">'
+					+ '<td style="padding-right:5px;font:12px arial;" nowrap><a href="' + a[i].data + '" target="_top" style="color:#0000cc;text-decoration:none;font:12px arial;">' + a[i].title + '</a></td>'
+				+ '</tr>'
+			}
+			for(var i=0; i < n ;i++) {
+				s += '<tr><td><img width="1" height="1"></td></tr>'
+				s += '<tr bgcolor="#ffffff"><td>&nbsp;</td></tr>'
+			} return s
+		}
+		if (s == null) {return}
+		if (arguments.length < 2) {w = '100%'}
+		if (arguments.length < 3) {n = 0}
+		return '<table dir="rtl" cellpadding="0" cellspacing="0" border="0" style="font:11px arial;width:' + w + '">'
+			+ '<tr><td>' + this.section_title(s.title,w,'5px',g.url.ifim + '/Arrow_Green1.gif') + '</td></tr>'
+			+ tr_list(s.list,n)
+			+ '</table>'
+	}
+	this.pink_title = function(t,d) {
+		if (arguments.length < 2) {d = ""}
+		var g = this.parent
+		var colspan = 3
+		return '<table cellspacing="0" cellpadding="0" border="0" width="100%" bgcolor="#F0F0F0" dir="rtl">'
+			+ '<tr>'
+			+	'<td colspan="' + colspan + '" background="' + this.parent.url.ifim + '/Dots_Orange.gif"><img src="' + g.url.sip + '" width="1" height="1"></td></tr>'
+			+	'<tr>'
+			+		'<td style="padding: 0 5 0 2" nowrap><img src="' + g.url.ifim + '/Arrow_Orange_L.gif" width="13" height="13"></td>'
+			+		'<td width="100%" style="padding: 3 3 3 4;height:27px;font:18px arial;color:#cc0000" nowrap><b>' + t + '</b></td>'
+			+		'<td style="padding-left:20px;font:12px arial;color:black" nowrap><b>' + d + '</b></td>'
+			+	'</tr>'
+			+	'<tr><td colspan="' + colspan + '" background="' + g.url.ifim + '/Dots_Orange.gif"><img src="' + g.url.sip + '" width="1" height="1"></td></tr>'
+			+ '</table>'
+	}
+	
+	this.Tab_Title = function(str, color) {
+		var g = this.parent		
+		return '<table cellspacing="0" cellpadding="0" border="0" width="100%" dir="rtl">'
+			+ '<tr>'
+			+	'<td class="TabTitle_Content_'+color+'" align="right">'+ str +'</td>'
+			+ '</tr>'
+			+ '</table>'
+	}
+
+	this.tower = function(h,w) {
+		if (arguments.length < 1) {w = "100%"}
+		var s = '<table width="' + w + '" cellspacing="0" cellpadding="0" border="0">'
+			+ '<tr><td>' + this.pink_title('תפריט נתונים') + '</td></tr>'
+		for(var i in this.sections) {
+			if (i > -1) {s += '<tr><td><img width="1" height="' + h + '"></td></tr>'}
+			s += '<tr><td>' + this.section_html(this.sections[i]) + '</td></tr>'
+		}
+		return s + '</table>'
+	}
+}
+
+
+
+
+var nyse_holidays = []
+var tase_holidays = []
+function c_exchange(name,start,duration,offset,daylight_range,days,holidays) {
+	this.name = name
+	this.start = start
+	this.duration = this.get_seconds(duration)
+	this.days = days
+	this.offset = offset // from gmt
+	this.daylight_savingtime = 0
+	var a = daylight_range.split(',')
+	try {
+		var now = server_datetime.getTime()
+		for(var i=0; i < a.length ;i += 2) {
+			if (now < (new Date(a[i])).getTime()) {continue}
+			if (now > (new Date(a[i+1])).getTime()) {continue}
+			this.daylight_savingtime = 1
+			break
+		}
+	} catch(ex) {}
+}
+c_exchange.prototype.to_gmt = function(dt) {return g.datetime.add('hour',-1 * (this.offset + this.daylight_savingtime),dt)}
+c_exchange.prototype.from_gmt = function(dt) {return g.datetime.add('hour',this.offset + this.daylight_savingtime,dt)}
+c_exchange.prototype.is_holiday = function(ymd) {
+	if (!bin_list(new Date(ymd).toString().toLowerCase().substring(0,3),this.days)) {return true}
+	for(var i in this.holidays) {if (this.days[i] == ymd) {return true}}
+	return false
+}
+c_exchange.prototype.get_seconds = function(hms) {
+	var a = hms.split(':')
+	return parseInt(a[2],10)
+		+ parseInt(a[1],10) * 60
+		+ parseInt(a[0],10) * 3600
+}
+c_exchange.prototype.open = function(dt) {
+	dt.setTime(dt.getTime() + offset * 60 * 60 * 1000)
+	
+}
+
+
+// global functions
+function FixDateToShow(str)
+{
+    var oDate = new Date(str)
+    var month = oDate.getMonth()+1
+    month = (month<10)? "0"+ month : month;
+    var day = (oDate.getDate()<10) ? "0" + oDate.getDate().toString() : oDate.getDate().toString();
+    var minute = (oDate.getMinutes()<10) ? "0" + oDate.getMinutes().toString() : oDate.getMinutes().toString();
+    var hour = (oDate.getHours()<10) ? "0" + oDate.getHours().toString() : oDate.getHours().toString();
+
+    return  day + "." + month + "." + oDate.getFullYear() + ", " + hour + ":" + minute;
+}
+function ChangeElementDisplay(layerName,sValue)
+{
+    document.getElementById(layerName).style.display = sValue;
+}
+//
+
+function RefreshDynamicItems() {
+    GetResponsesDesksSharesTextFile();
+    GetLikesCounts();
+}
+
+function GetLikesCounts() {
+    var url = "/news/ashx_handlers/GetLikesShares.ashx?" + new Date().getTime()
+    GetAsynchronousData(url, "FillLikesCounts(xmlHttp)")
+}
+
+function responses_count(b,doc_id,fid) {
+    var ruleriAction = 'Abstract_Response_abstract_click';
+    var objResponsesSpan = document.getElementById("ResponseCount_" + doc_id + "_" + fid);
+
+    if (b[doc_id] && b[doc_id].responses > 5)  {        
+        try {ruleriAction = objResponsesSpan == null  ? ruleriAction : objResponsesSpan.ruleriActRes;}     catch(ex) {}
+        
+        //var objResponsesSpan = document.getElementById("ResponseCount_" + doc_id + "_" + fid);
+        return "<span class='G_AfnayoutBublle' title='בכתבה זו " + b[doc_id].responses + " תגובות'><a  target='_top' href='/news/article.aspx?did=" + doc_id + "#reaction'><font color='#cc0000'>" + b[doc_id].responses + "</font></a></span>";                  
+	} 
+	return null;
+}
+function GetUserIDForSaving()
+{
+    if (document.cookie.length>0){
+        return ReadCookieData("UserID");
+    }
+    return 0;
+}
+
+
+function SaveToCookie(sData,sName)
+{
+    var expiredays = 1;
+    var exdate=new Date();
+    exdate.setDate(exdate.getDate() + expiredays);
+    document.cookie= sName + "=" + escape(sData)+ ((expiredays==null) ? "" : ";expires="+exdate.toGMTString());
+}
+
+ 
+function ReadCookieData(c_name)
+{
+    if (document.cookie.indexOf(c_name) == -1) return "";
+    c_start=document.cookie.indexOf(c_name);
+    var sCookie = document.cookie.substring(c_start,document.cookie.length)
+
+    if (sCookie.indexOf(";") == -1) return "";
+    sCookie= sCookie.substring(0,sCookie.indexOf(";"));
+
+    if (sCookie.indexOf("=") == -1) return "";
+    return unescape(sCookie.substring(sCookie.indexOf("=")+1));
+}
+
+
+function ChangeScrollBarDir() {
+    return;
+}
+
+function fixScroll() {
+    return;	
+}
+
+//=============================================Desk responses===================================
+function GetQueryString(key) {
+				var b = location.href.replace(/\?/,"&").toLowerCase().indexOf("&" + key + "=")
+				if (b < 0) {return ''}
+				b += key.length + 2
+				var e = location.href.indexOf("&",b)
+				return location.href.substring(b,(e < b) ? location.href.length : e)
+			}
+			
+
+var sGlobalDidForResponses = "";
+var sRespIds = "";
+
+
+function responses_desk_count(b,doc_id,fid) {
+    if (b[doc_id] && b[doc_id].responses > 5)
+    {
+        return  b[doc_id].responses ;
+    }
+	return "";
+}
+
+function isGlobesTV()
+{   
+   try
+   {
+      if(typeof FolderDynasty != "undefined")
+      {
+        if(FolderDynasty.indexOf("2006") != -1)return true
+      }
+   }
+   catch(e){}
+   
+   return false;
+}
+
+
+function getResponsesByDid(did, elementID) {
+    var url = "/Responses/txtResponses.txt?" + new Date().getTime()
+    GetAsynchronousData(url,"response_filler_bydid(xmlHttp," + did + ",'" + elementID + "')")
+}
+
+function getDeskResponsesByDid(did, elementID) {
+    if (Is_Desk_On == true) {    
+        var url = "/Responses/txtGlobesDeskResponses.txt?" + new Date().getTime()
+        GetAsynchronousData(url, "deskResponse_filler_bydid(xmlHttp," + did + ",'" + elementID + "')")
+    }
+}
+
+function response_filler_bydid(xmlHttp, did, elementID)
+{
+    var a = xmlHttp.responseText.split('\n')
+    var iResponses = 0;
+    var b = new Array();
+    
+    for (var i in a) 
+    {
+       var x = (a[i]+ ":").split(':');
+       var doc_id = x[0];
+       var responses = x[1].replace("\n","").replace("\r","");
+
+       if (doc_id == did)iResponses = responses;
+    }
+    
+    var obj = document.getElementById(elementID);
+    if(obj)
+    {
+      if(iResponses < 5) 
+      {     
+     
+         //var objTeguvot_Ballon_pink = document.getElementById("Teguvot_Ballon_pink");
+         //var container = document.createElement("span");
+         //container.innerHTML = "<a href=\"/news/article.aspx?did=" + did + "#reaction\">+</a> ";
+         //obj.appendChild(container); 
+         
+         return;  
+      }
+
+     //obj.innerHTML = "<a href='#reaction'>" + iResponses + "</a>";
+    
+     var lnk = document.createElement("a");
+     lnk.setAttribute('href', '#reaction');
+     lnk.innerHTML = "<span title='בכתבה זו " + iResponses +" תגובות'>" + iResponses + "</span>";
+     obj.appendChild(lnk);
+
+    }  
+}
+
+function deskResponse_filler_bydid(xmlHttp, did, elementID)
+{
+    var a = xmlHttp.responseText.split('\n')
+    var iResponses = 0;
+    var b = new Array()
+    for (var i in a) 
+    {
+       var x = (a[i]+ ":").split(':');
+       var doc_id = x[0];
+       var responses = x[1].replace("\n","").replace("\r","");
+
+       if (doc_id == did)iResponses = responses;
+    }
+    var obj = document.getElementById(elementID);
+    
+    if(obj)
+    {
+      if(iResponses == 0) 
+      {        
+        var objTeguvot_Ballon_white = document.getElementById("Teguvot_Ballon_white");        
+        var container = document.createElement("span");
+        container.innerHTML = "<a href=\"/news/article.aspx?did=" + did + "#reactionDesk\">+</a>";
+        obj.appendChild(container);  
+        
+        return;  
+      }  
+      //obj.innerHTML = "<a href='#reactionDesk'>" + iResponses + "</a>";
+
+        var lnk = document.createElement("a");
+        lnk.setAttribute('href', '#reactionDesk');
+        lnk.innerHTML = iResponses;
+        obj.appendChild(lnk);
+    }
+}
+
+function GetResponsesDesksSharesTextFile() {
+    var url = "/Responses/ResponsesDeskSharesCounters.txt?" + new Date().getTime()
+    GetAsynchronousData(url, "FillResponsesDesksShares(xmlHttp)")
+}
+
+function FillResponsesDesksShares(xmlHttp) {
+    try {
+        var hasDID = (GetQueryString("did") != "") ? true : false;
+        var rs = null;
+
+        // span
+        var rs1 = null;
+
+        // ResponseCount
+        var rs2 = null;
+        
+        // ResponseDeskCount
+        var rs3 = null;
+
+        var lines = xmlHttp.responseText.split('\n');
+        var dic = new Object();
+
+        for (var i in lines) {
+            var x = (lines[i] + ":").split(':');
+            var y = (x[1] + ",").split(',');
+
+            dic[x[0]] = new function () {
+                this.responses = parseInt(y[0]);
+                this.desks = parseInt(y[1]);
+                this.shares = parseInt(y[2]);
+            }
+        }
+        
+        if (window.ActiveXObject) {
+            rs1 = document.getElementsByTagName('span');
+            FillResponses(rs1, dic);
+
+            //FillDesk(rs1, dic);
+        } else {
+            rs2 = document.getElementsByName("ResponseCount");
+            FillResponses(rs2, dic);
+
+            if (hasDID) {
+                rs = document.getElementsByName("ResponseDeskCount");
+            } else {
+                rs = document.getElementsByName("ResponseCount");
+            }
+
+            //FillDesk(rs, dic);
+        }
+    } catch (e) { alert("ERROR - FillResponsesDesksShares"); }
+}
+
+function get_responses_count(dic, did, fid) {
+    var ruleriAction = 'Abstract_Response_abstract_click';
+    var objResponsesSpan = document.getElementById("ResponseCount_" + did + "_" + fid);
+
+    if (dic[did] && dic[did].responses > 5) {
+        try { ruleriAction = objResponsesSpan == null ? ruleriAction : objResponsesSpan.ruleriActRes; } catch (ex) { }
+
+        //var objResponsesSpan = document.getElementById("ResponseCount_" + doc_id + "_" + fid);
+        return "<span  class='G_AfnayoutBublle' title='בכתבה זו " + dic[did].responses + " תגובות'><a href='/news/article.aspx?did=" + did + "#reaction'><font color='#cc0000'>" + dic[did].responses + "</font></a></span>";
+    }
+    return null;
+}
+
+function get_responses_desk_count(dic, did, fid) {
+    if (dic[did] && dic[did].desks > 5) {
+        return dic[did].desks;
+    }
+    return "";
+}
+
+function FillResponses(rs, dic) {
+    for (var i = 0; i < rs.length; i++) {
+        //if (window.ActiveXObject && rs[i].className != 'CountTguvot') { continue; }
+        if (rs[i].className == 'CountTguvot') {
+            var strArr = rs[i].id.split('_');
+            var did = strArr[1];
+            var fid = strArr[2];
+            var ih = get_responses_count(dic, did, fid);
+            if (ih != null) {
+                rs[i].innerHTML = ih;
+                try {
+                    if (dic[did] && dic[did].responses > 5) {
+                        var ruleriAction = 'Abstract_Response_abstract_click';
+                        var objResponsesSpan = document.getElementById("ResponseCount_" + did + "_" + fid);
+
+                        try { ruleriAction = objResponsesSpan == null ? ruleriAction : objResponsesSpan.ruleriActRes; } catch (ex) { }
+
+                        $("div[id*='fbls_" + did + "']").find('.nwshares').html("<span class='G_AfnayoutBublle' title='בכתבה זו " + dic[did].responses + " תגובות'><a href='/news/article.aspx?did=" + did + "#reaction'>" + dic[did].responses + "</a></span>");
+                    } else {
+                        $("div[id*='fbls_" + did + "']").find('.nwshares').html(dic[did].responses)
+                    }
+                } catch (e) { }
+            }
+        }
+    }
+}
+
+function FillDesk(rs, dic) {
+    for (var i = 0; i < rs.length; i++) {
+        try {
+            var strArr = rs[i].id.split('_')
+            var did = strArr[1];
+            var fid = strArr[2];
+            var ih = get_responses_desk_count(dic, did, fid)
+
+            if (ih != null && ih != "") {
+                if (GetQueryString("did") != "") {
+                    var objResponseDeskCount = document.getElementById("ResponseDeskCount_" + did + "_" + fid);
+                    var objDescLink = document.getElementById("ResponseDeskLink_" + did + "_" + fid);
+
+                    if (objResponseDeskCount && objDescLink) {
+                        if (objDescLink) {
+                            objDescLink.innerHTML = "<font color='#cc0000'>" + ih + "</font>";
+                            objDescLink.title = "בכתבה זו " + ih + " פרשנויות דסק";
+                        }
+                        objResponseDeskCount.style.visibility = "visible";
+                    }
+                }
+                else {
+                    var objResponsesLink = document.getElementById("ResponseCount_" + did + "_" + fid);
+                    objResponsesLink.style.direction = "rtl";
+
+                    if (objResponsesLink && ih != null && ih != "") {
+                        var sInnerHTMLOfResponses = objResponsesLink.innerHTML;
+                        if (sGlobalDidForResponses != did && sRespIds.indexOf(did) == -1) {
+                           // sInnerHTMLOfResponses += "<label title='בכתבה זו " + ih + " פרשנויות דסק' style='margin:0;padding:0;' class='G_AfnayoutBublleDesk'><a target='_top' href='/news/article.aspx?did=" + did + "&fid=" + fid + "&autoplay=false#reactionDesk'  onclick=\"javascript:e_counter.count('', 'DeskIcon_Click', null, GetRuleriEventCategoryValue());\"><font color='#cc0000'>" + ih + "</font></a></label>";
+
+                            sGlobalDidForResponses = did;
+                            sRespIds += did;
+                        }
+
+                        objResponsesLink.innerHTML = sInnerHTMLOfResponses;
+
+                    }
+                }
+            }
+        }
+        catch (ex) { }
+    }
+}
+
+function add_FBShare_Click(did, fid) {
+    var url = "/Incrementclick.ashx?did=" + did + "&fid=" + fid + "&ctype=FBShares&tt=" + new Date().getTime()
+    GetAsynchronousData(url, "add_FBShare_Click_Response(xmlHttp)");
+}
+
+function add_FBShare_Click_Response(xmlHttp) {
+    alert("add_FBShare_Click_Response: " + xmlHttp.responseText);
+}
+
+function FillLikesCounts(xmlHttp) {
+    var itemsObj = new Object();
+    var items = xmlHttp.responseText.split("\n");
+
+    for (var i = 0; i < items.length; i++) {
+        if (items[i] != "") {
+            var itemData = items[i].split(",");
+            itemsObj[itemData[0]] = { like: itemData[1], share: itemData[2], total: itemData[3] };
+            $("div[id*='fbls_" + itemData[0] + "']").find('.nwlikes').html(itemData[3]);
+        }
+    }
+
+    $("span[id*='likesBubble_']").each(function () {
+        var iid = $(this).attr('id');
+        var did = iid.split('_')[1];
+        if (itemsObj[did] != null) {
+            if (1 * itemsObj[did].total > 5 || itemsObj[did].total.indexOf("K") > 0) {
+                $(this).html(itemsObj[did].total);
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        } else {
+            $(this).hide();
+        }
+    });
+}
+
+<!-- #INCLUDE VIRTUAL="/Finance/js/viewInstrument.asp" -->
+
+function GetQS(data) {    
+	var qs = new Querystring();
+	var result = qs.get("fid")
+	result = ((result==null || result=='' || result=='undefined') && (location.href.toLowerCase().indexOf("home.aspx")!=-1 || location.href.toLowerCase().indexOf("article.aspx")!=-1 )) ? 2 : result;
+	return result;
+}
+
+var host = location.protocol + "//www.globes.co.il"
+var DBrowser = '<a href="javascript:void(0);" onClick="this.style.behavior=\'url(#default#homepage)\'; this.setHomePage(\'http://www.globes.co.il/serve\');">הפוך לעמוד הבית</a>';
+
+var myTimer;
+var FolderDynasty =  typeof(FolderDynasty) == "undefined" ? "" : FolderDynasty
+var MainMenuTimer;
+var MainMenuFlag;
+var inner_fid = GetQS(location.href);
+var connectedProviders = new Array();
+var connectedProvidersChecked = false;
+
+function getEmailNew()
+{
+	try {        
+		if (user_id > 0) {
+			var unescaped_login_id = unescape(login_id)
+			var longest = 14
+			if (unescaped_login_id.length > longest) {unescaped_login_id = '... ' + unescaped_login_id.substring(0,longest - 4)}
+			return '<div id="LoginClass">'
+			+'<div style="position:relative;width:100%;height:1px;z-index:1000;">'
+			+show_my_product()
+			+show_user_menubar(unescaped_login_id)
+			+'</div>'
+			+'</div>';
+		}
+
+	} catch(ex){}	
+    var backToUrl = "/news/m/login/login.aspx?mode=wizard&p_backTo=" + escape(location.href)  ;//"/pay/login.asp?mode=wizard"; 
+    return ("<div id='LoginClass'><a href='javascript:void(0)' onclick=\"SignWizard_Show('" + backToUrl + "','wizard','',580,620);\" target='_top'  id='Login_connect_Span'>התחבר</a></div>");
+}
+
+function c_header(p) {	
+		
+	this.menu = new Object()
+	this.menu.parent = this
+	this.menu.select_types = TypeArraySetup()
+	this.menu.search = new Object()
+	this.menu.search.parent = this
+	this.menu.search.site = function(s) {
+		function sr(e,f,q) {location.href = g.url.fsr + '?ExchangeID=' + e + '&Feeder='  + f + '&strToSearch=' + escape(q)}
+		var e = document.getElementById("site_search_selector")
+		e.blur()
+		var v = e.options[(arguments.length > 0) ? s : e.selectedIndex].value
+		if (arguments.length == 0) {e.selectedIndex = 0}
+		var q = document.getElementById("query_for_site").value
+		if (q.match(/^\s*$/)) {return}
+		if (v == 'ny') {return sr(4,1,q)}
+		if (v == 'ta') {return sr(45,0,q)}
+		location.href = '/news/searchresults.aspx?searchQuery=' + q + '&count=10&field=0&period=0&status=All'
+	}
+	this.menu.search.find = function() {window.open ('http://www.find.co.il/redirsrch.asp?uid=221&sourceid=300&searchstring=' + document.getElementById("query_for_find").value,"find")}
+	this.menu.search.finance = function(g) {
+		var query = document.getElementById("name_or_symbol").value
+		var feeder = radio_value("Feeder")
+		var cboType = selected_value("cboTypes")
+		var newPortfolio = (self.location.href.toLowerCase().indexOf("globessites")>=0 || self.location.href.toLowerCase().indexOf("newportfolio=1")>0) ? 1 : 0
+		location.href = '/finance/shared/SearchResults.asp?t=' + (new Date().getTime() % 10000)
+			+ '&strToSearch=' + escape(query)
+			+ '&SearchIdxInst=0'
+			+ '&Lang=HE'
+			+ '&Field=3'
+			+ '&Direction=1'
+			+ '&WhatType=' + ((cboType > -1) ? g.header.menu.select_types[cboType].WhatType : "")
+			+ '&TypeID=' + ((cboType > -1) ? g.header.menu.select_types[cboType].TypeID : "")
+			+ '&NumPage=1'
+			+ '&Feeder=' + ((feeder == 'abroad') ? 1 : 0)
+			+ '&WhatToSearch=' + query
+			+ '&cboTypes=-' + cboType
+			+ '&newPortfolio='+ newPortfolio
+
+	}
+	this.menu.dropdown = new c_dropdown(this.menu)
+	
+	this.menu.site = new Object()
+	this.menu.site.parent = this
+	
+	this.menu.site.filler = function() {
+		document.getElementById("hm_in_israel").innerHTML = "<b>" + g.datetime.dt2DMy(server_datetime,"/") + "</b>&nbsp; ישראל " + g.datetime.dt2hM(server_datetime,":")
+		server_datetime.setTime(server_datetime.getTime() + 60 * 1000)
+		setTimeout("g.header.menu.site.filler()",60 * 1000)		
+	}
+	
+	this.menu.site.financial_options = function(g,w) {
+		var s = '<select dir="rtl" align="center" style="color:#000000;font:11px Arial;line-height:130%; width:' + w + 'px" onchange="view_selected(this)" ID="Select1" NAME="Select1">'
+		+	'<option value="-1" style="color: #000000; background-color: #E5E5E5; text-align: center;">::: נתונים פיננסיים :::</option>'
+		for(var i in g.finance.sections) {
+			s += '<option value="" style="color:black;background-color:#E5E5E5;text-align:center;">::: ' + g.finance.sections[i].title + ' :::</option>'
+			for(j in g.finance.sections[i].list) {
+				s += '<option value="' + g.finance.sections[i].list[j].data + '">' + g.finance.sections[i].list[j].title + '</option>'
+			}
+		}
+		return s + "</select>";
+	}
+		
+	this.menu.finance = function(g) {
+		g.onload(function() {
+			function querystring(key) {
+				var b = location.href.replace(/\?/,"&").toLowerCase().indexOf("&" + key + "=")
+				if (b < 0) {return ''}
+				b += key.length + 2
+				var e = location.href.indexOf("&",b)
+				return location.href.substring(b,(e < b) ? location.href.length : e)
+			}
+			var abroad = location.href.match(/feeder=1/i)
+		
+			g.header.menu.populator(abroad ? 'abroad' : 'in israel',g.financial_links,abroad ? 1 : 0)
+			document.getElementById("name_or_symbol").value = unescape(querystring("strtosearch"))
+			var type_id = parseInt(querystring("typeid"))
+			if (!isNaN(type_id)) {
+				var cboTypes = document.getElementById("cboTypes")
+				for(var i=1; i < cboTypes.options.length ;i++) {				
+						if (g.header.menu.select_types[cboTypes[i].value].TypeID != type_id) {continue}
+						cboTypes.selectedIndex = i
+						break				
+				}
+			}
+		})
+	}			
+	
+}
+function getEnter(event)
+{
+	if(navigator.appName == "Microsoft Internet Explorer")
+	{
+		if(window.event && window.event.keyCode == 13 && isHiddenDivDisplayed == 0){startSearch()}
+	}
+	else
+	{
+		if (event && event.which == 13 && isHiddenDivDisplayed == 0){startSearch()}
+	}
+}
+
+function querystring(key) {
+				var b = location.href.replace(/\?/,"&").toLowerCase().indexOf("&" + key + "=")
+				if (b < 0) {return ''}
+				b += key.length + 2
+				var e = location.href.indexOf("&",b)
+				return location.href.substring(b,(e < b) ? location.href.length : e)
+			}
+			
+function searchQuery(key) {
+				var b = location.href.indexOf("?" + key + "=")
+				if (b < 0) {return ''}
+				b += key.length + 2
+				var e = location.href.indexOf("&",b)
+				return location.href.substring(b,(e < b) ? location.href.length : e)
+			}
+
+function GetCookie(sCookie,sSubCookie) {
+	var startIndex, endIndex, valueCookie;	
+	startIndex = document.cookie.indexOf(sCookie);
+	if (startIndex != -1) {
+		startIndex += sCookie.length + 1;
+		endIndex = document.cookie.indexOf(";",startIndex);
+		if (endIndex == -1)
+			endIndex = document.cookie.length;
+		valueCookie = document.cookie.substring(startIndex,endIndex);
+		if (sSubCookie != "") {
+			startIndex = valueCookie.indexOf(sSubCookie);
+			if (startIndex != -1) {
+				startIndex += sSubCookie.length + 1;
+				endIndex = valueCookie.indexOf("&",startIndex);
+				if (endIndex == -1)
+					endIndex = valueCookie.length;
+				valueCookie = valueCookie.substring(startIndex,endIndex);
+				return(valueCookie);
+			}
+			else return null;
+		}
+		else return(valueCookie);	
+	}
+	else return null;
+}
+
+
+function getSearch(caller,b) {
+
+	LoadTextFile(b);	
+	var oDiv = document.getElementById("divHiddenSearch")
+	var sQ = document.getElementById("site_search_selector");
+	var q = document.getElementById("query_for_site");
+	var oCombo = document.getElementById("cboTypes");
+	ShowResults(q,oDiv,b)
+	
+	sQ.value = b;
+	q.blur();
+	
+	var tr = caller.parentNode;
+	
+	for (var i=0; i < tr.childNodes.length ;i++)
+	{
+		var tdi = tr.childNodes[i]
+		var stdName = null
+		switch (tdi.id) {
+			case "tdS_1":
+				stdName = 'משולב';  
+				break
+			case "tdS_2":
+				stdName = 'כתבות';
+				break
+			case "tdS_3":
+				stdName = 'ני"ע&nbsp;בארץ';
+				break
+			case "tdS_4":
+				stdName = 'ני"ע&nbsp;בחו"ל';
+				break
+			case "tdS_5":
+				stdName = 'בארכיון';
+				break
+			case "tdS_TV":
+				stdName = 'TV';
+				break
+			case "tdS_6":
+				stdName = 'כלים&nbsp;ומידע';
+				break
+			case "tdS_7":
+				stdName = 'Find';
+				break
+			//case "tdS_8":
+			//	stdName = '<a href="/news/searchresults.aspx">מתקדם&rsaquo;&rsaquo;</a>';
+			//	break
+		}
+		if (!stdName) {continue}			
+		if (false || caller === tdi) {
+                      
+           tdi.innerHTML = "<table cellpadding=0 cellspacing=0 border=0 width='100%'>"
+                         + "<tr>"
+                         +      "<td class='Header_FinanceTabsrightimg' valign='bottom'><img src='http://images.globes.co.il/images/serve/images/pixel.gif' width='2' height='18' /></td>" 
+                         +      "<td class='HeaderTabstext'>" + stdName + "</td>"
+                         +      "<td class='Header_FinanceTabsleftimg' valign='bottom'><img src='http://images.globes.co.il/images/serve/images/pixel.gif' width='2' height='18' /></td>" 
+                         + "</tr></table>"   
+           
+           switch(tdi.id)
+           {
+                case "tdS_1":
+                    unselectBorder(1,0);
+                    break;
+                    
+                case "tdS_6":
+                    unselectBorder(1,2);
+                    break;
+                    
+                case "tdS_2":
+                    unselectBorder(2,3);
+                    break;
+                    
+                case "tdS_5":
+                    unselectBorder(3,4);
+                    break;
+                    
+                case "tdS_TV":
+                    unselectBorder(4,5);
+                    break;
+                      
+                case "tdS_3":
+                    unselectBorder(5,6);
+                    break;
+                    
+                case "tdS_4":
+                    unselectBorder(6,7);
+                    break;
+                
+                case "tdS_7":
+                    unselectBorder(7,8);
+                    break;
+                    
+                case "tdS_8":                    
+                    break;    
+           }
+                 
+			if(b == 'ta' || b == 'ny' || b == 1 || b == 2 || b == 5 || b == 'TV') {	
+				oCombo.style.display = '';
+				oCombo.style.width = '95px';
+				q.style.width = '220px';
+				build_combo_types(b);
+			} else {
+				oCombo.style.display = 'none';
+				q.style.width = '315px';
+			}
+    
+		} else {
+			tdi.innerHTML = stdName;
+			tdi.className = "tabstextHeaderItems";
+		}		
+	}
+	try{q.focus()}catch(ex){}
+}
+
+function unselectBorder(idLeft,idRight)
+{ 
+    for(var i=1; i<9; i++)
+    {      
+        if(i == idLeft || i == idRight)
+        {      
+             var tdIDLeft = "tdS_" + idLeft + idLeft;
+             var tdIDRight = "tdS_" + idRight + idRight;    
+             if(document.getElementById(tdIDLeft) != null)document.getElementById(tdIDLeft).className = "uncheckedTabBorder";
+             if(document.getElementById(tdIDRight) != null)document.getElementById(tdIDRight).className = "uncheckedTabBorder";
+        }
+        else
+        {
+            var tdID = "tdS_" + i + i; 
+            if(document.getElementById(tdID) != null)document.getElementById(tdID).className = "tabHeaderBorderButtom";
+            
+        }
+    }
+}
+
+
+function search_find_new() {
+    var q = document.getElementById("query_for_site");
+    var str = q.value;
+    window.open('http://find.co.il/displayManager.aspx?searchPhrase=' + escape(str) + '&lang=2~rtl&indexversion=globes&ssid=23',"find")
+}
+
+function GetKey(key) {
+				var b = location.href.replace(/\?/,"&").toLowerCase().indexOf("&" + key + "=")
+				if (b < 0) {return ''}
+				b += key.length + 2
+				var e = location.href.indexOf("&",b)
+				return location.href.substring(b,(e < b) ? location.href.length : e)
+}
+
+function startSearch()
+{
+    var iSearchID = document.getElementById("site_search_selector").value;
+    
+    var sRuleriOpt_label = "News";
+	if(iSearchID == 11) sRuleriOpt_label = "Qautes";
+	
+	ruleriHeaderSearchEvent(sRuleriOpt_label, "Search");
+    
+	var q = document.getElementById("query_for_site");
+	var str = q.value;
+	var sCheckingLength;
+	
+	sCheckingLength = str.replace(" ","");
+	
+	str = str.replace(/>/g,"");
+	str = str.replace(/</g,"");
+
+	sCheckingLength = sCheckingLength.replace(/^\s*|\s(?=\s)|\s*$/g, "");
+
+	if(sCheckingLength.length < 1) 
+	{
+                    alert('אנא הכנס ערך לחיפוש שהוא לפחות תו אחד');
+		return;
+	}
+	
+	if(iSearchID == "") {iSearchID = 1}
+	if(iSearchID == 8){top.location.href = "/news/SearchResults.aspx?searchType=exact&id=2&searchQuery=" + escape(str);}
+	if(iSearchID == 'ta' || iSearchID == 'ny')
+	{
+		getSearch_TA_NY_NEW(g,iSearchID);	
+	}
+	if (iSearchID == 1 || iSearchID == 2 || iSearchID == 5 || iSearchID == 'TV' || iSearchID == 'nadlan') {		
+		var search_type = "exact"
+
+		if (iSearchID == 1 ) {
+            var dt = new Date();
+            var month1 = dt.getMonth() + 1;
+            var day1 = dt.getDate();
+            var year1 = dt.getFullYear();
+
+            var dd = dt.getDate()
+            dt.setDate(0);
+            dt.setDate(0);
+            dt.setDate(0);
+            dt.setDate(dd);
+
+            var month2 = dt.getMonth() + 1;
+            var day2 = dt.getDate();
+            var year2 = dt.getFullYear();
+
+            var items = str.split(" ");
+            var sq = "";
+            for (var i = 0; i < items.length; i++) {
+                if(items[i] != ""){
+                    sq = sq + items[i];
+
+                    if(i < items.length - 1){
+                        sq = sq + "+";
+                    }
+                }
+            }
+            
+            // top.location.href = "/news/search.aspx?author=&all=" + sq + "&exact=&any=&nowords=&ling=False&time=last+3+month&start=" + year2 + "%2f" + month2 + "%2f" + day2 + "&end=" + year1 + "%2f" + month1 + "%2f" + day1 + "&count=10&nadlan=&accuracy=False&page=0";
+            search_type = "all";
+            top.location.href = "/news/search.aspx?searchType=" + search_type + "&searchQuery=" + escape(str) + "&id=1&cx=partner-pub-3457903570625953:1632854301&cof=FORID:10&ie=UTF-8&q=" + encodeURI(str) + "&sa=Search";
+            // top.location.href = "/news/search/?searchType=" + search_type + "&searchQuery=" + escape(str) + "&id=1&cx=partner-pub-3457903570625953:1632854301&cof=FORID:10&ie=UTF-8&q=" + encodeURI(str) + "&sa=Search";
+        }
+        if (iSearchID == 2 || iSearchID == 5 || iSearchID == 'nadlan') {
+            top.location.href = "/news/searchresults.aspx?searchType=" + search_type + "&searchQuery=" + escape(str) + "&id=" + iSearchID
+        }
+		if (iSearchID == 'TV') {
+			//g.links.globestv('searchType=' + search_type + '&SearchTxt=' + escape(str) + '&id=TV');
+			top.location.href = "/news/home.aspx?fid=2006&clip=" + escape(str);
+		} 
+	}
+	if(iSearchID == 6){top.location.href = "/news/searchresults.aspx?searchType=exact&searchQuery=" + escape(str) + "&id=6"}
+	if(iSearchID == 7){	
+		window.open(g.url.host + '/search/find.aspx?redirect&searchQuery=' + escape(str),"find")
+	}
+	if (iSearchID == 11) 
+    {
+        // top.location.href = "/news/searchresults.aspx?searchType=exact&searchQuery=" + escape(str) + "&id=7";
+        top.location.href = "/portal/search.aspx?searchType=exact&searchQuery=" + escape(str) + "&id=7&area=ta";
+    }
+}
+function setChanges() {
+	var id = querystring("id")
+	var td = id ? document.getElementById("tdS_" + id) : null
+	if (!td) {td = document.getElementById("tdS_1"); id = 1}
+	getSearch(td,id)
+}
+function build_combo_types(iSearchID) {
+	if (iSearchID == 1 || iSearchID == 2 || iSearchID == 5 || iSearchID == 'TV')
+	{
+		var e = document.getElementById("cboTypes")
+		e.options.length = 0
+		e.options[0] = new Option('ביטוי מדויק','exact')
+		e.options[1] = new Option('כל המילים','all')
+		return
+	}
+	if(iSearchID == 'ta')
+	{
+		combo_populator('israel',g.financial_links)	
+	}
+	
+	if(iSearchID == 'ny')
+	{
+		combo_populator('abroad',g.financial_links)
+	}
+}
+
+function combo_populator(t,fl,f)
+{
+	var e = document.getElementById("cboTypes")
+	e.options.length = 0
+	e.options[0] = new Option(" --- הכל --- ",-1)
+	var feeder = (t == 'israel') ? "0" : "1"
+	var select_types = TypeArraySetup()
+	for (var i in select_types) {
+		var r = select_types[i]
+		if (r.Feeder == feeder) {e.options[e.options.length] = new Option(r.TypeName_HE,i)}
+	}
+		
+}
+
+function getSearch_TA_NY_NEW(g,iSearchID)
+{
+		var query = document.getElementById("query_for_site").value;
+		var cboType = '';//selected_value("cboTypes")
+		var newPortfolio = (self.location.href.toLowerCase().indexOf("globessites")>=0 || self.location.href.toLowerCase().indexOf("newportfolio=1")>0) ? 1 : 0
+		location.href='/finance/shared/SearchResults.asp?t=' + (new Date().getTime() % 10000)
+			+ '&strToSearch=' + escape(query)
+			+ '&SearchIdxInst=0'
+			+ '&Lang=HE'
+			+ '&Field=3'
+			+ '&Direction=1'
+			//+ '&WhatType=' + ((cboType > -1) ? g.header.menu.select_types[cboType].WhatType : "")
+			//+ '&TypeID=' + ((cboType > -1) ? g.header.menu.select_types[cboType].TypeID : "")
+			+ '&WhatType=' 
+			+ '&TypeID=' 
+			
+			+ '&NumPage=1'
+			+ '&Feeder=' + ((iSearchID == 'ny') ? 1 : 0)
+			+ '&WhatToSearch=' + query
+			+ '&cboTypes=-' + cboType
+			+ '&newPortfolio='+ newPortfolio
+			+ '&id=' + ((iSearchID == 'ny') ? 4 : 3)
+
+}
+
+function bookmarksite(title,url)
+{
+	if (window.sidebar) // firefox
+		window.sidebar.addPanel(title, url, "");
+	else if(window.opera && window.print){ // opera
+		var elem = document.createElement('a');
+		elem.setAttribute('href',url);
+		elem.setAttribute('title',title);
+		elem.setAttribute('rel','sidebar');
+		elem.click();
+	} 
+	else if(document.all)// ie
+		window.external.AddFavorite(url, title);
+}
+
+		function DrawHiddenSearchDiv()
+		{
+			return '<div dir="ltr" style="margin:10 0 10 0;display:none;font:12 px arial;position:absolute;top:87px;" id="divHiddenSearch"></div>'
+		}
+
+
+function GetSearchBox()
+{
+			var search_box = '<table dir="rtl" id="Table13" width="100%" cellspacing="0" cellpadding="0" border="0">'
+		+	'<tr valign=bottom>'
+		+		'<td height=22>'
+		+			'<table cellspacing="0" cellpadding="0"  width="390" align=left border="0" ID="Table16">'				
+		+			'<tr>'
+        +				'<td><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="50" height="1"/></td>'
+        +				'<td id="tdS_11" class="tabHeaderBorderButtom" rowspan="2"><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="1" height="1"/></td>'
+        +				'<td><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="70" height="1"/></td>' 
+        +				'<td id="tdS_22" class="tabHeaderBorderButtom" rowspan="2"><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="1" height="1"/></td>'
+        +				'<td><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="50" height="1"/></td>'
+        //+				'<td id="tdS_33" class="tabHeaderBorderButtom" rowspan="2"><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="1" height="1"/></td>'
+        //+				'<td><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="0" height="1"/></td>'
+        +				'<td id="tdS_44" class="tabHeaderBorderButtom" rowspan="2"><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="1" height="1"/></td>'
+        +				'<td><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="40" height="1"/></td>'
+        +				'<td id="tdS_55" class="tabHeaderBorderButtom" rowspan="2"><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="1" height="1"/></td>'
+        +				'<td><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="60" height="1"/></td>'
+        +				'<td id="tdS_66" class="tabHeaderBorderButtom" rowspan="2"><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="1" height="1"/></td>'
+        +				'<td><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="60" height="1"/></td>'
+        +				'<td id="tdS_77" class="tabHeaderBorderButtom" rowspan="2"><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="1" height="1"/></td>'
+        +				'<td><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="50" height="1"/></td>'
+		//+				'<td id="tdS_88" class="tabHeaderBorderButtom" rowspan="2"><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="1" height="1"/></td>'
+		//+				'<td><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="0" height="1"/></td>' 
+		+			'</tr>'
+		+			'<tr>'
+		+				'<td id="tdS_1" onclick="getSearch(this,1)">משולב</td>'		
+		+				'<td id="tdS_6" onclick="getSearch(this,6)">כלים ומידע</td>'			
+		+				'<td id="tdS_2" onclick="getSearch(this,2)">כתבות</td>'		
+		//+				'<td id="tdS_5" onclick="getSearch(this,5)">בארכיון</td>'		
+		+				'<td id="tdS_TV" onclick="getSearch(this,\'TV\')">TV</td>'		
+		+				'<td id="tdS_3" onclick="getSearch(this,\'ta\')">ני"ע בארץ</td>'		
+		+				'<td id="tdS_4" onclick="getSearch(this,\'ny\')">ני"ע בחו"ל</td>'		
+		+				'<td id="tdS_7" onclick="getSearch(this,7)">Find</td>'		
+		//+				'<td id="tdS_8"></td>'
+		+			'</tr>'
+		+			'</table>'
+		+		'</td>'
+		+ 	'</tr>'
+		+	'</table>'
+		+   '<table width=390 height=32 dir=rtl cellpadding=0 cellspacing=0  align=left ID="Table2">'
+		+ 	'<tr align=left>'
+		+		'<td class="SearchQueryBackground" id="td_query" >'
+		+         '<table cellpadding=0 cellspacing=0 width=100% ID="Table3" border=0><tr>'  
+		+             '<td style="padding-left:10px;padding-right:5px;font:12px arial;font-weight:bold;color:#999999;">חפש:</td>'
+		+		    	'<td align=right><input width=220 onkeypress="getEnter(event)" onkeyup="onSearchKeyUp(event,this);" onclick="hideHelpDiv();"  style="font:11px arial;" id="query_for_site" type="text" NAME="query_for_site">&nbsp;<select onchange="oncboTypesChange()" id="cboTypes" style="border:1px solid #000000;width:100px;font:11px arial;display:none;" dir="rtl" NAME="cboTypes"><option value="-1"> --- הכל --- </select>'
+		+		    	'<img width="2" height="0" border=0><img align=absmiddle width=20 id="Img1" style="cursor:pointer;" src="http://images.globes.co.il/images/GlobesGlobal/button20x20_Norm.gif" onclick=startSearch() onmouseover="changeSearchButton(this,1)" onmouseout="changeSearchButton(this,0)"><input type="hidden" id="site_search_selector" name="site_search_selector" value=""></td>'
+		+         '</tr></table>'
+		+		'</td>'
+		+ 	'</tr>'	
+		+	'</table>' 
+		
+		search_box +=  DrawHiddenSearchDiv() +  '<' + 'script> update_datetime();setChanges();</' + 'script>'
+		return search_box;		
+}
+
+function changeSearchButton(obj,state)
+{
+    if(state == 1)
+        obj.src = "http://images.globes.co.il/images/GlobesGlobal/button20x20_On.gif";
+    else
+        obj.src = "http://images.globes.co.il/images/GlobesGlobal/button20x20_Norm.gif";    
+}
+
+
+function RenderMainMenuNagish(w,wEx)
+{	
+  	var render_id = GetMainTabID(inner_fid);  
+  	var selected_tab="";	
+
+    var TdSpace = ''
+    var menu='<table width="' + w + '" border="0" cellpadding="0" cellspacing="0" id="Table4" ><tr><td align="right"><br><b>';
+    if(HeaderMenu.length>0) {menu +=  HeaderMenu[0][2]  }
+    menu += '</b><hr></td></tr></table>';
+    return menu;
+}
+
+ 
+function RenderMainMenu2(w,wEx)
+{   
+  	var render_id = GetMainTabID(inner_fid);    	
+  	var selected_tab="";	
+    var TdSpace = ''
+    var OffsetForSubMenu = 60;
+    if (w!=990){ 
+        HeaderMenu = HeaderMenu_750;        
+        OffsetForSubMenu = 45;
+    }
+    var menu='<table align="center" border="0" cellpadding="0" cellspacing="0" id="HeaderTopnavigation' + wEx + '" dir="rtl"><tr>';
+	for (var i=0; i<HeaderMenu.length ; ++i)
+	{
+	    var pointer="hmt" + HeaderMenu[i][0];	
+	    var link_pointer="mht_link" + HeaderMenu[i][0];	
+	    
+	    var menu_class="class=\"MainMenu" + wEx + "\"";
+	    if (HeaderMenu[i][0] == render_id) 
+	    {
+	        menu_class="class=\"SelectedMainMenu" + wEx + "\"";
+	    }	     	    
+    
+	    if (HeaderMenu[i][1]=='0') 
+	    {
+	        menu += TdSpace + 
+	        '<td id=\"' + pointer + '\" valign=\"top\" align=\"center\" ' +  menu_class + ' ><span id=\"' + link_pointer + '\" style=\"width:100%\"><a  href="' + HeaderMenu[i][3][0][1] + '">' + HeaderMenu[i][2] + '</a></span>'+ GenerateHoverMenuItem(i,wEx,OffsetForSubMenu) +'</td>';
+	    }
+	    else 
+	    {
+		    menu += TdSpace + '<td id=\"' + pointer + '\" valign=\"top\" align=\"center\" ' +  menu_class + ' ><span id=\"' + link_pointer + '\" style=\"width:100%\"><a  href="' + HeaderMenu[i][3][0][1] + '">' + HeaderMenu[i][2] + '</a></span>' + GenerateHoverMenuItem(i,wEx,OffsetForSubMenu) + '</td>';
+	        TdSpace = '<td style="border-bottom:1px solid #C0C0C0;"><img src="http://images.globes.co.il/images/serve/images/pixel.gif" width="4" height="1" /></td>'
+	    }
+	}
+	menu += '</tr></table>';
+	return menu;	
+}
+
+function GenerateHoverMenuItem(i, wEx, OffsetForSubMenu)
+{
+    var result="";    
+  	var render_id = GetMainTabID(inner_fid);      
+    
+		var pointer="hmt" + HeaderMenu[i][0];
+        var link_pointer="mht_link" + HeaderMenu[i][0];
+        var outer_pointer="mht_outer" + HeaderMenu[i][0];        
+        result += '<div style="position: relative; left: -' + OffsetForSubMenu + '; top: 0;"><div id="menu_child' + HeaderMenu[i][0] + '" style="position: absolute; left:0; top:0; visibility: hidden;direction:rtl;background-color:white;border-top:1px solid #BCBCBC;">'
+		if (HeaderMenu[i][1]=='1' && HeaderMenu[i][0]!=render_id)
+		{
+			for (var j=0; j<HeaderMenu[i][3].length ; ++j)
+			{	
+			 //  result += '<div class="SubMenuDD' + wEx + '" onmouseover="this.className=\'SubMenuDDSelected' + wEx + '\'" onmouseout="this.className=\'SubMenuDD' + wEx + '\'"><a href=\"' + HeaderMenu[i][3][j][1] + HeaderMenu[i][3][j][2] + '\"' + (j==HeaderMenu[i][3].length-1? ' style=\"border-bottom: 1px solid #BCBCBC;\"' : '') + '>' + HeaderMenu[i][3][j][0]+ '</a></div>'			      
+   			   result += '<div class="SubMenuDDD' + wEx + '" onmouseover="this.className=\'SubMenuDDDSelected' + wEx + '\'" onmouseout="this.className=\'SubMenuDDD' + wEx + '\'" onclick="location.href=\'' + HeaderMenu[i][3][j][1] + HeaderMenu[i][3][j][2] + '\'"' + (j==HeaderMenu[i][3].length-1? ' style=\"border-bottom: 1px solid #BCBCBC;\"' : '') + '>' + HeaderMenu[i][3][j][0]+ '</div>'			      
+			}
+		}
+		
+        result += '</div></div>'
+        + '<' + 'script>'
+        + 'generate_hover_menu2(\"' + pointer + '\",\"' + link_pointer + '\", \"menu_child' + HeaderMenu[i][0] + '\", \"y\" ,"' + wEx + '");'
+        + '</' + 'script>'  
+
+    return result;
+}
+
+
+var SelectedMainTabId=null;
+function GetMainTabID(inner_fid)
+{       
+    if (SelectedMainTabId!=null) return SelectedMainTabId;
+    
+	for (var i=0; i<HeaderMenu.length ; ++i)
+	{
+	    for (var j=0; j<HeaderMenu[i][3].length ; ++j)
+	    {                        
+	        if (inner_fid==null)
+	        {
+	            if (typeof(HeaderMenu[i][3][j][1])!='undefined' && HeaderMenu[i][3][j][1]!='')
+                {
+                    var temp = HeaderMenu[i][3][j][1].toLowerCase();
+                    var folder_search = location.href.toLowerCase().indexOf(temp);
+                    if(folder_search==-1)
+                    {
+                        temp = temp.replace(/home/, "article");
+                        temp = temp.replace(/fid=/, "");                        
+                        folder_search = location.href.toLowerCase().indexOf(temp);
+                    }                
+                    if(folder_search>-1)
+                    {              
+                        SelectedMainTabId = HeaderMenu[i][0];
+                        return SelectedMainTabId;
+                    }
+                }
+	        }
+	        else
+	        {	            	            
+	            if (typeof(HeaderMenu[i][3][j][2])!='undefined' && typeof(HeaderMenu[i][3][j][2])!='' && (HeaderMenu[i][3][j][2] == inner_fid || FolderDynasty.indexOf('-' + HeaderMenu[i][3][j][2] + '-')>-1))
+                {                              
+                    SelectedMainTabId = HeaderMenu[i][0];
+                    return SelectedMainTabId;             
+                }                
+	        }            
+	    }
+	}	
+	return 	SelectedMainTabId;
+}
+
+function RenderSubMenuNagish(w,wEx)
+{
+	var menu = '<table border="0" cellpadding="0" cellspacing="0" ID="Table5" width="' + w + '">\n<tr>\n<td align="right" dir="rtl">';		
+	var delimiter = '&nbsp;&nbsp;|&nbsp;&nbsp;';
+	for( var i=0; i<HeaderMenu[0][3].length ;  i++) 
+	{
+		if(i==7) { menu += '<br>'}
+		menu += '<a href="' + HeaderMenu[0][3][i][1] + HeaderMenu[0][3][i][2] + '&nagish=1">' + HeaderMenu[0][3][i][0] + '</a>'
+		if(i<HeaderMenu[0][3].length-1) { menu +=  delimiter;}
+	}
+	menu += '</td>\n</tr>\n</table>\n';
+	return menu;
+}
+
+
+function RenderSubMenu()
+{
+	var menu="<table border=0 cellpadding=0 cellspacing=0><tr>";			
+	var render_id = GetMainTabID(inner_fid);
+
+	for (var i=0; i<HeaderMenu.length ; ++i)
+	{
+		if (HeaderMenu[i][0]==render_id)
+		{
+			if (HeaderMenu[i][1]=='1')
+			{
+				for (var j=0; j<HeaderMenu[i][3].length ; ++j)
+				{
+				    var off_menu = '<td align=center style="padding:0 10px 0 10px; height:19px; background: url(http://images.globes.co.il/images/site/Header/MainTab_Dot.gif) no-repeat top left;" class="navigSubStyle"><a href="' + HeaderMenu[i][3][j][1] +  HeaderMenu[i][3][j][2] + '">' + HeaderMenu[i][3][j][0] + '</a></td>';				    
+				    var on_menu = '<td align=center valign=middle style="padding:0 5px 0 5px; height:19px; background: url(http://images.globes.co.il/images/site/Header/MainTab_Dot.gif) no-repeat top left;" ><table width="100%" border=0 cellpadding=0 cellspacing=0><tr><td><img src="http://images.globes.co.il/images/site/Header/TabRed_1x15.gif" width="1" height="15" valign="absmiddle"></td><td style="padding:0 5px 0 5px;height:13px; background: #CC0000 ;" valign="middle" align="center" class="navigSubStyle"><a href="' + HeaderMenu[i][3][j][1] +  HeaderMenu[i][3][j][2] + '" style="color:White; text-decoration:none;">' + HeaderMenu[i][3][j][0] + '</a></td><td><img src="http://images.globes.co.il/images/site/Header/TabRed_1x15.gif" width="1" height="15"></td></tr></table>';
+				    
+				    if (inner_fid==null)
+				    {
+					    var io_search = location.href.toLowerCase().indexOf(HeaderMenu[i][3][j][1].toLowerCase());
+		                if (io_search>-1)
+		                {
+			                menu += on_menu;
+		                }
+		                else
+		                {
+			                menu += off_menu;
+		                }	
+				    }
+				    else
+				    {				        
+					    if (HeaderMenu[i][3][j][2] == inner_fid || FolderDynasty.indexOf('-' + HeaderMenu[i][3][j][2] + '-')>-1)
+					    {
+						    var search = FolderDynasty.indexOf(inner_fid);
+						    if (search>-1)
+						    {
+							    menu += on_menu;
+						    }
+						    else
+						    {
+							    menu += off_menu;
+						    }	
+					    }				
+					    else
+					    {
+						    menu += off_menu;
+					    }
+				   }
+				}
+			}
+			
+		}
+	}
+	menu += "</tr></table>";	
+	return '' + menu;			
+		
+}
+
+//QS Handling
+function Querystring(qs) { // optionally pass a querystring to parse
+	this.params = new Object()
+	this.get=Querystring_get
+	
+	if (qs == null)
+		qs=location.search.substring(1,location.search.length)
+
+	if (qs.length == 0) return
+
+	qs = qs.replace(/\+/g, ' ')
+	var args = qs.split('&') // parse out name/value pairs separated via &
+	
+	for (var i=0;i<args.length;i++) {
+		var value;
+		var pair = args[i].split('=')
+		var name = unescape(pair[0])
+
+		if (pair.length == 2)
+			value = unescape(pair[1])
+		else
+			value = name
+		
+		this.params[name] = value
+	}
+}
+
+function Querystring_get(key, default_) {
+	if (default_ == null) default_ = null;
+	
+	var value=this.params[key]
+	if (value==null) value=default_;
+	
+	return value;
+}
+
+
+
+function show_hm2()
+{
+  MainMenuFlag = true;
+  var MenuItem = document.getElementById(this["at_parent"]);
+  var SubMenu = document.getElementById(this["at_child" ]);
+  var MenuItemTab = document.getElementById(this["at_tab" ]);
+   if(MenuItemTab.className == "MainMenu" + this.extension)
+   {
+	MenuItemTab.className = "MainMenuOver" + this.extension;
+   }
+  show2(MenuItem.id, SubMenu.id, this.extension);
+}
+
+function hide_hm2()
+{
+  var SubMenu = document.getElementById(this["at_child"]);
+  var MenuItemTab = document.getElementById(this["at_tab"]);
+  if (MenuItemTab.className=="MainMenuOver"+this.extension)
+  {
+	MenuItemTab.className = "MainMenu" + this.extension;
+  }
+  document.getElementById(SubMenu.id).style.visibility = 'hidden';
+  //clearTimeout(MainMenuTimer);
+}
+
+function show2(parent, child, extension)
+{
+	  var top  = 0
+	  var left = 0
+	  
+	  if (MainMenuFlag)
+      {
+		  
+          var MenuItem = document.getElementById(parent);
+          var SubMenu = document.getElementById(child );
+		  var subMenuParent = SubMenu.parentNode.parentNode
+         
+          var w = 0
+          if(extension=="750")
+          {
+			try{
+					var menu_child_index = child.replace("menu_child","")
+					var index = parseInt(menu_child_index)
+					if(index==1) { w = -30 }
+			}
+			catch(err){}
+          }
+
+          SubMenu.style.position   = "absolute";
+          SubMenu.style.visibility = "visible";
+          MainMenuFlag = false;
+          
+      }
+}
+
+
+function click_hm()
+{
+  var MenuItem = document.getElementById(this["at_parent"]);
+  var SubMenu = document.getElementById(this["at_child" ]);
+  if (SubMenustyle.visibility != "visible")
+  {
+      show(MenuItemid, SubMenu.id);
+  }
+  else
+  {
+    SubMenustyle.visibility = "hidden";
+  }
+  return false;
+}
+
+
+function generate_hover_menu2(parentTab, parent, child,  position, widthExtension)
+{
+  var MenuItem = document.getElementById(parent);
+  var MenuItemTab =  document.getElementById(parentTab);
+  var SubMenu = document.getElementById(child);
+   
+  Extension = widthExtension;
+  MenuItem["at_parent"]     = MenuItem.id;
+  SubMenu["at_parent"]     = MenuItem.id;
+  MenuItem["at_child"]      = SubMenu.id;
+  SubMenu["at_child"]      = SubMenu.id;
+  MenuItem["at_position"]   = position;
+  SubMenu["at_position"]   = position;
+  MenuItem["at_tab"] = MenuItemTab.id;
+  SubMenu["at_tab"] = MenuItemTab.id;
+  MenuItem["extension"] = widthExtension;
+  SubMenu["extension"] = widthExtension;  
+  SubMenu.style.position   = "absolute";
+  SubMenu.style.visibility = "hidden";
+  
+  
+  MenuItem.onmouseover = show_hm2;
+  MenuItem.onmouseout  = hide_hm2;
+  SubMenu.onmouseover = show_hm2;
+  SubMenu.onmouseout  = hide_hm2;
+  
+}
+
+
+
+function change_Zindex(obj,flag)
+    {
+    if(flag==1)
+	obj.style.zIndex="1005";
+    else
+	obj.style.zIndex="1001";
+    }
+
+function show_user_menubar(username)
+    {
+    var menubar="";
+    menubar+='<div id="loged_user_tosite" onmouseover="change_Zindex(this,1)" onmouseout="change_Zindex(this,0)"><span>'+username+'</span>';
+    menubar+='<a href="http://www.globes.co.il/news/alerts/?fid=3840#fromelement=toplinks">עדכון פרטים</a>';
+    menubar+='<a href="/pay/rlogin.asp?disconnect#fromelement=toplinks">התנתק</a>';
+    menubar+='</div>';
+    return menubar;
+    }
+
+
+
+function show_my_product()
+{
+     var premium_products = [ 
+        { id: 8 , name: 'עיתון דיגיטלי', link: '/news/home.aspx?fid=2701'}, 
+        { id: 12, name: 'Stocks Online', link: '/GlobesSites/Globes/Finance/instruments/Instrumentslist.aspx?wantrt=1&TypeID=3'},
+	{ id: 13, name: 'Options Online', link: '/GlobesSites/Globes/Finance/instruments/optionlist.aspx?wantrt=1&TypeID=15'},
+	{ id: 14, name: 'Tel-Aviv Online', link: '/GlobesSites/Globes/Finance/instruments/Instrumentslist.aspx?wantrt=1&TypeID=3'}
+    ];
+
+
+    var cookieData;
+    var cookieName = 'SessionData';
+    var i, x, y, ARRcookies = document.cookie.split(";");
+    for (i = 0; i < ARRcookies.length; i++) {
+        x = ARRcookies[i].substr(0, ARRcookies[i].indexOf("="));
+        y = ARRcookies[i].substr(ARRcookies[i].indexOf("=") + 1);
+        x = x.replace(/^\s+|\s+$/g, "");
+        if (x == cookieName) {
+            cookieData = unescape(y).split('|');
+        }
+    }
+
+    var menubar="";
+    var productsHTML = '';
+    if(cookieData != 'undefined' && cookieData.length > 1 && cookieData[1] != '')
+    {
+        var premiumProductIds = cookieData[1].split('-');
+        for(var i = 0; i< premiumProductIds.length; i++)
+        {
+            var productId = premiumProductIds[i];
+            for(var p = 0; p < premium_products.length; p++)
+            {
+                if(premium_products[p].id == productId)
+                {
+                    productsHTML += '<a ' + " onmousedown=\"_gaq.push(['_trackEvent', 'תפריט ראשי', 'ניווט', 'המוצרים שלי - " + premium_products[p].name + "', undefined, false]);\"" +  ' href="' + premium_products[p].link + '#fromelement=toplinks">' + premium_products[p].name + '</a>';
+                }
+            }
+        }
+    }
+	var ipad_fn="";
+	var isiPad = navigator.appVersion.match(/iPad/i) != null;
+	if(isiPad)
+	    ipad_fn=" onclick='ipad_onmouseover_open_menu(this)' ";
+
+        menubar+='<div id="my_products_insite" '+ ipad_fn +' ><a ' + " onmousedown=\"_gaq.push(['_trackEvent', 'תפריט ראשי', 'ניווט', 'המוצרים שלי - ראשי', undefined, false]);\" " + 'id=myProductslink href="/news/alerts/?fid=3840#fromelement=toplinks">המוצרים שלי</a>';
+        menubar+='	<div id="my_prod">'
+	menubar+='	    <a ' + " onmousedown=\"_gaq.push(['_trackEvent', 'תפריט ראשי', 'ניווט', 'המוצרים שלי - תיק אישי', undefined, false]);\" " + ' href="/globessites/globes/portfolio/portfolio/Portfolio.aspx?default=true#fromelement=toplinks">תיק אישי</a>';
+        menubar+=productsHTML;
+        menubar+='	</div>';
+        menubar+='</div>';
+    
+    return  menubar;
+}
+
+var ipad_myproduct_menu_is_open=false;
+function ipad_onmouseover_open_menu(obj)
+    {
+    if(!ipad_myproduct_menu_is_open)
+	{
+	obj.className="my_products_insite_ipad_menu_onclick";
+	ipad_myproduct_menu_is_open=true;
+	}
+    else
+	{
+	obj.className="my_products_insite_ipad_menu";
+	ipad_myproduct_menu_is_open=false;
+	}
+    }
+var footer_pattern = "<div class='G_BoxTH_footer'>"
+var footer_pattern = "<div class='G_BoxTH_footer'>"
++ "<span class='PaddingRight'>&nbsp;</span>"
++ "<h3>{1}</h3>"
++ "</div>"
++ "<table border='0' cellpadding='0' cellspacing='0' id='FooterCombos' width='310'>"
++ "<tr>"
++ "<td valign='top' style='padding:10px;'><a href='{3}' onclick='javascript:ruleriAdvancementArticleClick(\"-title-\")'>{0}</a></td>"
++ "<td align=right  valign='top' width='100%' style='padding:7px 0 0 10px;'><div class='FooterLink'><a href='{3}' onclick='javascript:ruleriAdvancementArticleClick(\"-title-\")'>{2}</a></div><div>{4}</a></div></td>"
++ "</tr>"
++ "</table>";
+
+var objects_in_row = 3;
+var footer_pointer = 0;
+
+var randomnumber=new Array();
+var constant_element = 0;
+var randomnumber1, randomnumber2, randomnumber3;
+
+Array.prototype.shuffle = function( b )
+{
+ var i = this.length, j, t;
+ while( i )
+ {
+  j = Math.floor( ( i-- ) * Math.random() );
+  t = b && typeof this[i].shuffle!=='undefined' ? this[i].shuffle() : this[i];
+  this[i] = this[j];
+  this[j] = t;
+ }
+
+ return this;
+};
+function get_popunder_script() {
+	try {
+		if (popunder_script_src.length > 0 && shalter.without_popunder == false && !is_mobile) {
+			return '<' + 'script id="popunder_script" src="' + popunder_script_src + '"></' + 'script>'
+		}
+	} catch(ex) {}
+	return ''
+}
+
+function ruleriAdvancementArticleClick(value)
+{
+    e_counter.count(unescape(value), 'Footer_mivzaim_banner', null, GetRuleriEventCategoryValue());
+}
+
+function GenerateFooter()
+{
+	//randomnumber1=Math.floor(Math.random()*5)
+	randomnumber1=constant_element
+	do{
+		randomnumber2=Math.floor(Math.random()*5)
+	}
+	while(randomnumber1==randomnumber2);
+
+    do{
+		randomnumber3=Math.floor(Math.random()*5)
+	}
+	while(randomnumber3==randomnumber1 || randomnumber3==randomnumber2);
+
+    randomnumber.push(randomnumber1,randomnumber2,randomnumber3);
+    randomnumber.shuffle()
+}
+
+function RenderFooterBox(r_number)
+{
+
+	if (footer_data[r_number][4]!=""){
+        temp_item = footer_pattern.replace("{0}", "<img src=" + footer_data[r_number][4] + " width='100' height='75'>");
+    }else{
+        temp_item = footer_pattern.replace("{0}", "<img src='https://images.globes.co.il/images/site2/images/PromoSpecial_100x75.jpg' width='100' height='75'>");
+    }
+
+    temp_item = temp_item.replace("{1}", footer_data[r_number][1]);
+    temp_item = temp_item.replace("{2}", footer_data[r_number][2]);
+    temp_item = temp_item.replace(/\{3\}/g, footer_data[r_number][5]);
+    temp_item = temp_item.replace("{4}", footer_data[r_number][3]);
+    temp_item = temp_item.replace(/-title-/g, escape(footer_data[r_number][1]));
+    
+
+    footer_pointer++;
+    return temp_item
+}
+
+
+function GenerateLinks(nagish)
+{
+    var qsDid = new Querystring();
+	var did = qsDid.get("did")
+    var links = [['מנוי לעיתון גלובס','javascript:g.links.subscribe()','']
+    ,['שירות למנויי גלובס','/news/article.aspx?did=1000252423&fid=3038','&nagish=1']
+    ,['דרושים','/news/article.aspx?did=1000252044&fid=3038','&nagish=1']
+    ,['פרסמו אצלנו','/news/article.aspx?did=1000323852&fid=3038','&nagish=1']
+    ,['תנאי שימוש','/news/article.aspx?did=1000252043&fid=3038','&nagish=1']
+    ,['עזרה','/news/article.aspx?did=1000324018&fid=3038','&nagish=1']
+    ,['צור קשר','/news/article.aspx?did=1000252041&fid=3038','&nagish=1']
+    ,['תמיכה','/support/support.asp?Lang=HE','']
+    ,['עדכון פרטים','/pay/updateusern.asp?tab=1','']
+    ,['המוצרים שלי','/globessites2/premium/default.aspx?pid=all&tab=1','']
+    ,['אודות','/news/article.aspx?did=1000252042&fid=3038','&nagish=1']
+	,['עמוד נגיש','/news/home.aspx?fid='+inner_fid +'&did='+did+'&nagish=1','']
+   	,['RSS','/news/article.aspx?did=851969&fid=3038','']
+   	,['נושאים','/news/tag_index.aspx','']
+	,['אקספלורר 8 בגלובס','https://www.globes.co.il/ie8/','']];
+
+
+    nagish = (arguments.length > 0) ? nagish : "";
+
+    var result="";
+    var prefix_nagish = (nagish!="") ? "<li class='none'>" : "";
+    var suffix_nagish = (nagish!="") ? "</li>" : "";
+
+    for (var i=0;i<links.length;++i)
+    {
+	    var nagishParam = (nagish!="") ?  links[i][2]: "";
+	    var prefix_bold = (links[i][0]== 'פרסמו אצלנו' ? "<strong>" : "")
+		var suffinx_bold = (links[i][0]== 'פרסמו אצלנו' ? "</strong>" : "")
+		var sStyle = (links[i][0]== 'פרסמו אצלנו' ? " style='font-size:12px' " : "")
+
+	    if (i == 0)
+		{
+			result += prefix_nagish + "<span class='HeaderFooterLink'><a href=\"" + links[i][1] + nagishParam + "\">" +  links[i][0] + "</a></span>" + suffix_nagish + " | ";
+		}
+		else
+		{
+			result += prefix_nagish + "<span class='HeaderFooterLink'"+ sStyle +"><a target=_blank href=\"" + links[i][1] +  nagishParam + "\">" + prefix_bold + links[i][0] +  suffinx_bold + "</a></span>" + suffix_nagish + " | ";
+		}
+
+    }
+
+
+    return result;
+}
+function GenerateFooterPart2()
+{
+	GenerateFooter();
+    footer_pointer=3;
+	var globesShop = ''
+	+   '<div class="G_BoxTH_footer">'
+    +   '<span class="PaddingRight">&nbsp;</span>'
+    +   '<h3>המבצעים החמים – גלובס שופס</h3>'
+    +   '</div>'
+	+	'<table width="300" border="0" align="center" cellpadding="0" cellspacing="0" dir="rtl" style="height:120px;">'
+	+	'<tr>'
+	+		'<td id="globesshops_container" valign="top" style="padding-top:10px;">'
+	+		'</td>'
+	+	'</tr>'
+	+	'</table>'
+    document.write(""
+    +   "<tr>"
+    +   "   <td id=\"footer_travels\" valign=top align=right>" + RenderFooterBox(randomnumber[0]) + "</td>"
+    +   "   <td id=\"footer_travels\" valign=top align=right>" + RenderFooterBox(randomnumber[1]) + "</td>"
+    +   "   <td id=\"footer_shops\" valign=top align=right>" + RenderFooterBox(randomnumber[2]) + "</td>"
+    +   "</tr>"
+    +   "");
+
+    //Liron - I deleted the function body. You can find this on Visual SourceSafe.
+    //fill_globesshops();
+}
+function evaluateXPath(aNode, aExpr) { // https://developer.mozilla.org/en/Using_XPath
+	if (window.ActiveXObject) {return aNode.selectNodes(aExpr)}
+	var xpe = new XPathEvaluator()
+	var nsResolver = xpe.createNSResolver(aNode.ownerDocument == null ? aNode.documentElement : aNode.ownerDocument.documentElement)
+	var result = xpe.evaluate(aExpr, aNode, nsResolver, 0, null)
+	var found = []
+	for(var res = result.iterateNext(); res ;res = result.iterateNext()) {found.push(res)}
+	return found;
+}
+function child_text(aNode, aExpr,i) {
+	var a = evaluateXPath(aNode, aExpr)
+	if (a.length <= i) {return ''}
+	if (a[i].nodeValue != null) {return a[i].nodeValue}
+	return a[i].firstChild.data
+}
+function GenerateTravels()
+{
+    return "נסיעות";
+}
+
+function c_globes() {
+	this.script = new function() {
+		this.querystring = ""
+		this.host = location.protocol + '//www.globes.co.il'
+		this.url = '/shared/js/he/main-16a11.aspx'.toLowerCase()
+		if (location.protocol != 'http:') {return}
+		var scripts = document.getElementsByTagName("script")
+		for(var i=0; i < scripts.length ;i++) {
+			var src = scripts[i].src.toLowerCase()
+			var p = (src + "?").indexOf(this.url + '?')
+
+			if (p > -1) {
+				this.host = p > 0 ? src.substring(0,p) : location.protocol + "//" + location.hostname + (location.port ? ":" + location.port : "")
+				this.querystring = src.substring((src + '?').indexOf('?') + 1)
+				break
+			}
+		}
+    }
+	this.StopPageReload = false;
+	this.PageReloadRelativeTime = new Date();
+	this.PageReloadMillisecond  = 0;
+	this.PageReloadAfterXsecond = function(iSecond) {
+		this.PageReloadMillisecond = iSecond * 1000;
+		setTimeout("g.PageReload()",this.PageReloadMillisecond )
+	}
+	this.PageReload = function(){
+		if (!this.StopPageReload){
+			var TempDate = new Date()
+			if ((TempDate.getTime() - this.PageReloadRelativeTime.getTime()) >= this.PageReloadMillisecond ){
+				window.location.reload();
+			//location.href ='/rjs.asp?' + escape(location.href) // document.location.reload(true);
+			//	document.location.href = document.location.href;
+			}
+		}
+		setTimeout("g.PageReload()",60000); // if not stop or reload, try again after 1 minute.
+	}
+	this.onload_handlers = new Array()
+	this.onload = function(h) {this.onload_handlers[this.onload_handlers.length] = h}
+
+	this.onResize_handlers = new Array()
+	this.onResize = function(h) {this.onResize_handlers[this.onResize_handlers.length] = h}
+
+	this.datetime = new c_datetime()
+	this.almond = new c_almond(this)
+	this.exchange = new function() {
+		this.days = new function() {
+			this.nyse = "mon,tue,wed,thu,fri".split(",")
+			this.tase = "sun,mon,tue,wed,thu".split(",")
+		}
+		this.nyse = new c_exchange("נוי יורק","00:09:00","00:09:00",-5,'apr 2 2006 8:00,oct 29 2006 8:00',this.days.nyse,nyse_holidays)
+		this.tase = new c_exchange("תל אביב","00:09:00","00:09:00",2,'mar 31 2006 2:00,oct 1 2006 2:00',this.days.tase,tase_holidays)
+	}
+	this.querystring = function(name) {
+		var a = location.search.substring(location.href.indexOf('?')+1).split('&')
+		var l = name.length + 1
+		for(var i=0; i < a.length ;i++) {if (a[i].substring(0,l).toLowerCase() == name + '=') {return a[i].substring(l)}}
+		return ''
+	}
+
+	this.url = new Object()
+	this.url.host = this.script.host
+	this.url.root = this.url.host
+	this.url.p = this.script.host + '/pay'
+	this.url.f = this.script.host + '/finance'
+	this.url.fp = this.url.f + '/portfolio'
+	this.url.i = this.script.host + '/images'
+	this.url.s = this.script.host + '/serve'
+	this.url.a = this.script.host + '/archive'
+	this.url.sen = this.script.host + '/serveen'
+	this.url.fm = this.url.f + '/maof'
+	this.url.gsg = this.url.root + '/GlobesSites/Globes'
+	this.url.gsgpsc = this.url.gsg + '/Premium/SC'
+	this.url.gsgf = this.url.gsg + '/finance'
+	this.url.gsgi = this.url.gsg + '/images'
+	this.url.fb = this.url.f + '/bonds'
+	this.url.fe = this.url.f + '/etf'
+	this.url.ff = this.url.f + '/futures'
+	this.url.fs = this.url.f + '/shared'
+	this.url.fsr = this.url.fs + '/SearchResults.asp'
+	this.url.ifi = this.url.i + '/finance'
+	this.url.ifl = this.url.ifi + '/logo'
+	this.url.ifim = this.url.ifi + '/menu'
+	this.url.sg = this.url.s + '/globes'
+	this.url.si = this.url.s + '/images'
+	this.url.sp = this.url.s + '/pirsum'
+	this.url.sip = this.url.si + '/pixel.gif'
+	this.url.sin = this.url.si + '/nadlan'
+	this.url.sinew = this.url.si + '/new'
+	this.url.sil = this.url.si + '/logo'
+	this.url.international = this.script.host + '/international'
+	this.url.sganst = this.url.sg + '/AllNews.asp?searchType='
+
+	this.node_ids = new Object()
+	this.node_ids.tase = 585
+	this.node_ids.ht = 594
+	this.node_ids.ci = 598
+	this.node_ids.writers = 845
+	this.node_ids.wallstreet = 2973 //1225
+	this.node_ids.marketing = 821
+	this.node_ids.events = 1502
+	this.node_ids.auctions = 1283
+	this.node_ids.cellular = 1909
+	this.node_ids.nadlanDirot = 2621
+	this.node_ids.library = 1667
+	this.node_ids.research = 2190
+	this.node_ids.dh = 829
+	this.node_ids.ib = 2173
+	this.node_ids.nadlan = 607
+	this.node_ids.travel = 1941
+	this.node_ids.board = 2401
+	this.node_ids.initiative = 2463
+	this.node_ids.sport = 2605
+	this.node_ids.jobs = 2707
+	this.links = new Object()
+	this.links.subscribe = function() {window.open('https://www.globes.co.il/bulletin/menuim/menuim.html','pirsum','width=750,height=550,left=100,top=100,scrollbars=no,resizable=yes')}
+	this.links.subscribe2 = function() {window.open('https://www.globes.co.il/bulletin/globes/globes_ver26.html','pirsum','width=750,height=700,left=100,top=100,scrollbars=no,resizable=yes')}
+	this.links.for_subscribers = function() {window.open('/serve/pirsum/1.14.2.3.htm','pirsum','width=650,height=250,left=100,top=100,scrollbars=yes,resizable=yes')}
+	this.links.help = function() {window.open('/serve/globes/help.html','help','width=650,height=510,left=100,top=100,scrollbars=yes,resizable=yes')}
+	this.links.globestv = function() {window.open('/GlobesTV/default.asp','GlobesTV','width=782,height=590,left=10,top=10,toolbar=no,location=no,status=no,menubar=no,scrollbars=no').focus()}
+	this.links.radio = function() {window.open('https://www.radio-hi.co.il/channel01/Globes.asp','radio','left=100,top=100,toolbar=no,scrollbars=no,menu=no,status=no,width=439,height=254').focus()}
+	this.links.VeidatHanasi09 = function() {window.open('/news/frames/VeidatHanasi09.asp','VeidatHanasi09','left=200,top=200,toolbar=no,scrollbars=no,menu=no,status=no,width=350,height=350').focus()}
+	this.links.radio99 = function() {
+		if (arguments.length == 1)
+		{
+			window.open('/news/radio99.aspx?clip=' + escape(arguments[0]),'radio99','left=100,top=100,toolbar=no,scrollbars=no,menu=no,status=no,width=320,height=350').focus()
+		}
+		else
+		{
+			window.open('/news/radio99.aspx','radio99','left=100,top=100,toolbar=no,scrollbars=no,menu=no,status=no,width=320,height=350').focus()
+		}
+	}
+
+    this.links.blogs = function() {window.open('https://gblogs.tapuz.co.il/','blogs');}
+   this.folders = [
+		 ["הבורסה בת''א",this.node_ids.tase]
+		,["וול סטריט ושוקי העולם",this.node_ids.wallstreet]
+		,["היי-טק והון סיכון",this.node_ids.ht]
+		,["תקשורת ואינטרנט",this.node_ids.ci]
+		,["נתח שוק וצרכנות",this.node_ids.marketing]
+		,["דין וחשבון",this.node_ids.dh]
+		,["ביטוח ופיננסים",this.node_ids.ib]
+		,["עסקי ספורט",this.node_ids.sport]
+		,["פורטל הנדל''ן מספר 1",this.node_ids.nadlan]
+	]
+	this.url.sganst = '/serve/globes' + '/AllNews.asp?searchType='
+	this.allim = [
+		['כל כותרות היום', this.url.sganst + 1 ]
+		,['כל הכותרות החשובות', this.url.sganst + 2 ]
+		,['כל הדעות',this.node_ids.writers]
+	]
+	this.accessories = [['עדכון פרטי משתמש','/serve/login/loginUpdate.asp']]
+	if (window.ActiveXObject) {this.accessories[1] = ['הפוך לעמוד הבית','javascript:g.links.make_homepage()']}
+	append_array(this.accessories,
+		[['לעזרה','javascript:g.links.help()']
+		,['מנוי על עיתון גלובס','javascript:g.links.subscribe()']
+		,['שירות למנויי העיתון','javascript:g.links.for_subscribers()']
+		,['פרסם אצלנו','javascript:g.links.pirsum()']
+		,['עזרה למפרסמים',2577]
+		,['תנאי שימוש','javascript:g.links.conditions_of_use()']
+		,['מערכת האתר','javascript:g.links.people()']
+		,['צור קשר','javascript:g.links.feedback()']
+		,['דרושים','javascript:g.links.jobs()']
+	])
+	this.table_of_links = function(m,a,s) {
+		if (arguments.length < 3) {s = location.href}
+		function tr(caller,a,s) {
+			function background(caller,fid) {
+				//if (fid == caller.node_ids.nadlan) {return ';background-image: url(' + caller.url.si + '/nadlan/premium.gif);background-position: left;background-repeat: no-repeat'}
+				//if (fid == caller.node_ids.sport) {return ';background-image: url(' + caller.url.gsgi + '/new4.gif);background-position: 5px;background-repeat: no-repeat'}
+				return ''
+			}
+			function link(caller,l) {
+				if (l==607){
+					sLink = "/nadlan/";
+					return sLink
+				}
+				var sLink = l.toString().match(/^\d+$/)	? '/serve/globes/nodeview.asp?fid=' + l + ''	: l
+				if (l==2)  sLink = "/";
+				return sLink
+			}
+			//alert(a[1] + "\n" + s)
+			var bi = background(caller,a[1])
+			var is_current = a[1] == s || a[1] == "" + s
+			var c =  is_current ? 'white' : 'black'
+			var moc = is_current ? 'black' : 'black'
+			var b = is_current ? '#cc0000' : '#dcdadb'
+
+			var mob = '#bababa'
+			return '<tr>'
+			+		'<td><img src="https://images.globes.co.il/images/serve/images/ribua_grey_light.gif" border="0"></td>'
+			+		'<td style="background-color:black"><img width="1" height="1"></td>'
+			+		'<td width="100%" style="cursor:pointer;background-color:' + b + bi + ';padding:0 .5em 0 0" onMouseOver="this.style.backgroundColor=\'' + mob + '\';" onMouseOut="this.style.backgroundColor=\'' + b + '\';"><a href="' + link(caller,a[1]) + '" onMouseOver="this.style.color=\'' + moc + '\'" onMouseOut="this.style.color=\'' + c +  '\'" style="color:' + c + '" target="_top">' + a[0] + '</a></td>'
+			+	'</tr>\n'
+
+		}
+		if (m.toString().match(/^\d+$/)) {m = m + ' 0 0 0'}
+		var b = '<table dir="rtl" cellspacing="0" cellpadding="0" border=0 style="margin:' + m + ';background-color:#a1a0a0;border:1px solid black;font:13px arial;font-weight:bold;letter-spacing:-0.04em">\n'
+		for(var i=0; i < a.length ;i++) {
+			b += (i == 0 ? '' : '<tr><td colspan="2" style="background-color:black"></td><td background="' + this.url.sinew + '/kav1.gif"><img src="' + this.url.sip + '" width="1" height="1"></td></tr>') + tr(this,a[i],s)}
+		return b + '</table>'
+	}
+	this.table_of_folders = function(m,s) {return this.table_of_links(m,append_array([['עמוד השער',2]],this.folders),s)}
+
+	this.bottom = function(FooterWidth,nagish,isExternal) {
+		try{ dc_handler.activate(true)} catch(ex){ }
+
+		if (arguments.length == 1) {nagish = ""}
+		FooterWidth += "";
+		if (FooterWidth=="" || FooterWidth=="undefined") {FooterWidth = 750}
+		var show_footer = FooterWidth == 990 && !location.href.match(/home\.aspx\?fid=3493/i) && typeof(Herom_ToShowFooter) == "undefined"
+
+		function top_of_footer(g,FooterWidth) {
+			var sHTML = "<table border='0' cellpadding='0' cellspacing='0' width='" + FooterWidth + "'>"
+			+ "<tr>"
+			+	"<td width='310'><img src='https://images.globes.co.il/images/serve/images/pixel.gif' width='310' height='5' /></td>"
+			+	"<td rowspan='2' width='30'><img src='https://images.globes.co.il/images/serve/images/pixel.gif' width='30' height='1' /></td>"
+			+	"<td width='310'><img src='https://images.globes.co.il/images/serve/images/pixel.gif' width='310' height='5' /></td>"
+			+	"<td rowspan='2' width='30'><img src='https://images.globes.co.il/images/serve/images/pixel.gif' width='30' height='1' /></td>"
+			+	"<td width='310'><img src='https://images.globes.co.il/images/serve/images/pixel.gif' width='310' height='5' /></td>"
+			+ "</tr>" + "<" + "script>GenerateFooterPart2()</" + "script>" + "</table>";
+			return sHTML
+		}
+
+		function footer_companies(g,FooterWidth) {
+			return '<font style="font-size:10px;color:#666666;">UI design by <a href="https://www.tzur.com" target="_blank"><img alt="UI design by TZUR" src="https://images.globes.co.il/images/site/Logo20_Tzur.gif" border="0" align="absmiddle" /></a>&nbsp;&nbsp;&amp;&nbsp;&nbsp;<a href="https://www.danielchen.co.il" target="_blank"><img alt="Daniel Chen" src="https://images.globes.co.il/images/site2/images/daniel_chen.png" border="0" align="absmiddle" style="margin-top:5px;"/></a>&nbsp;&nbsp;|&nbsp;&nbsp;Application delivery by <a href="https://www.radware.com" target=_blank""><img SRC="https://images.globes.co.il/images/site/Logo20_Radware.gif" border="0" align="absmiddle" alt="Radware"></a>&nbsp;&nbsp;|<span dir="ltr">&nbsp;&nbsp;Developed By <a href="https://www.matrix.co.il" target="_blank"><img SRC="https://images.globes.co.il/images/Site2/images/logo_matrix_02.PNG" width="86" height="20" border="0" align="absmiddle" alt=""></a>&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;כל זכויות שמורות לגלובס 2008</span></font>'
+		}
+		var KavAboveBottom = document.getElementById('KavAboveBottom')
+		if (KavAboveBottom && !show_footer) {KavAboveBottom.style.display = 'none'}
+		if(nagish == "") {
+			var sResults = '<div align="center" style="float:none;">'
+				+ (show_footer ? top_of_footer(this,FooterWidth) : "" )
+				if (isExternal != 0)
+				{
+					sResults += '<table width="' + FooterWidth + '" style="font:11px arial" dir="rtl" align="center" border=0  cellspacing="0" cellpadding="0">'
+				+ '<tr><td><hr></td></tr><tr><td align="center"><b>עזרה ומידע: </b>' + GenerateLinks() + '</td></tr>'
+				+ '</table>'
+				+ footer_companies(this)
+				}
+				sResults += '</div>'
+				try {for(var i=0; i < excluded_dc_ids.length ;i++) {if (excluded_dc_ids[i] == 'without_popunder') {shalter.without_popunder = true; break}}} catch(ex) {}
+				return sResults + get_popunder_script()
+
+		} else {
+			return '<div align="center" style="float:none;">'
+				+ '<table width="750" dir="rtl" align="center" border=0  cellspacing="0" cellpadding="0" ID="Table1">'
+				+ '<tr><td align="center"><ul><h3><strong>עזרה ומידע: </strong></h3>' + GenerateLinks(nagish) + '</ul></td></tr><tr><td align="center"><a href="https://www.isoc.org.il/access/verification.html" title="נגיש - רמה 1"><img height="60" width="60" src="https://www.isoc.org.il/images_n/accessibility_level_1.jpg" alt="רמה 1 - העמוד עומד בקריטריונים לרמה 1 לפי הנחיות הנגישות של W3C-WAI" border="0" /></a></td></tr>'
+				+ '</table>'
+				+ '</div>'
+		}
+	}
+	this.show_header = function(h,t,l,m) {
+		if (arguments.length == 0) {return this.show_header([],[],[],[])}
+		if (arguments.length == 1) {return this.show_header(h,[],[],[])}
+		if (arguments.length == 2) {return this.show_header(h,t,[],[])}
+		if (arguments.length == 3) {return this.show_header(h,t,l,[])}
+		if (typeof(h) == 'string') {return this.show_header([h],t,l,m)}
+		var HeaderWidth;
+		for(var i=0; i < h.length ;i++) {if (h[i].match(/^width=\d+%?$/i)) {HeaderWidth = h[i].substring(6)}}
+
+		if (!bin_list('notop',h)) {
+			HeaderWidth = bin_list('width=100%',t) ? '100%' : HeaderWidth
+			var WidthExtension = "";
+			HeaderWidth +=""
+	        if (HeaderWidth == "undefined" || HeaderWidth=="" ){
+	            HeaderWidth = 750;
+	            WidthExtension = "750";
+	        }
+	        else if (HeaderWidth==990) {
+	            HeaderWidth = 990;
+	            WidthExtension = "990";
+	        }
+			dw(this.header.top.html(this,h,t,HeaderWidth,WidthExtension))
+		}
+		if (bin_list('toponly',h)) {return}
+		dw(this.header.logo.html(HeaderWidth,WidthExtension))
+		if (bin_list('nadlandirot',h)) {dw('<div style="margin:8px 0 4px 0;background-color:#999999;width:750px;height:6px"></div>')}
+		//if (bin_list('finance',h)) {this.header.menu.populator('in israel',this.financial_links,0)}
+		var Arr = document.getElementsByName("banner_ad")
+		try{for(var i=0; i<Arr.length ;i++){Arr[i].src='about:blank'}}catch(ex){}
+
+	}
+
+	this.show_header_nagish = function(h,t,l,m) {	 alert('nagish')
+		if (arguments.length == 0) {return this.show_header_nagish([],[],[],[])}
+		if (arguments.length == 1) {return this.show_header_nagish(h,[],[],[])}
+		if (arguments.length == 2) {return this.show_header_nagish(h,t,[],[])}
+		if (arguments.length == 3) {return this.show_header_nagish(h,t,l,[])}
+		if (typeof(h) == 'string') {return this.show_header_nagish([h],t,l,m)}
+		var HeaderWidth;
+		for(var i=0; i < h.length ;i++) {if (h[i].match(/^width=\d+%?$/i)) {HeaderWidth = h[i].substring(6)}}
+		if (!bin_list('notop',h)) {
+			HeaderWidth = bin_list('width=100%',t) ? '100%' : HeaderWidth
+			var WidthExtension = "";
+			HeaderWidth +=""
+	        if (HeaderWidth == "undefined" || HeaderWidth=="" ){
+	            HeaderWidth = 750;
+	            WidthExtension = "750";
+	        }
+	        else if (HeaderWidth==990) {
+	            HeaderWidth = 990;
+	            WidthExtension = "990";
+	        }
+			dw(this.header.top.html(this,h,t,HeaderWidth,WidthExtension))
+		}
+
+		if (bin_list('toponly',h)) {return}
+		dw(this.header.logo.html_nagish(HeaderWidth,WidthExtension))
+
+	}
+	this.header = new c_header(this)
+}
+
+
+if (typeof(Is_Almond_On)=="undefined") Is_Almond_On = true;
+
+var g = new c_globes()
+
+g.endofbody = {
+	handlers : []
+	,add : function(f){this.handlers.push(f)}
+	,run : function() {for(var i=0; i < this.handlers.length ;i++) {try{this.handlers[i]()}catch(ex){}}}
+}
+
+function GetExternalJSFile(urlPath){
+    var domscript = document.createElement('script');
+    domscript.src = urlPath;
+    document.getElementsByTagName('head')[0].appendChild(domscript);
+}
+
+///// g.onload(function() {g.almond.start()})
+
+onload = function() {for(var i in g.onload_handlers) {try{g.onload_handlers[i]()}catch(ee){}}}
+onresize = function() {for(var i in g.onResize_handlers) {g.onResize_handlers[i]()}}
+
+document.write('<iframe id="logjframe" width="100%" height="0" frameborder="0" style="display:none"></iframe>')
+function set_logjframe_src() {
+	var t = new Date()
+	var j = document.getElementById('logjframe')
+	var ignor = (g.script.host) ? '&ignor=1' : ''
+	var drfrr = '&drfrr=' + escape(document.referrer)
+	if (typeof(area_fid) == 'undefined') {area_fid = ''}
+	if (area_fid != "-") {
+		var j_src = /* g.script.host + */ '/shared/s.ashx?aid=' + area_fid + '&t=' + t.getTime() + ignor + drfrr + '&language=he'
+		try{ j_src += '&fp=' + user_properties.fingerprint } catch(e) {}
+		j.src = j_src
+	}
+} setTimeout(set_logjframe_src,1000)
+
+function do_onload(f,p) {g.onload(f)}
+function aad(a,b,c,d,e) {dw(g.almond.iframe(a,b,c,arguments.length < 4 ? 10001 : d,arguments.length < 4 ? 'www@globes:2' : e))}
+function NoAdClient() {return false}
+function nodad() {document_ad = false}
+function poll(p,w) {
+	if (arguments.length < 2) {w = 270}
+	var url = 'http://nl.globes.co.il/poll/poll.php?pid=' + p
+	var h = 310
+	var l = (screen.width - w)/2
+	var t = (screen.height - h)/2 - 20
+	var popup = window.open(url,'Poll','toolbar=no,scrollbars=auto,width='+w+',height='+h+',top='+t+',left='+l)
+	popup.focus()
+}
+
+//Add Bookmarks for Firefox and IE Browser too
+function addFavorite(name,url){
+	if (window.sidebar){
+		window.sidebar.addPanel(name, url,"");
+	}
+	else if (document.all){
+		window.external.AddFavorite(url, name);
+	}
+}
+
+function OW6(l){window.open(l,'help','width=480,height=510,left=100,top=100,scrollbars=yes,resizable=no')}
+function conditions_of_use(){(NoAdClient()) ? OW6(host+'/pay/Disclaimer.asp') : OW6('/news/article.aspx?did=1000252043')}
+
+var arrBanners = new Array()
+var indx = 0;
+
+function drawBanners(site,width,height,space,isRunNow,isBorder)
+{
+	if (dc_handler) {
+		dw(dc_handler.drawBanner(site,width,height,space,isRunNow,isBorder))
+		return
+	}
+    if (!Is_Almond_On) return;
+	try{
+		var Rnd =  Math.random() + Math.random() + "";
+		Rnd = Rnd.replace('.','')
+		var sBorderStyle = "";
+		var divHeight = height;
+
+		if(isBorder == 1)
+		{
+			sBorderStyle = "border:1px solid black;"
+			divHeight =
+			eight + 2;
+		}
+
+		if(isRunNow == 1){
+			dw("<iframe style='" + sBorderStyle + "margin-bottom:10px;' width=" + width + " height=" + height + " frameborder=0 scrolling=no src=http://pbid.pro-market.net/engine?site=" + site + "+space=" + space + "+page=$www@globes:2$+size=" + width + "x" + height + "+rnd=(" + Rnd + ")+linktarget=$_blank$></iframe>")
+
+		}
+		else
+		{
+			dw("<iframe style='" + sBorderStyle + "margin-bottom:10px;' id='" + Rnd + "' width=" + width + " height=" + height + "  frameborder=0 scrolling=no src='about:blank'></iframe>")
+			arrBanners[indx] = new Array(Rnd,site,width,height,space);
+			indx++;
+		}
+	}
+	catch(e){}
+}
+
+function drawBannerOnLoad(){
+	if (dc_handler || !Is_Almond_On) {return;}
+	for(var i=0;i<arrBanners.length; i++) {
+		var bannerID = arrBanners[i][0]
+		var site = arrBanners[i][1]
+		var width = arrBanners[i][2]
+		var height = arrBanners[i][3]
+		var space = arrBanners[i][4]
+		var Rnd =  Math.random() + Math.random() + "";
+		Rnd = Rnd.replace('.','')
+		var objFrame = document.getElementById(bannerID);
+		if(objFrame)objFrame.src ="http://pbid.pro-market.net/engine?site=" + site + "+space=" + space + "+page=$www@globes:2$+size=" + width + "x" + height + "+position=m+rnd=(" + Rnd + ")+linktarget=$_blank$";
+	}
+	var Rnd =  Math.random() + Math.random() + "";
+	Rnd = Rnd.replace('.','')
+	var TempBunner = '<' + 'script SRC="http://pbid.pro-market.net/engine?site=1002+size=899+rnd=(' + Rnd + ')+linktarget=$_blank$+mimetype=js"></' + 'script>'
+	document.write(TempBunner)
+}
+function Globes_Close_Jumbo(){
+	document.getElementById("DivId750x160TopBunner").style.display = "none";
+}
+function DrawJumbo() {
+	if (!Is_Almond_On) {return}
+	if (adhandler.can_jambo()) {
+		document.write('<'+'script src="http://pbid.pro-market.net/engine?site='+ g.almond.site +'+size=928+page=$www@globes:2$+distinct+linktarget=$_blank$+mimetype=js"></'+'script>')
+	}
+}
+function DrawStrip990x80()
+{
+    if (!Is_Almond_On) return;
+	document.write('<'+'script src="http://pbid.pro-market.net/engine?site='+ g.almond.site +'+size=931+page=$www@globes:2$+distinct+linktarget=$_blank$+mimetype=js"></'+'script>')
+}
+function Globes_Close_Maavaron() {
+	document.getElementById("a_1091487653379").style.display = "none"
+	document.getElementById("d_1091487653379").style.display = "block"
+}
+
+
+function AlmondCounter(id,fid,d)
+{
+	if (false && arguments.length > 2) {
+		var x = (window.ActiveXObject) ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest()
+		x.open("GET",'/GlobesCounter.ashx?fid=' + fid + '&d=' + d + '&t=' + new Date().getTime(),true)
+		x.send(null)
+	}
+    if (!Is_Almond_On) return;
+    var Rnd =  Math.random() + Math.random() + "";
+	Rnd = Rnd.replace('.','');
+	var url = "http://pbid.pro-market.net/engine?site=" + id + "+size=134+page=$www@globes:2$+distinct+mimetype=img+rnd=(" + Rnd + ")";
+    var AlmondCounterImg = new Image();
+    AlmondCounterImg.src = url;
+}
+var iAlmondOverCounter = 0;
+function AlmondOverCounter(id)
+{
+    if (!Is_Almond_On) return;
+
+    if (iAlmondOverCounter != id)
+    {
+        iAlmondOverCounter = id;
+        var Rnd =  Math.random() + Math.random() + "";
+	    Rnd = Rnd.replace('.','');
+	    var url = "http://pbid.pro-market.net/engine?site=" + id + "+size=134+page=$www@globes:2$+distinct+mimetype=img+rnd=(" + Rnd + ")";
+        var AlmondCounterImg = new Image();
+        AlmondCounterImg.src = url;
+    }
+
+}
+
+
+if (typeof(Is_Almond_On)=="undefined") {Is_Almond_On = true}
+
+function DrawMaavaron(almondId)
+{
+	if (dc_handler || !Is_Almond_On) {return}
+	if (adhandler.can_kdimon()) {
+		document.write('<'+'script src="http://pbid.pro-market.net/engine?site=' + almondId + '+size=919+page=$maavaron$+space=1+mimetype=js+linktarget=$_blank$+rnd=(1181203369490)"></'+'script>');
+	}
+}
+function DrawMaavaron_CheckExist()
+{
+	if (dc_handler || !Is_Almond_On) {return}
+	var oSpan = document.getElementById("a_1091487653379").innerHTML.toLowerCase()
+//	if (document.getElementById("a_1091487653379").innerHTML.match(/object/i))
+	if (oSpan.match(/object/i) || oSpan.match(/jumbo_span_ex/i)) {
+		document.getElementById("a_1091487653379").style.display = "block";
+		document.write("<style>.data_area{display:none}</style>");
+		window.setTimeout("Globes_Close_Maavaron()",10000);
+	}
+}
+
+function GenerateLibrary(folder_id)
+{
+    var url="/news/scripts/GetLibraryBook.gspx?folder="+folder_id;
+    GetAsynchronousData(url,'document.getElementById("footer_library").innerHTML=xmlHttp.responseText;');
+}
+
+function GenerateShops(folder_id)
+{ 
+    var url="/news/scripts/GetglobesShopsData.aspx?cid="+folder_id;
+    GetAsynchronousData(url,"document.getElementById(\"footer_shops\").innerHTML=xmlHttp_shops.responseText;");
+}
+/* Client-side access to querystring name=value pairs
+	Version 1.2.3
+	22 Jun 2005
+	Adam Vandenberg
+*/
+function Querystring(qs) { // optionally pass a querystring to parse
+	this.params = new Object()
+	this.get=Querystring_get
+	
+	if (qs == null)
+	    qs = location.search.substring(1)
+	
+
+	if (qs.length == 0) return
+
+// Turn <plus> back to <space>
+// See: http://www.w3.org/TR/REC-html40/interact/forms.html#h-17.13.4.1
+	qs = qs.replace(/\+/g, ' ')
+	var args = qs.split('&') // parse out name/value pairs separated via &
+	
+// split out each name=value pair
+	for (var i=0;i<args.length;i++) {
+	    var value;
+	    var pos = args[i].indexOf('=')
+	    if(pos > 0 )
+	    {
+	        var name = args[i].substring(0,pos)
+	        var value = args[i].substring(pos+1)            
+            this.params[name] = unescape(value)
+	    }
+		
+	}
+}
+
+function Querystring_get(key, default_) {
+	// This silly looking line changes UNDEFINED to NULL
+	if (default_ == null) default_ = null;
+	
+	var value=this.params[key]
+	if (value==null) value=default_;
+	
+	return value
+}
+
+function GetXmlHttpObject()
+{
+    if (typeof XMLHttpRequest != "undefined") {
+        return new XMLHttpRequest();
+    } else if (typeof ActiveXObject != "undefined") {
+        return new ActiveXObject("Microsoft.XMLHTTP");
+    } else {
+        throw new Error("XMLHttpRequest not supported");
+    }
+}
+function PostAsynchronousData(url,params,callback_function) {
+	var xmlHttp = (window.ActiveXObject) ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest()
+	xmlHttp.open("POST", url, true)
+	xmlHttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+	xmlHttp.onreadystatechange = function() {if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {eval(callback_function)}}
+	xmlHttp.send(params)
+}
+function GetAsynchronousData(url,callback_function)
+{
+    var xmlHttp=GetXmlHttpObject();
+    if (xmlHttp==null)
+    {
+          alert ("Your browser does not support AJAX!");
+          return;
+    } 
+    
+    if (url.indexOf("?")==-1)
+    {
+        url+="?sid="+Math.random();        
+    }
+    else
+    {
+        url+="&sid="+Math.random();        
+    }
+            
+    xmlHttp.onreadystatechange=function () 
+    { 
+        if (xmlHttp.readyState==4)
+        { 
+            eval(callback_function)
+        }    
+    }
+    xmlHttp.open("GET",url,true);
+    xmlHttp.send(null);
+}
+
+function SendPostAsynchronousData(url,params,callback_function)
+{
+    var xmlHttp=GetXmlHttpObject();
+    
+    xmlHttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xmlHttp.setRequestHeader("Content-length", params.length);
+    xmlHttp.setRequestHeader("Connection", "close");
+    
+    if (xmlHttp==null)
+    {
+          alert ("Your browser does not support AJAX!");
+          return;
+    } 
+    
+    if (url.indexOf("?")==-1)
+    {
+        url+="?sid="+Math.random();        
+    }
+    else
+    {
+        url+="&sid="+Math.random();        
+    }
+            
+    xmlHttp.onreadystatechange=function () 
+    { 
+        if (xmlHttp.readyState==4)
+        { 
+            eval(callback_function)
+        }    
+    }
+    xmlHttp.open('POST', url, true);
+    xmlHttp.send(params);
+}
+
+function countClick(node_id, did) {
+    $.ajax({ type: "get", url: "/news/click.ashx", data: { nid: node_id, did: did} });
+    
+    //.done(function (data) { alert(data); }).fail(function (xhr, status, error) { alert(error) });
+}
+function ShowFolderWeeklyArticles(node_id,num_of_days,divId,nagish)
+{ 
+    var url="scripts/GetFolderWeeklyArticles.gspx?fid="+node_id+"&days="+num_of_days+"&nagish="+nagish;   
+    GetAsynchronousData(url,"document.getElementById('" + divId + "').innerHTML=xmlHttp.responseText; RefreshDynamicItems();");
+}
+
+
+
+var less_on="https://images.globes.co.il/images/site/Tools_less.gif";
+var less_off="https://images.globes.co.il/images/site/Tools_less_OFF.gif";
+var more_on="https://images.globes.co.il/images/site/Tools_more.gif";
+var more_off="https://images.globes.co.il/images/site/Tools_more_OFF.gif";
+var min_articles = 1;
+function ActiveFoldersItemPatern(docId,fid,title,subtitle,date,author, subitem){
+    var did = docId.split('&')[0];
+    date = new Date(date);
+    var sDate = "" + date.getHours() + ":" + (date.getMinutes()<10? "0" + date.getMinutes():date.getMinutes()) + "," + date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear();
+    if (subitem)
+    {
+        return "<dl><dt><div class='standartArticleTitle'><A target=\"_top\" HREF=\"/news/article.aspx?did=" + docId + "&fromMador=" + fid + "&fromErechMusafHP\">" + title + "</A></div><br><div class='g_Article_DateTime'>" + sDate + "</div>&nbsp;<div class='g_Article_Author'>" + author + "</div>&nbsp;" 
+            + GetPersonalNewsletterIcon(did) + "&nbsp;<span class=\"CountTguvot\" name=\"ResponseCount\" ID=\"ResponseCount_" + did + "_" + fid + "\"></span></dt></dl>"                                                       
+    }
+    else
+    {
+        return "<div class='standartArticleTitle'><A target=\"_top\" HREF=\"/news/article.aspx?did=" + docId +"&fromMador="+ fid +"&fromErechMusafHP\">" + title + "</A></div>" + subtitle + "<br><div class='g_Article_DateTime'>" + sDate + "</div>&nbsp;<div class='g_Article_Author'>" + author + "</div>&nbsp;" 
+            + GetPersonalNewsletterIcon(did) + "&nbsp;<span class=\"CountTguvot\" name=\"ResponseCount\" ID=\"ResponseCount_" + did + "_" + fid + "\"></span>"
+    }    
+}
+function addEventClick(elem, did) {
+    var time = new Date();
+    var id = $(elem).attr('id');
+    dataLayer.push({ 'event': 'user click', 'eventInfo': { 'did': did, 'user_ID': user_id, 'promoID': id, 'time stamp': time } });
+}
+
+function GenerateActiveFolders(data){      
+    var Content;
+    var FolderInfoContent;
+    var sResults = "";    
+    for ( var i=0; i<data.length; ++i )
+    {                
+        var item = data[i].split(","); 
+        Content = "";
+        RowDelimiter = "";
+        FolderInfoContent = "";
+        var FolderImage = "";
+        var items_counter = 0;
+        var image_link = "";
+        for (j = 0; j < FoldersData.length; j++){
+             if (items_counter<item[1]){
+                 if (item[0]==FoldersData[j][0]){ 
+                    var subitem_status = true;                   
+                    if (Content==""){
+                        subitem_status = false;
+                        FolderImage = FoldersData[j][6];                                                
+                        image_link = "/news/article.aspx?did=" + FoldersData[j][5];
+                    }                                       
+                    Content += RowDelimiter + ActiveFoldersItemPatern(FoldersData[j][5],item[0],FoldersData[j][1],FoldersData[j][2],FoldersData[j][3],FoldersData[j][4],subitem_status);   
+                    RowDelimiter = "";
+                    items_counter++;                    
+                 }
+             }
+        }
+        var InfoCount = 0
+        for (j = 0; j < FoldersInfo.length; j++){
+             if (item[0]==FoldersInfo[j][0]){//ereh mosaf
+                InfoCount ++;
+                var sTarget = " target=\"_top\""
+                var sLink = FoldersInfo[j][2]
+                if (sLink.indexOf("javascript") > -1) {
+                    sTarget = "";                
+                }
+                else{
+                    if (sLink.indexOf("?") > -1) {
+                        sLink += "&fromErechMusafHP"
+                    }
+                    else{
+                        sLink += "?fromErechMusafHP"
+                    }                    
+                }
+                FolderInfoContent += "<li style=\"padding-left:15px\"><A " + sTarget + " HREF=\"" + sLink + "\">" + FoldersInfo[j][1] + "</A>";
+                if (InfoCount==4) break;
+             }
+        }                
+        var c_folder = item[0];
+        var c_current = i;
+        var c_quantity = item[1];        
+        var img_less = "<img style=\"cursor:hand\" id=\"imgFoldersLess" + item[0] + "\" onclick=\"UpdateFolderPosition('" + c_folder + "'," + c_current + "," + c_quantity  + ",'" + "less" + "')\" alt=\"הצג פחות כתבות\" src=\"" + (c_quantity==min_articles?less_off:less_on) + "\"/>&nbsp;";
+        var img_more = "<img style=\"cursor:hand\"  id=\"imgFoldersMore" + item[0] + "\" onclick=\"UpdateFolderPosition('" + c_folder + "'," + c_current + "," + c_quantity  + ",'" + "more" + "')\" alt=\"הצג עוד כתבות\" src=\"" + (c_quantity==GetArticlesCount(c_folder)?more_off:more_on) + "\"/>&nbsp;";
+        var img_move = "<span id=\"imgFoldersMove\" style=\"cursor:move\" class=\"handle\"><img alt=\"גרור ושנה מיקום\" src=\"https://images.globes.co.il/images/site/Tools_Move.gif\"/></span>&nbsp;";
+        var images=img_less + img_more;
+		if(i==4) sResults +=createTohen_pirsom();
+         sResults +="<div recordid=\"" + item[0] + "\">"         
+         +"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%; direction:rtl;\">"
+         +"<tr>"
+         +"<td id=\"articles_tab1\" align=\"right\" style=\"width:120px;\"><div class=\"G_GrayBGColorRelatesLink\"><div class=\"G_RelatedLinksTitle\">ערך מוסף</div></div></td>"         
+         +"<td align=left width=\"525\" class=\"handle\"><div class=\"G_BoxTH_DragBox\"><span class=\"PaddingRight\">&nbsp;</span><a target=\"_top\" href=\"/news/home.aspx?fid=" + item[0] + "&fromErechMusafHP\"><h4 style=\"cursor:hand;text-decoration:none;\">" + GetFolderTitle(item[0]) + "</h4></a><span class=DragAction>" + /* img_move  + */ "</span></div></td>"
+         +"<td style=\"background-color:#F5E3D5;padding-top:4px;\" width=35>" + images + "</td></tr>"
+         +"</table>"
+      Content += "";
+      if (item[1] > 0 ){
+            if (FolderImage==""){                
+                FolderImage = "<img alt='" + GetFolderTitle(item[0]) + "' src=\"https://images.globes.co.il/images/site/folders_default_images/" + item[0] + ".jpg\" width=\"100\" height=\"75\" />";
+            }
+            else{                
+                var t = /&quot;/g;
+                FolderImage = FolderImage.replace(t,'"');
+                FolderImage = "<img src=" + FolderImage.replace(/&quote;/,'"') + "/>";
+            }
+            sResults += "<div class=\"G_HomePageFolders\"><table width='100%' cellSpacing='0' cellPadding='0' border='0'>"
+           + "<tr>" 
+           + "<td valign=\"top\" width=\"115\"><img border=\"0\" alt=\"\" src=\"https://images.globes.co.il/images/serve/images/pixel.gif\" width=\"120\" height=\"1\" /><br />"
+           + "<ul class=\"G_HomePageFolder_related_link\">" + FolderInfoContent + "</ul></td>"               
+           + "<td align=right valign=top width='100'><a href=\"" + image_link + "\">" + FolderImage + "<a/></td>"
+           + "<td valign=top align=right style=\"padding-right:15px;\">"
+           + "<div id=\"inner_" + item[0] + "\">" + Content + "</div></td>"
+           + "</tr>"
+           + "</table></div><div class=\"G_divTopSpace\">&nbsp;</div>"; 			
+       }
+       else{
+            sResults += "<div><img alt=\"\" src=\"https://images.globes.co.il/images/serve/images/pixel.gif\" width=\"1\" height=\"1\" /></div>"
+            + "<div style=\"width:100%;\"><img alt=\"\" src=\"https://images.globes.co.il/images/serve/images/pixel.gif\" width=\"1\" height=\"1\" /></div>";               
+       }
+       sResults += "</div>";
+    }     
+    UpdateUserData(data);    
+    document.getElementById("divSubFoldersPreview").innerHTML = "<div style=\"padding-top:0px;\" id=\"FoldersList\">" + sResults + "</div>";
+    RefreshDynamicItems();
+}        
+function GetFolderTitle(folder){
+    var value;
+    for (i = 0; i < FoldersNames.length; i++)    {
+        if (FoldersNames[i][0]==folder)        {
+            value = FoldersNames[i][1];                
+        }
+    }
+    return value;
+}        
+function UpdateUserData(data){
+    var send_value ="";
+    for (i = 0; i < data.length; i++)    {
+        var item = data[i].split(","); 
+        if (i!=0)        {
+            send_value+="|";
+        }
+        send_value += item[0] + "," + item[1]
+    }
+    var expiredays = 7;
+    var value = send_value;        
+    var exdate=new Date();
+    exdate.setDate(exdate.getDate() + expiredays);
+    document.cookie="InnerFoldersPosition=" +escape(value)+ ((expiredays==null) ? "" : ";expires="+exdate.toGMTString());     
+}        
+function ReadUserConfigurations(){           
+    var result="";
+    if (document.cookie.length>0)    {
+        return ReadCookieData("InnerFoldersPosition")
+    }
+    return result;
+}        
+function UpdateFolderPosition(folder,current,quantity,action){   
+	e_counter.count(folder + "." + action,'UpdateFolderPosition',folder + ".less")
+   var pointer=0;
+   var cookie_data = ReadUserConfigurations();
+   var user_position = cookie_data.split("|"); 
+   var current_pointer=0;
+   for (i = 0; i < user_position.length; i++)   {
+        var inner_item = user_position[i].split(",");
+        if (inner_item[0]==folder)        {
+            current_pointer=i;
+        }
+   }
+   var item = user_position[current_pointer].split(",");           
+    switch(action)    {
+        case 'up':                    
+           var prev_folder = user_position[current-1];
+           user_position[current-1] = user_position[current]; 
+           user_position[current] = prev_folder; 
+          break    
+        case 'down':
+           var next_folder = user_position[current+1];
+           user_position[current+1] = user_position[current]; 
+           user_position[current] = next_folder; 
+          break    
+        case 'less':
+            var less = parseInt(item[1]) - 1;
+            if (less >= min_articles)
+            {
+                document.getElementById("imgFoldersMore" + item[0]).src = more_on;                    
+                user_position[current_pointer] = folder + "," + (less);
+                RenderInnerFolderContent(folder,less);
+                if (less==min_articles)
+                {
+                    document.getElementById("imgFoldersLess" + item[0]).src = less_off;                    
+                }
+            }
+          break    
+        case 'more':
+            var all = GetArticlesCount(folder);
+            var more = parseInt(item[1]) + 1;
+            if (more <= all)            {
+                document.getElementById("imgFoldersLess" + item[0]).src = less_on;
+                user_position[current_pointer] = folder + "," + (more);
+                RenderInnerFolderContent(folder,more);
+                if (more==all)                {
+                    document.getElementById("imgFoldersMore" + item[0]).src = more_off;                    
+                }
+            }
+          break    
+    }            
+    UpdateUserData(user_position);    
+    RefreshDynamicItems();
+}
+function GetArticlesCount(folder){
+    var counter=0;
+    for (i = 0; i < FoldersData.length; i++)    {
+        if (folder==FoldersData[i][0])        {
+            counter++;
+        }
+    }
+    return counter;
+}
+function Init_Folders(){
+    try    {
+        if (document.cookie.length>0)        {            
+           var pointer=0;
+           var cookie_data = ReadUserConfigurations();           
+           var temp_user_position = cookie_data.split("|"); 
+           var user_position = new Array();                      
+           for (i = 0; i < FoldersNames.length; i++)           {
+               var status=false;
+               for (j = 0; j < temp_user_position.length; j++)               {    
+                    var item = temp_user_position[j].split(","); 
+                    if (item[0]==FoldersNames[i][0])                    {                        
+                        status=true;                        
+                        user_position[i] = FoldersNames[i][0] + "," + item[1];
+                    }
+               }
+               if (status==false)               {
+                   user_position[i] = FoldersNames[i][0] + "," + "1";                   
+               }                                 
+           }                                       
+           GenerateActiveFolders(user_position);
+        }
+        else        {
+           var InitPosition = new Array(FoldersNames.length);
+           for (i = 0; i < FoldersNames.length; i++)           {
+                InitPosition[i] = FoldersNames[i][0] + ",1";
+           }               
+           GenerateActiveFolders(InitPosition);      
+        }        
+  }
+  catch(ex){}       
+}
+function RenderInnerFolderContent(folder, count){
+    var host = "inner_" + folder;
+    var Content="";
+    var RowDelimiter = "";
+    var items_counter = 0;
+    for (j = 0; j < FoldersData.length; j++)    {
+         if (items_counter<count)         {
+             if (folder==FoldersData[j][0])             {                
+                var subitem_status = true;                   
+                if (Content=="")                {
+                    subitem_status = false;
+                }               
+                Content += ActiveFoldersItemPatern(FoldersData[j][5],folder,FoldersData[j][1],FoldersData[j][2],FoldersData[j][3],FoldersData[j][4],subitem_status);
+                items_counter++;                
+             }
+         }
+    } 
+    document.getElementById(host).innerHTML = Content;
+}
+// ליצור תוכן של מדור פירסומי
+function createTohen_pirsom()	{
+	var ErehNosaf="";
+	ErehNosaf += "<div recordid=100>"
+	+"<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%; direction:rtl;\">"
+	+"<tr>"
+	+"<td id=\"articles_tab1\" align=\"right\" style=\"width:120px;\"><div class=\"G_GrayBGColorRelatesLink\"><div class=\"G_RelatedLinksTitle\">ערך מוסף</div></div></td>"
+	+"<td align=right width=\"510\" style=\"color:#666666 ; background-color:#dddddd; font-family:Arial; font-size:12px; font-weight:bold; direction:rtl; text-align:right; border-right:10px solid #000000;\"><span style=\"margin-left:10px; \">מדור פירסומי</span></td>"
+	+"<td style=\"background-color:#dddddd; padding-top:4px;\" width='50' valign='middle'> - מודעה - </td></tr>"
+	+"</table>";		
+	var sR= ErehNosaf + "<div class=\"G_HomePageFolders\"><table width='480' border='0' cellspacing='0' cellpadding='0' DIR='rtl'>"
+	+"<tr>"
+	+"	<td width='117' height='90' valign='top'>"
+	+"    	<table width='117' border='0' cellspacing='0' cellpadding='0' DIR='rtl' >"
+	+"        	<tr>"
+	+"	            <td style='width:12px; height:10px; vertical-align:top;' align='center'><img src='https://images.globes.co.il/images/site2/images/Red_Bullet.gif' width='4' height='8' align='middle' style='margin-top:4px; margin-right:1px;'/></td>"
+	+" 			    <td style='width:105px; vertical-align:top;'>"+dc_handler.div('musaf',';width:95px; text-align:right;')+"</td>"
+	+"            </tr>"
+	+"        	 <tr>"
+	+"	           <td style='width:12px; height:10px; vertical-align:top;' align='center'><img src='https://images.globes.co.il/images/site2/images/Red_Bullet.gif' width='4' height='8' align='middle' style='margin-top:4px; margin-right:1px;'/></td>"
+	+"			   <td style='width:105px; vertical-align:top;padding-right:2px;padding-top:2px;padding-bottom:2px;'><a href='https://www.24p.co.il/' target='_blank' style='color:#666666;text-decoration:none;'>השוואת מחירים</a></td>"
+	+"           </tr>"
+	+"        	 <tr>"
+	+"	            <td style='width:12px; height:10px; vertical-align:top;padding-top:1px' align='center'><img src='https://images.globes.co.il/images/site2/images/Red_Bullet.gif' width='4' height='8' align='middle' style='margin-top:4px; margin-right:1px;'/></td>"
+	+"			    <td style='width:105px; vertical-align:top;padding-right:2px;padding-top:2px;padding-bottom:2px;'><a href='https://www.vir-tec.net' target='_blank' style='color:#666666;text-decoration:none;'>גרפים מתקדמים</a></td>"
+	+"            </tr>"
+	+"         	 <tr>"
+	+"	            <td style='width:12px; height:10px; vertical-align:top;' align='center'><img src='https://images.globes.co.il/images/site2/images/Red_Bullet.gif' width='4' height='8' align='middle' style='margin-top:4px; margin-right:1px;'/></td>"
+	+"				<td style='width:105px; vertical-align:top;'>"+dc_handler.div('musaf',';width:95px; text-align:right;')+"</td>"
+	+"            </tr>"
+	+"        </table>"
+	+"    </td>"
+	+"	<td width='180' height='80' valign='top' >"+dc_handler.div('textgif',';margin-right:3px;')+"</td>"
+	+" 	<td width='20'  height='90' valign='middle' align='center'><img src='https://images.globes.co.il/images/NLimages/Gray_pixel.png' height='90' width='1' style='background-repeat:repeat-y; margin-left:15px; margin-right:15px;'></td>"
+	+"	<td width='150' height='90' valign='top'>"+dc_handler.div('text','')+dc_handler.div('text','')+dc_handler.div('text','')+"</td>"
+	+"</tr>"
+	+"</table></div></div><div class=\"G_divTopSpace\">&nbsp;</div></div>";
+	return sR;		
+}
+function SavePersonalRssSettings(user_id,feed_id,box_id)
+{ 
+    var url="scripts/SaveRssFeed.gspx?user="+user_id+"&feed="+feed_id+"&box="+box_id;
+    GetAsynchronousData(url,"");
+}
+function GetRssFeed(feed_id,box_id)
+{ 
+    var path = SharedRootFolder + '/data/js/RssFeeds/rss_' + feed_id + '.js?box=' + box_id;
+    GetAsynchronousData(path,"eval(xmlHttp.responseText)");
+}
+    var icon_on="https://images.globes.co.il/images/site/Tools_Open.gif";
+    var icon_off="https://images.globes.co.il/images/site/Tools_Open_OFF.gif";
+    var rssIcon_on="https://images.globes.co.il/images/site/Tools_Rss.gif";
+    var text_off="<span style=\"cursor:hand\">התחבר וערוך RSS <img src=\"" + icon_off + "\" align=\"absmiddle\"/></span>";
+    var url_off="/pay/rlogin.asp?p_backTo=/news/home.aspx";
+    var user_db_data;
+    var box1_default = 'walla';
+    var box2_default = 'maya';
+    var box3_default = 'mw';
+    var feed1 = "";
+    var feed2 = "";
+    var feed3 = "";            
+
+    function ruleriRssEvent(open, boxIndex)
+    {
+        var value = document.getElementById('RssBox' + boxIndex + 'Title').innerHTML + boxIndex;
+        if(open)
+        {
+            e_counter.count(value,'RSS_SeeMore',null,'hp');
+        }
+        else
+        {            
+            e_counter.count(value,'Rss_CloseSeeMore',null,'hp');
+        }
+    }
+    
+    function GetRssFeedEx(feed,box_id, hebrew) {
+		var url = "/data/js/rss.ashx?source=" + feed + '&' + (new Date()).getTime()
+		var rss = (window.ActiveXObject) ? new ActiveXObject("Microsoft.XMLHTTP") : new XMLHttpRequest()
+		rss.open("GET",url,true)
+		rss.onreadystatechange = function() {if (rss.readyState == 4 && rss.status == 200) {GetRssDataFromFile(rss.responseXML,box_id, hebrew)}}
+		rss.send()
+    }
+    function GetRssDataFromFile(xmlDoc,box_id, hebrew)
+    {
+        var result=[];
+        var css_class="";
+        if (hebrew) {
+            css_class = "G_Rss_linkRight";            
+        } else {
+            css_class = "G_Rss_linkLeft";
+        }
+        
+        var x = xmlDoc.getElementsByTagName('link');
+        var max = x.length > 5 ? 5 : x.length;
+        
+        for (i=0;i<max;i++) {
+			var ilink = x[i].childNodes[0].nodeValue;
+			var linkstart = ilink.indexOf(" href=") + 7
+			var prefix = ilink.substring(0,linkstart)
+			var linkend = ilink.indexOf('"',linkstart)
+			var suffix = ilink.substring(linkend)
+			var link = ilink.substring(linkstart,linkend)
+			
+			var mlink = link.match(/^[a-z]+:\/\/[a-z]+\.walla\.co\.il\//i) ? ilink : prefix + '/countandredirect.ashx?' + escape(link) + suffix
+		
+			result.push('<dl>' + mlink + '</dl>')
+        }
+        document.getElementById(box_id).innerHTML = result.length == 0 ? '<dl>אין מידע.</dl>' : result.join('')
+        document.getElementById(box_id).className = css_class;
+
+    }
+    function ParseXML(box_id,url, hebrew)
+    {
+        document.getElementById(box_id).innerHTML = "<img src=\"https://images.globes.co.il/images/site/Loading30x30.gif\">";     
+        GetRssFeedEx(url,box_id, hebrew);        
+    }    
+    
+    function GetRssLocation(el,item)
+    {
+        var result = 0;
+        var select = document.getElementById(el);
+        for (i = 0; i < select.options.length; i++)
+        {
+            if(select[i].value==item)
+            {
+                result = i;
+            }
+        }
+        return result;
+    }
+    
+    function GetFeedIndex(feed_url,default_feed)
+    {
+        for (i = 0; i < RssFeeds.length; i++)
+        {
+            if (RssFeeds[i][2]==feed_url)
+            {
+                return i;
+            }
+        }
+        return default_feed;
+    }
+    
+    function GetFeedIndexByCode(feed_code)
+    {
+        for (i = 0; i < RssFeeds.length; i++)
+        {
+            if (RssFeeds[i][2]==feed_code.replace(/^-/,''))
+            {
+                return i;
+            }
+        }
+        return default_feed;
+    }
+    
+    function SelectFeed(feed_url,feed_title,box_title_id, box_id, save)
+    {
+        var box;
+        document.getElementById(box_title_id).innerHTML  = feed_title;
+        var lang_pointer;
+        if (save==true)
+        {
+            switch(box_id)
+            {
+                case 'RssContent1':
+                  box = '1';
+                  feed1= (typeof(feed_url)!='undefined'?feed_url : box1_default);                  
+                  lang_pointer=RssFeeds[GetFeedIndexByCode(feed1)][3];
+                  //SavePersonalRssSettings(user_id,feed1,box);
+                  break    
+                case 'RssContent2':
+                  box = '2';   
+                  feed2= (typeof(feed_url)!='undefined'?feed_url : box2_default);
+                  lang_pointer=RssFeeds[GetFeedIndexByCode(feed2)][3];
+                  //SavePersonalRssSettings(user_id,feed2,box);
+                  break    
+                case 'RssContent3':
+                  box = '3';
+                  feed3= (typeof(feed_url)!='undefined'?feed_url : box3_default);
+                  lang_pointer=RssFeeds[GetFeedIndexByCode(feed3)][3];
+                  //SavePersonalRssSettings(user_id,feed3,box);
+                  break    
+            }
+            
+//            if (user_id>0)
+//            {
+                var data = '1,' + feed1 + '|' + '2,' + feed2 + '|' + '3,' + feed3;
+                UpdateUserRssCookie(data);
+//            }
+        }
+        else
+        {
+            switch(box_id)
+            {
+                case 'RssContent1':
+                  feed1= (typeof(feed_url)!='undefined'?feed_url : box1_default);                  
+                  lang_pointer=RssFeeds[GetFeedIndexByCode(feed1)][3];
+                  break    
+                case 'RssContent2':
+                  feed2= (typeof(feed_url)!='undefined'?feed_url : box2_default);
+                  lang_pointer=RssFeeds[GetFeedIndexByCode(feed2)][3];
+                  break    
+                case 'RssContent3':
+                  feed3= (typeof(feed_url)!='undefined'?feed_url : box3_default);
+                  lang_pointer=RssFeeds[GetFeedIndexByCode(feed3)][3];
+                  break    
+            }
+        }
+        
+        var hebrew=true;
+        if (lang_pointer=='1')
+        {
+            hebrew=false;
+        }
+                
+        ParseXML(box_id,feed_url, hebrew);
+    }
+    
+    function ShowEditBox(box_id,index)
+    {
+//        if(user_id>0)
+//        {        
+            var close_id;            
+            switch(index)
+            {
+                case 1:
+                  close_id = feed1;
+                  break    
+                case 2:
+                  close_id = feed2;
+                  break    
+                case 3:
+                  close_id = feed3;
+                  break    
+            }
+        
+            var close_link = "SelectFeed('" + RssFeeds[GetFeedIndexByCode(close_id)][2] + "','" + RssFeeds[GetFeedIndexByCode(close_id)][0] + "','RssBox" + index + "Title','" + box_id + "',true)\"" + ")";
+            var tpl = "<table style=\"width: 100%; height:100%;\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" class=\"G_RssTable\">"
+                     +"<tr>"
+                     +"<td style=\"text-align: right;\" width=\"295\">&nbsp;&nbsp;<strong>בחר מקור תוכן מהרשימה</strong></td>"
+                     +"<td width='15' style='padding-top:3px;'><a href=\"javascript:ruleriRssEvent(false," + index + ");" + close_link + "\"><img src=\"https://images.globes.co.il/images/site/RSS_Reader/Rss_Close.gif\"/></a></td>"
+                     +"</tr>"
+                     +"<tr>"
+                     +"<td style=\" vertical-align:top;\" colspan=\"2\">"
+                     +"<table style=\"width: 100%\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\">"
+                     +"<tr>"
+                     + GetFeedsList(index) 
+                     +"</tr>"
+                     +"</table>"
+                     +"</td>"
+                     +"</tr>"
+                     +"</table>";
+                     
+            document.getElementById(box_id).className = "rssBox1";
+            document.getElementById(box_id).innerHTML = tpl;
+//        }
+    }
+    
+    function GetFeedsList(index)
+    {
+         var max = 5;
+         var left = RssFeeds.length % max;
+         var columns =  (RssFeeds.length - (RssFeeds.length % max)) / max;
+         
+         if (left>0)
+         {
+            columns++;
+         }
+         
+         var feeds="";
+         var items="";
+         var pointer=0;
+         for (i = 0; i < RssFeeds.length; i++)
+         {
+             items +=  "<dl><a href=\"javascript:SelectFeed('" + RssFeeds[i][2] + "','" + RssFeeds[i][0] + "','RssBox" + index + "Title','RssContent" + index + "',true)\"" + ")\">" + RssFeeds[i][0] + "</a></dl>";
+             pointer++;   
+             if (pointer==max || i==RssFeeds.length-1)
+             {
+                 feeds += "<td style=\"vertical-align:top;\" class=\"G_RssDL\">" + items + "</td>";
+                 items ="";
+                 pointer=0;
+             }
+         }         
+         return feeds;
+    }
+    
+    function UpdateUserRssCookie(data)
+    {
+        var send_value = data;
+        var expiredays = 7;
+        var value = send_value;        
+        var exdate=new Date();
+        exdate.setDate(exdate.getDate() + expiredays);
+        document.cookie="RssReader=" +escape(value)+ ((expiredays==null) ? "" : ";expires="+exdate.toGMTString());     
+    }
+    
+    function RssReader_GetCookieValue(value,splitter)
+    {
+        var c_name = value;
+        var result;
+        if (document.cookie.length>0)
+        {
+          c_start=document.cookie.indexOf(c_name + "=")
+          if (c_start!=-1)
+          { 
+                c_start=c_start + c_name.length+1 
+                c_end=document.cookie.indexOf(splitter,c_start)
+                if (c_end==-1) c_end=document.cookie.length
+                result = unescape(document.cookie.substring(c_start,c_end))
+          } 
+          else
+          {
+            result = 0;
+          }
+        }
+        else              
+        {
+            result = 0;
+        }
+        return result;
+    }
+    
+    function DeleteRssCookie()
+    {
+        var d = new Date();
+        document.cookie="RssReader=Deleted;expires=" + d.toGMTString() + ";" + ";";
+    }
+    
+    function GetUserRssDataFromDB()
+    { 
+        var url="scripts/GetUserRssDataFromDB.gspx?user="+user_id;
+        GetAsynchronousData(url,"user_db_data=xmlHttp.responseText; UpdateUserRssCookie(user_db_data); ReadUserRssCookie(user_db_data);");
+    }
+    
+    function ReadUserRssCookie(data)
+    {
+        var box1;
+        var box2;
+        var box3;
+        if (data.length > 0)
+        {
+            var feeds = data.split("|");
+            for ( var i=0; i<feeds.length; ++i )
+            {
+                var item = feeds[i].split(",");
+                switch(item[0])
+                {
+                    case '1':
+                      box1 = item;
+                      break    
+                    case '2':
+                      box2 = item;
+                      break    
+                    case '3':
+                      box3 = item;
+                      break    
+                }          
+            }
+        }    
+        
+        var box1_feed;
+        var box2_feed;
+        var box3_feed;
+        if (typeof(box1)!='undefined' && !IsNumeric(box1[1]))
+        {
+            box1_feed=box1[1];
+        }
+        else
+        {
+            box1_feed=box1_default;
+        }
+        
+        if (typeof(box2)!='undefined' && !IsNumeric(box2[1]))
+        {
+            box2_feed=box2[1];
+        }
+        else
+        {
+            box2_feed=box2_default;
+        }
+
+        if (typeof(box3)!='undefined' && !IsNumeric(box3[1]))
+        {
+            box3_feed=box3[1];
+        }
+        else
+        {
+            box3_feed=box3_default;
+        }     
+        
+        feed1=box1_feed;
+        feed2=box2_feed;
+        feed3=box3_feed;
+
+	//	alert(RssFeeds[GetFeedIndexByCode(box1_feed)][2])
+
+        SelectFeed('-' + RssFeeds[GetFeedIndexByCode(box1_feed)][2],RssFeeds[GetFeedIndexByCode(box1_feed)][0],'RssBox1Title', 'RssContent1', true);
+        SelectFeed('-' + RssFeeds[GetFeedIndexByCode(box2_feed)][2],RssFeeds[GetFeedIndexByCode(box2_feed)][0],'RssBox2Title', 'RssContent2', true);
+        SelectFeed('-' + RssFeeds[GetFeedIndexByCode(box3_feed)][2],RssFeeds[GetFeedIndexByCode(box3_feed)][0],'RssBox3Title', 'RssContent3', true);       
+    } 
+    
+    function IsNumeric(value)
+    {
+       var ValidChars = "0123456789.";
+       var IsNumber=true;
+       var Char;
+            
+       for (i = 0; i < value.length && IsNumber == true; i++) 
+       { 
+          Char = value.charAt(i); 
+          if (ValidChars.indexOf(Char) == -1) 
+          {
+            IsNumber = false;
+          }
+       }
+       return IsNumber;
+    }
+    
+    function InitRssBoxes()
+    {
+        try        
+        {
+//            if (user_id==0)
+//            {
+//                //DeleteRssCookie();
+//                document.getElementById("RssBoxLink1").innerHTML = text_off;
+//                document.getElementById("RssBoxLink1").href = url_off;
+//                document.getElementById("RssBoxLink2").innerHTML = text_off;
+//                document.getElementById("RssBoxLink2").href = url_off;
+//                document.getElementById("RssBoxLink3").innerHTML = text_off;
+//                document.getElementById("RssBoxLink3").href = url_off;
+//                SelectFeed(box1_default,RssFeeds[GetFeedIndexByCode(box1_default)][0],'RssBox1Title', 'RssContent1', false);
+//                SelectFeed(box2_default,RssFeeds[GetFeedIndexByCode(box2_default)][0],'RssBox2Title', 'RssContent2', false);
+//                SelectFeed(box3_default,RssFeeds[GetFeedIndexByCode(box3_default)][0],'RssBox3Title', 'RssContent3', false);       
+//            }
+//            else
+//            {
+                document.getElementById("imgEditRss1").src  = icon_on; 
+                document.getElementById("imgEditRss2").src  = icon_on; 
+                document.getElementById("imgEditRss3").src  = icon_on;
+                var reader=RssReader_GetCookieValue("RssReader",";");
+                
+//                if (reader==0)
+//                {
+//                    GetUserRssDataFromDB();                
+//                }
+//                else
+//                {
+//                    ReadUserRssCookie(reader);
+//                }            
+                  ReadUserRssCookie(reader);
+//            }
+        }
+        catch(ex){}        
+    }
+    
+    function RenderRssBoxes()
+    {
+        try
+        {
+            var boxes= "<div style=\"padding-top:5px;padding-bottom:5px;\">" +
+                        "<table style=\"width: 100%;\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr>";
+                        
+            for (i = 1; i < 4; i++)
+            {
+            
+            if ( i != 3)
+            {
+                TDSeparator ="<td width=\"width=30px\"><img height='1' src='https://images.globes.co.il/images/serve/images/pixel.gif' width='30' /></td>";
+            }
+            else
+            {
+                TDSeparator ="";
+            }
+                      
+                boxes += "<td id=\"tdRssBox" + i + "\" valign=\"top\" style=\"margin-bottom: 5px;width=30%\">"
+                      +"<div class=\"G_BoxRss\" style=\"width=100%\">"
+                      +"<span class=\"PaddingRight\">&nbsp;</span>"
+                      +"<span class=\"RssPaddingRight\"><img alt=\"RSS\" src=\"" + rssIcon_on + "\" align=\"absmiddle\"/ style=\"display:inline;\"></span><h3 id=\"RssBox" + i + "Title\">בטעינה...</h3>"
+//                      + (user_id==0?"<a id=\"RssBoxLink" + i + "\" class=\"Font11\" href=\"\"><span onclick=\"javascript:ShowEditBox('RssContent" + i + "'," + i + ");\" id=\"EditRssText" + i + "\">לפידים נוספים <img src=\"\" align=\"absmiddle\" id=\"imgEditRss" + i + "\" /></span></a>":"<span style=\"height:20px;padding:3px 0 0 12px;display:inline;float:left;cursor:hand;font-size:11px;\" onclick=\"javascript:ShowEditBox('RssContent" + i + "'," + i + ");\" id=\"EditRssText" + i + "\">לפידים נוספים <img src=\"\" align=\"absmiddle\" id=\"imgEditRss" + i + "\" /></span>")
+                      +"<span style=\"height:20px;padding:3px 0 0 12px;display:inline;float:left;cursor:pointer;font-size:11px;\" onclick=\"javascript:ShowEditBox('RssContent" + i + "'," + i + ");ruleriRssEvent(true," + i + ")\" id=\"EditRssText" + i + "\">ל-RSS נוספים <img alt=\"לבחירת RSS נוספים\" align=\"absmiddle\" id=\"imgEditRss" + i + "\" /></span>"
+                      +"</div><div class='clearInline'>"
+                      +"<table cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"310\" height=\"105\">"
+                      +"<tr>"
+                      +"<td valign=\"top\" style=\" width:500px;\" id=\"RssContent" + i + "\"></td>"
+                      +"</tr>"
+                      +"</table>"
+                      +"</div>"
+                      +"</td>"
+                      +TDSeparator;
+            }
+            boxes += "</tr></table></div>";
+            document.write(boxes);
+        }
+        catch(ex){}        
+    }
+function CheckPollForm(){    
+	var bIsOneSelected = false;
+	var obj = document.getElementsByName("op");
+	var objPoolAlert = document.getElementById("PoolAlert");
+	
+	document.forms["aspnetForm"].action = "/serve/inc/Poll_Submit.asp";
+	document.forms["aspnetForm"].target = "_top";
+	for (var i=0; i < obj.length; i++){
+		if (obj[i].checked == true) bIsOneSelected = true;
+	}
+	if (bIsOneSelected){    
+    	document.forms["aspnetForm"].submit();
+	    objPoolAlert.style.display = "none";
+	  }
+	else
+	{     
+	     objPoolAlert.innerHTML =   "יש לבחור אחת מהאפשרויות"
+	}
+}
+function CheckCustomPoll()
+{   
+    var selected = false;
+    var answer;
+    for (i = 0; i <12; i++)
+    {
+        if (document.getElementById("cop" + i).checked)
+        {
+            selected = true;
+            answer = document.getElementById("cop" + i).value;
+        }
+    }
+    
+    if (!selected)
+    {
+        alert("נא לבחור תשובה");        
+    }
+    else
+    {
+        window.open("/news/CustomPoll.aspx?answer=" + answer,"Poll","menubar=no,width=430,height=720,toolbar=no");
+    }    
+}
+
+function OpenPollResults()
+{
+        window.open("/news/CustomPoll.aspx","Poll","menubar=no,width=430,height=720,toolbar=no");
+}
+
+
+function CheckInnerPollForm() {
+    var bIsOneSelected = false;
+    var obj = document.getElementsByName("op");
+    var objPoolAlert = document.getElementById("PoolAlert");
+
+    if ($("#PollAns").length == 0) {
+        $("body").append($("<iframe id='innerPollAns' src='' style='height:0px;border:0;width:0px;position:absolute;top:0px;left:0px;' name='innerPollAns'></iframe>"));
+    }
+
+    document.forms["aspnetForm"].action = "/serve/inc/Poll_Submit.asp";
+    // document.forms["aspnetForm"].target = "_top";
+    document.forms["aspnetForm"].target = "innerPollAns";
+
+    for (var i = 0; i < obj.length; i++) {
+        if (obj[i].checked == true) bIsOneSelected = true;
+    }
+
+    if (bIsOneSelected) {
+        document.forms["aspnetForm"].submit();
+        objPoolAlert.style.display = "none";
+        $("#ancInnerPollVote").hide();
+        SignWizard_Show('/news/poll_thanks.aspx');
+    } else {
+        objPoolAlert.innerHTML = "יש לבחור אחת מהאפשרויות"
+    }
+}
+
+
+
+// JScript File
+var iframe_w, iframe_h;
+
+function checkIE7Version()
+{
+    if(navigator.appName=="Microsoft Internet Explorer")
+        {
+        var IE_VER=navigator.appVersion;
+        IE_VER=IE_VER.substr(22,3);
+        if(IE_VER=="7.0")
+            return true;
+        }
+    return false;
+}
+var SignWizard_IspopupVisible = false;
+function SignWizard_GetTopPoint(h) {
+    var iVal;
+    if (!h) {
+        h = document.getElementById("SignWizard_popup").clientHeight;
+    }
+    iVal = (($(window).height() - h) / 2);
+    if (iVal > 0 && (1 * iVal) + (1 * h) > $(window).height()) {
+        iVal = 0;
+    }
+    iVal = (iVal > 300) ? 100 : iVal;
+    return (iVal > 0) ? iVal : 0;
+}
+function SignWizard_GetLeftPoint(w)
+{
+    if (!w)
+        w = document.getElementById("SignWizard_popup").clientWidth;
+
+    var iVal = ((document.body.clientWidth - w) / 2);
+    return (iVal > 0 )? iVal : 0;
+}
+function SignWizard_SetPopup(url, mode, method,w,h)
+{
+    try{document.getElementById("htmlHead").style.overflow="hidden";}
+    catch(ex){}
+
+    if (SignWizard_IspopupVisible != true) return;
+    
+    if (mode == "wizard_LoginOnly")
+    {        
+        document.getElementById("SignWizard_popup").className = "SignWizard_popup_LoginOnly";
+        document.getElementById("SignWizard_popup_Iframe").className = "SignWizard_popup_Iframe_LoginOnly";
+    }
+    else if (mode == "wizard_pass_madadim")
+    {
+        document.getElementById("SignWizard_popup").className = "SignWizard_popup";
+        var NewClassName = "SignWizard_popup_Iframe SignWizard_popup_Iframe_pass";
+        document.getElementById("SignWizard_popup_Iframe").className = NewClassName;
+    }
+    else
+    {
+    if(mode != "wizard")
+	{
+        iframe_w = (parseInt(w) - 2) + "";
+        iframe_h = (parseInt(h) - 2) + "";
+
+        document.getElementById("SignWizard_popup_Iframe").style.width = iframe_w + "px";
+        document.getElementById("SignWizard_popup_Iframe").style.height = iframe_h + "px";
+	}
+    document.getElementById("SignWizard_popup").className = "SignWizard_popup";
+    document.getElementById("SignWizard_popup_Iframe").className = "SignWizard_popup_Iframe";
+    }
+
+    scrollByUser_Top=document.documentElement.scrollTop+document.body.scrollTop;
+
+    document.getElementById("SignWizard_Gray_Layer").style.display = "block";
+    document.getElementById("SignWizard_popup").style.display = "block";
+    document.getElementById("LG_wizard_close").style.display = "block";
+    
+    document.getElementById("SignWizard_popup").style.top =SignWizard_GetTopPoint(h) + scrollByUser_Top + "px";
+    document.getElementById("LG_wizard_close").style.top = SignWizard_GetTopPoint(h) + scrollByUser_Top-14 + "px";
+    
+    document.getElementById("SignWizard_popup").style.left = SignWizard_GetLeftPoint(w)  + "px";
+    document.getElementById("LG_wizard_close").style.left = SignWizard_GetLeftPoint(w)-14  + "px";
+           
+    document.getElementById("SignWizard_Gray_Layer").style.width = document.body.clientWidth;
+    document.getElementById("SignWizard_Gray_Layer").style.height = document.body.clientHeight;
+    
+    document.getElementById('SignWizard_Gray_Layer').style.top=scrollByUser_Top +"px";
+    
+    
+
+    if (url!=null)
+    {
+        if (method=="get")
+        {
+            document.getElementById("SignWizard_popup_Iframe").src = url;        
+        }
+        else
+        {
+            var frm = document.getElementById("aspnetForm");
+            if (frm) {
+                frm.action = url;
+                frm.target = "SignWizard_popup_Iframe";
+                frm.submit();
+            }
+        }        
+    }
+
+    document.getElementById("SignWizard_popup").style.width = w + "px";
+    document.getElementById("SignWizard_popup").style.height = h + "px";
+
+    SignWizard_IspopupVisible = true;
+}        
+function SignWizard_Show(url, mode, method,w,h) { 
+
+    if (method!="post")
+    {
+        method="get";
+    }
+    if (!w)
+        w = "580";
+    if (!h)
+        h = "400";
+
+    if (checkIE7Version() == true)
+    {
+        document.getElementsByTagName("body")[0].scroll = "no";// ie7
+    }
+    else
+    {
+        document.getElementsByTagName('html')[0].style.overflow = 'hidden';
+    }
+    try {
+        if (g) { g.StopPageReload = true; }
+    } catch (e) { }
+    SignWizard_IspopupVisible = true;
+    SignWizard_SetPopup(url, mode, method,w,h)
+}
+
+function SignWizard_Close() {
+    try {
+        if (g) { g.StopPageReload = false; }
+    } catch (e) { }
+	document.getElementById("SignWizard_Gray_Layer").style.display = "none";
+    document.getElementById("SignWizard_popup").style.display = "none";
+    document.getElementById("LG_wizard_close").style.display = "none";
+    SignWizard_IspopupVisible = false;
+
+    if (checkIE7Version() == true) {
+        document.getElementsByTagName("body")[0].scroll = "yes"; // ie7
+    }
+    else {
+        document.getElementsByTagName('html')[0].style.overflow = 'auto';
+    }
+
+    try{document.getElementById("htmlHead").style.overflow="auto";}
+    catch(ex){}
+}
+
+document.write('<link href="/news/cache/wizard.css?ver=06" rel="stylesheet" type="text/css" />')
+document.write('<div id="SignWizard_Gray_Layer" onclick="SignWizard_Close()" style="width:' + (screen.width) + 'px; height:' + (screen.height) + 'px; ">&nbsp;</div>');
+document.write('<div id="LG_wizard_close" style="display:none; position:absolute; top:50px; z-index:205"><a id="SignWizard_Close_Anchor" href="javascript:SignWizard_Close();"><img src="https://images.globes.co.il/images/Site2/wizard/Icon_Close_v3.png" alt="סגור" width="28" height="28" border="0"></a></div>');
+document.write('<div id="SignWizard_popup" class="SignWizard_popup">'
+                + '<div style="clear:both;display:block;margin:0 auto;"><iframe frameborder="0" scrolling="no" class="SignWizard_popup_Iframe" id="SignWizard_popup_Iframe" name="SignWizard_popup_Iframe" src="about:blank"></iframe></div>' 
+                + '</div>');
+
+//g.onResize(SignWizard_SetPopup);
+
+var ie = document.all
+var ns6 = document.getElementById && !document.all
+var enabletip = false
+var plusBoxLastUrl = '';
+var newAgentTimer;
+
+function ietruebody() {
+    return (document.compatMode && document.compatMode != "BackCompat") ? document.documentElement : document.body
+}
+
+function ShowNewsAgentPlus(e, tagitId, tagitName, tagitLink, src) {
+    if (ns6 || ie) {
+        ClearNewsAgentDivTimer();
+        plusBoxLastUrl = "<div id='NG_followMeplus'> + </div><div class='NG_followMetext' onclick=\"javascript:SignWizard_Show('/news/wizard/newsagent/step1.aspx?tagit_name=" + tagitName + "&tagit_id=" + tagitId + "&tagit_link=" + tagitName + "','wizard');\">הוסף למעקב</div>";
+        document.getElementById("divNewsAgentPlus").innerHTML = plusBoxLastUrl;
+        enabletip = true
+        positiontip(e, src);
+        return false
+    }
+}
+
+function SetNewsAgentDivTimer() {
+    newAgentTimer = setTimeout("HideNewsAgentPlus()", 1000);
+}
+
+
+function ClearNewsAgentDivTimer() {
+    clearTimeout(newAgentTimer);
+}
+
+function positiontip(e,src) {
+    if (ie || ns6)
+        var tipobj = document.all ? document.all["divNewsAgentPlus"] : document.getElementById ? document.getElementById("divNewsAgentPlus") : ""
+
+    if (enabletip) {
+        var object = document.getElementById(src);
+        var oRect = object.getBoundingClientRect();
+        var cHeight = ObjectPosition(object) + 13;
+        tipobj.style.top = cHeight + "px";
+        tipobj.style.left = oRect.right - 74 + "px"
+        tipobj.style.visibility = "visible"
+    }
+}
+
+function ObjectPosition(obj) {
+    var curtop = 0;
+    if (obj.offsetParent) {
+        do {
+            curtop += obj.offsetTop;
+        } while (obj = obj.offsetParent);
+    }
+    return curtop;
+}
+
+
+function HideNewsAgentPlus() {
+    if (ie || ns6)
+        var tipobj = document.all ? document.all["divNewsAgentPlus"] : document.getElementById ? document.getElementById("divNewsAgentPlus") : ""
+
+    if (ns6 || ie) {
+        enabletip = false
+        tipobj.style.visibility = "hidden"
+        tipobj.style.left = "-1000px"
+    }
+}

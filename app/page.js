@@ -34,13 +34,13 @@ function PanelHeader({ eyebrow, title, caption, tone = "ok" }) {
   );
 }
 
-function TrendList({ items, emptyMessage, localeTag }) {
+function TrendList({ items, emptyMessage, localeTag, variant = "default" }) {
   if (!items.length) {
     return <p className="empty-state">{emptyMessage}</p>;
   }
 
   return (
-    <ol className="trend-list">
+    <ol className={`trend-list trend-list--${variant}`}>
       {items.map((item, index) => {
         const dir = item.dir || (hasHebrewCharacters(item.title) ? "rtl" : "ltr");
 
@@ -67,11 +67,20 @@ function TrendList({ items, emptyMessage, localeTag }) {
   );
 }
 
-function TrendPanel({ eyebrow, title, bucket, localeTag, emptyMessage }) {
+function TrendPanel({ eyebrow, title, bucket, localeTag, emptyMessage, initialVisibleCount, showMoreLabel = "Show more tags", variant = "default" }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const hasExpandableItems = initialVisibleCount && bucket.items.length > initialVisibleCount;
+  const visibleItems = hasExpandableItems && !isExpanded ? bucket.items.slice(0, initialVisibleCount) : bucket.items;
+
   return (
-    <section className="panel card">
+    <section className={`panel card panel--${variant}`}>
       <PanelHeader eyebrow={eyebrow} title={title} caption={bucket.caption} tone={bucket.status} />
-      <TrendList items={bucket.items} emptyMessage={emptyMessage} localeTag={localeTag} />
+      <TrendList items={visibleItems} emptyMessage={emptyMessage} localeTag={localeTag} variant={variant} />
+      {hasExpandableItems ? (
+        <button className="show-more-button" onClick={() => setIsExpanded((value) => !value)} type="button">
+          {isExpanded ? "Show fewer" : `${showMoreLabel} (${bucket.items.length - initialVisibleCount})`}
+        </button>
+      ) : null}
     </section>
   );
 }
@@ -139,9 +148,53 @@ function WarningStrip({ warnings }) {
   );
 }
 
+function GrokActions({ createdAt, isAsking, onAskAgain }) {
+  return (
+    <section className="grok-actions card">
+      <div>
+        <p className="eyebrow">Grok X Search</p>
+        <p>{createdAt ? `Created at ${new Date(createdAt).toLocaleString()}` : "No saved Grok result yet"}</p>
+      </div>
+      <button className="cost-button" disabled={isAsking} onClick={onAskAgain} title="Uses a paid xAI request" type="button">
+        <span aria-hidden="true">₪</span>
+        {isAsking ? "Asking..." : "Ask again"}
+      </button>
+    </section>
+  );
+}
+
 export default function HomePage() {
   const [dashboard, setDashboard] = useState(null);
   const [error, setError] = useState(null);
+  const [isAskingGrok, setIsAskingGrok] = useState(false);
+
+  async function loadDashboard({ refreshGrok = false } = {}) {
+    if (refreshGrok) {
+      setIsAskingGrok(true);
+    }
+
+    try {
+      const url = refreshGrok ? "/api/dashboard?refresh=1&refreshGrok=1" : "/api/dashboard";
+      const response = await fetch(url, {
+        cache: "no-store"
+      });
+
+      if (!response.ok) {
+        throw new Error(`Dashboard request failed with status ${response.status}.`);
+      }
+
+      const payload = await response.json();
+
+      setDashboard(payload);
+      setError(null);
+    } catch (loadError) {
+      setError(loadError);
+    } finally {
+      if (refreshGrok) {
+        setIsAskingGrok(false);
+      }
+    }
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -178,16 +231,16 @@ export default function HomePage() {
 
   const generatedAtLabel = dashboard ? new Date(dashboard.generatedAt).toLocaleString() : "טוען...";
   const activePanelsLabel = dashboard ? `${dashboard.summary.activePanels} / 5` : "טוען...";
+  const grokCreatedAt = dashboard?.xTrends?.he?.createdAt || dashboard?.xTrends?.en?.createdAt;
 
   return (
     <main className="shell">
       <section className="masthead">
         <div className="masthead-copy">
           <p className="kicker">דופק הטרנדים</p>
-          <h1>כל מוקדי תשומת הלב, בדשבורד JS אחד.</h1>
+          <h1>דשבורד טרנדים</h1>
           <p className="lede">
-            מגמות חיפוש של Google לישראל ולארה״ב, מגמות מבוססות מיקום ב־X, וההימור הכי חם בפולימרקט
-            לפי נפח מסחר ב־24 השעות האחרונות.
+            מגמות חיפוש של Google, שיחה בזמן אמת ב־X דרך Grok, והימור פולימרקט שנבחר לפי ציון עניין.
           </p>
         </div>
         <div className="masthead-meta card">
@@ -218,21 +271,38 @@ export default function HomePage() {
 
       {dashboard ? (
         <>
+          <section className="section-block section-block--google">
+            <div className="section-block-head">
+              <p className="eyebrow">Google Trends</p>
+              <h2>מגמות חיפוש</h2>
+            </div>
+            <div className="google-grid">
+              <TrendPanel
+                bucket={dashboard.searches.he}
+                eyebrow="חיפושי Google"
+                emptyMessage="מגמות החיפוש בעברית אינן זמינות כרגע."
+                initialVisibleCount={5}
+                localeTag="search-he"
+                showMoreLabel="Show more Google tags"
+                title="ישראל / עברית"
+                variant="google"
+              />
+              <TrendPanel
+                bucket={dashboard.searches.en}
+                eyebrow="חיפושי Google"
+                emptyMessage="מגמות החיפוש באנגלית אינן זמינות כרגע."
+                initialVisibleCount={5}
+                localeTag="search-en"
+                showMoreLabel="Show more Google tags"
+                title="ארה״ב / אנגלית"
+                variant="google"
+              />
+            </div>
+          </section>
+
+          <GrokActions createdAt={grokCreatedAt} isAsking={isAskingGrok} onAskAgain={() => loadDashboard({ refreshGrok: true })} />
+
           <section className="grid">
-            <TrendPanel
-              bucket={dashboard.searches.he}
-              eyebrow="חיפושי Google"
-              emptyMessage="מגמות החיפוש בעברית אינן זמינות כרגע."
-              localeTag="search-he"
-              title="ישראל / עברית"
-            />
-            <TrendPanel
-              bucket={dashboard.searches.en}
-              eyebrow="חיפושי Google"
-              emptyMessage="מגמות החיפוש באנגלית אינן זמינות כרגע."
-              localeTag="search-en"
-              title="ארה״ב / אנגלית"
-            />
             <TrendPanel
               bucket={dashboard.xTrends.he}
               eyebrow="מגמות X"

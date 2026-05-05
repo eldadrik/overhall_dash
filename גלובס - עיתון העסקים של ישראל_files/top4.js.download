@@ -1,0 +1,76 @@
+﻿var gNewsViewer;
+news_fade_counter=0;
+
+function GetSpokenArticles(){
+    
+        var SpokenArticles_arr;
+        //switch(range){
+        //case 'Daily':
+            SpokenArticles_arr = Daily;                      
+        //break    
+        //case 'Weekly':
+        //    SpokenArticles_arr = Weekly;
+        //break 
+        //case 'Monthly':
+        //    SpokenArticles_arr = Monthly;
+        //break    
+        //}                
+        
+        var max=0;
+        if (SpokenArticles_arr.length < 4)
+        {
+            max = SpokenArticles_arr.length;
+        }
+        else
+        {
+            max=3;
+        }
+        
+        for (i = 0; i < max; i++){       
+           var oDate = new Date(SpokenArticles_arr[i][2])
+           var month = oDate.getMonth()+1
+           month = (month<10)? "0"+ month : month;
+           var day = (oDate.getDate()<10) ? "0" + oDate.getDate().toString() : oDate.getDate().toString();
+           var minute = (oDate.getMinutes()<10) ? "0" + oDate.getMinutes().toString() : oDate.getMinutes().toString();
+           var hour = (oDate.getHours()<10) ? "0" + oDate.getHours().toString() : oDate.getHours().toString();
+           var author = "<div class='g_Article_Author'>"+ SpokenArticles_arr[i][3] +"</div>";
+           var shortDate =  "<div class='ArticleItemPatternNoFidHomePage'>"+ day + "." + month + "." + oDate.getFullYear() + "</div>" ;
+           var shortTime =  "<div class='ArticleItemPatternNoFidHomePage'>" + hour + ":" + minute +"</div>" ;
+           // mostSpokenPattern came from "lib.JsGraphicTools.ArticleItemPattern"
+           var mostSpokenItem = mostSpokenPattern.replace("{0}",SpokenArticles_arr[i][0])
+           
+           //mostSpokenItem = mostSpokenItem.replace("{2}",shortTime)
+           var writerNameForAlt = SpokenArticles_arr[i][3].replace('"', '&quot;')
+
+           var clusterTitle = ""; //SpokenArticles_arr[i][4]
+           var clusterId = SpokenArticles_arr[i][5]
+           var category = SpokenArticles_arr[i][6];
+           var clusterString = "";
+           var categoryString = category != "" ? '<span>' + (clusterTitle.length > 0 ? ' | ' : '') + category + '</span>' : '';
+           if (clusterTitle != "") {
+               clusterString = '<a href="/news/article.aspx?did=' + clusterId + '">' + clusterTitle + '</a>' + categoryString;
+           } else {
+               clusterString += categoryString;
+           }
+           
+            
+          
+           
+           mostSpokenItem = mostSpokenItem.replace("{1}",SpokenArticles_arr[i][1])
+          // mostSpokenItem = mostSpokenItem.replace("{5}","").replace("{6}","2")       
+         //  mostSpokenItem = mostSpokenItem.replace("{4}","")
+           
+         //  mostSpokenItem = mostSpokenItem.replace("{2}",shortDate)
+          // mostSpokenItem = mostSpokenItem.replace("{3}",author )
+          // mostSpokenItem = mostSpokenItem.replace("{7}", "")
+
+           mostSpokenItem = mostSpokenItem.replace("{2}", clusterString);
+
+           mostSpokenItem = mostSpokenItem.replace("<a ", "<a title=\"מאת: " + writerNameForAlt + "\" onclick=\"ga('homePage.send', 'event', '_browse', 'Click To Article', 'Homepage - More headlines ')\"")
+           document.write(mostSpokenItem)
+        }
+    
+}
+
+ 
+  

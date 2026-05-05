@@ -6,7 +6,8 @@ export const maxDuration = 180;
 
 export async function GET(request) {
   const forceRefresh = request.nextUrl.searchParams.get("refresh") === "1";
-  const payload = await getDashboardData({ forceRefresh });
+  const refreshGrok = request.nextUrl.searchParams.get("refreshGrok") === "1";
+  const payload = await getDashboardData({ forceRefresh, refreshGrok });
 
   return NextResponse.json(payload, {
     headers: {

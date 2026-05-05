@@ -1,0 +1,188 @@
+﻿
+var oUA = window.navigator.userAgent;
+var isIE = oUA.indexOf("MSIE ") > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./) ? true : false;
+var isDReadyDone = false;
+
+function changeItemImg(index) {
+   
+    $("#gvImConteiner .gv_box").each(function (i, e) {
+        if (i == index) {
+            $(e).addClass("active");
+        }
+        else {
+            $(e).removeClass("active");
+        }
+    });
+
+    if (index != currImg && index < gag_images.length) {
+        var imageData = gag_images[index].split("|");
+        if (imageData.length > 3) {
+            var EventPageName = (aroundTheGlobeMode == "top") ? "עמוד תמונות" : "עמוד הבית";
+
+            document.getElementById("imageATG").src = imageData[3];
+
+            var newLink = "";
+            if (typeof(imageData[6]) != "undefined" && imageData[6].toString() != "") {
+                document.getElementById("imgLink").href = imageData[6]; //"javascript:void(0); nextImg();" //"/news/article.aspx?did="
+                document.getElementById("imgLink").setAttribute("style", "cursor:pointer;");
+                document.getElementById("imageDetailsLink").setAttribute("style", "cursor:pointer;");
+                newLink = imageData[6];
+            }
+            else {
+                document.getElementById("imgLink").href = "javascript:void(0)";
+                document.getElementById("imgLink").setAttribute("style", "cursor:default;");
+                document.getElementById("imageDetailsLink").setAttribute("style", "cursor:default;");
+                newLink = "javascript:void(0)";
+            }
+
+            document.getElementById("imageDetailsDiv").innerHTML = "<a id=\"imageDetailsLink\" href='" + newLink + "'><h3 onmousedown=\"ga('homePage.send', 'event', 'home-page', 'מסביב לגלובוס', '" + attribute_xmlit(c2jss(imageData[0])) + "');\">" + imageData[0] + "</h3><div class='subText'>" + imageData[1] + "</div>";
+
+       
+            currImg = index;
+
+            if (typeof FB !== 'undefined') {
+                FB.XFBML.parse(document.getElementById('like'));
+            }
+
+            try { tmo_util.overAs() } catch (e) { }
+
+
+            
+
+        }
+    }
+}
+
+function sendIT(docID, docFID) {
+    window.open("/serve/globes/sendITnew.asp?did=" + docID + "&fid=" + docFID + "", "Send_Doc", "width=410,height=420,left=100,top=100,screenx=150,screeny=0,resizable=no,scrollbars=auto")
+}
+
+function prevImg() {
+    var index = parseInt(currImg) - 1;
+ 
+    if (index < 0) {
+        index = gag_images.length - 1;
+        return false;
+    }
+
+    if (index == 0) {
+        $("#gvWBefore").addClass("gvDisabled");
+    }
+
+
+    changeItemImg(index);
+    ga('homePage.send', 'event', 'home-page', 'מסביב לגלובוס', 'חץ ימין');
+}
+
+function nextImg() {
+    $("#gvWBefore").removeClass("gvDisabled");
+    var index = parseInt(currImg) + 1;
+    if (index > gag_images.length - 1) 
+        index = 0;
+    changeItemImg(index);
+    ga('homePage.send', 'event', 'home-page', 'מסביב לגלובוס', 'חץ שמאל');
+}
+
+function buildImagesList() {
+    var listData = "";
+    var opendiv = false;
+    for (var i = 0; i < gag_images.length; i++) {
+        var image = gag_images[i].split("|");
+        if (i % 5 == 0) {
+            listData += "<div class='group5'>";
+            opendiv = true;
+        }
+        if (aroundTheGlobeMode == "top")
+            listData += "<div class='gv_box'><img src='" + image[2] + "' onclick='self.location.href=\"/news/article.aspx?did=" + image[4] + "\"' alt='" + image[5] + "' onmousedown=\"ga('homePage.send', 'event', 'home-page', 'מסביב לגלובוס', '" + i + "');\"></div>";
+        else
+            listData += "<div class='gv_box " + (i==0 ? "active" : "") + "'><img src='" + image[2] + "' onclick='changeItemImg(" + i + ")' alt='" + image[5] + "' onmousedown=\"ga('homePage.send', 'event', 'home-page', 'מסביב לגלובוס', '" + i + "');\"></div>";
+
+        if (i % 5 == 4) {
+            listData += "</div>";
+            opendiv = false;
+        }
+    }
+    if (opendiv == true)
+        listData += "</div>";
+    document.getElementById("gv_Images").innerHTML = listData;
+    makeCustomSlider("group5", "gv_Images", "gvImConteiner", "gvBefore", "gvAfter", 0);
+}
+
+
+function StartGallery() {
+	ad_unit_for_aroundTheGlobe.display = 'now'
+	ad_handler.activate()
+	var xsrc = $("#imageATG").attr('xsrc');
+
+	$("#imageATG").attr('src', xsrc);
+
+	if (isIE) {
+	    activateGallery();
+	}
+	else {
+	    $("#imageATG").ready(function () {
+	        activateGallery();
+	    });
+	}
+}
+
+function activateGallery() {
+    $("#galleryWide").show();
+    $("#atgMark").hide();
+    buildImagesList();
+    if (typeof FB !== 'undefined') {
+        FB.XFBML.parse(document.getElementById('like'));
+    }
+    // preload rest of the images
+    $(imagesList).preload();
+    if (aroundTheGlobeMode != "top") {
+        ga('homePage.send', 'event', 'home-page', 'מסביב לגלובוס', 'גלילה');
+    }     
+}
+
+$(function () {
+    isDReadyDone = true;
+    $.fn.preload = function () {
+        this.each(function () {
+            $('<img/>')[0].src = this;
+        });
+    }
+
+    if (pageName == "עמוד תמונות") {
+        StartGallery();
+    } else {
+        $("#atgMark").waypoint(function (direction) {
+            StartGallery();
+        }, {
+            triggerOnce: true,
+            offset: 'bottom-in-view'
+        });
+    }
+});
+
+if (isIE && !isDReadyDone) {
+    setTimeout(function () {
+        $("#atgMark").waypoint(function (direction) {
+            StartGallery();
+        }, {
+            triggerOnce: true,
+            offset: 'bottom-in-view'
+        });
+    }, 5000);
+}
+
+function c2jss(s) { // (s) || (rs,n)
+    try {
+        if (s == null) { return '' }
+        s = ('' + s).replace(/\\/g, "\\\\")
+        s = s.replace(/\'/g, "\\\'")
+        s = s.replace(/\"/g, "\\\"")
+        s = s.replace(/\r/g, "\\r")
+        s = s.replace(/\n/g, "\\n")
+        s = s.replace(/</g, "\\x3C")
+        return s
+    } catch (ex) { return '' }
+}
+
+function xmlit(s) { return s == null ? '' : ('' + s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
+function attribute_xmlit(s) { return xmlit(s).replace(/\"/g, '&#34;').replace(/\'/g, '&#39;') }

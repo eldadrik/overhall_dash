@@ -1,0 +1,32 @@
+﻿function ChangeFinancialTabClass(obj) {
+	if (!obj.innerHTML.match(/[א-ת]/)) {return}
+	var mainId = document.getElementById(obj.parentNode.id);
+	for(var i=0; i < mainId.getElementsByTagName('div').length ;i += 6) {
+		mainId.getElementsByTagName('div')[i+1].className="portal_financy_Reqular_Border_Menu";
+		mainId.getElementsByTagName('div')[i+2].className="portal_financy_InnerText_Reqular_Menu";
+		mainId.getElementsByTagName('div')[i+4].className="portal_financy_Reqular_Border_Menu";
+	}
+	obj.getElementsByTagName('div')[0].className="portal_financy_right_Border_Menu";
+	obj.getElementsByTagName('div')[1].className="portal_financy_InnerText_Menu";
+	obj.getElementsByTagName('div')[3].className="portal_financy_left_Border_Menu";
+}
+function portalFinancy_ChangeClass(obj) {ChangeFinancialTabClass(obj)}
+//-----------------------------------------------------------------------
+function portalFinancy_ResetClass()
+	{
+	var mainId=document.getElementById("Graph_div_1_id");
+	var i=0;
+	
+	while(i < mainId.getElementsByTagName('div').length)
+		{
+		mainId.getElementsByTagName('div')[i+1].className="portal_financy_Reqular_Border_Menu";
+		mainId.getElementsByTagName('div')[i+2].className="portal_financy_InnerText_Reqular_Menu";
+		mainId.getElementsByTagName('div')[i+4].className="portal_financy_Reqular_Border_Menu";
+		i+=6;
+		}
+		
+	document.getElementById("Fist_item_Graph").getElementsByTagName('div')[0].className="portal_financy_right_Border_Menu";
+	document.getElementById("Fist_item_Graph").getElementsByTagName('div')[1].className="portal_financy_InnerText_Menu";
+	document.getElementById("Fist_item_Graph").getElementsByTagName('div')[3].className="portal_financy_left_Border_Menu";
+	}		
+//-----------------------------------------------------------------------		

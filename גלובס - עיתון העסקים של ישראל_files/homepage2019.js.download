@@ -1,0 +1,3992 @@
+﻿var top_id;
+var feed_loaded = false;
+var tik_loaded = false;
+var tik_pos = 3;        // 1 - open, 2 - sticky, 3 -close
+var feeder_pos = 3;
+var tools_pos = 3;
+var tik_was_minimized = false;
+var feed_was_minimized = false;
+var is_barable_platform = !is_mobile;
+var global_zIndex = 110;
+
+function getCookie(c_name) {
+    var i, x, y, ARRcookies = document.cookie.split(";");
+    for (i = 0; i < ARRcookies.length; i++) {
+        x = ARRcookies[i].substr(0, ARRcookies[i].indexOf("="));
+        y = ARRcookies[i].substr(ARRcookies[i].indexOf("=") + 1);
+        x = x.replace(/^\s+|\s+$/g, "");
+        if (x == c_name) {
+            return unescape(y);
+        }
+    }
+}
+
+function setCookie(c_name, value, exdays) {
+    var exdate = new Date();
+    exdate.setDate(exdate.getDate() + exdays);
+    var c_value = escape(value) + ((exdays == null) ? "" : "; expires=" + exdate.toUTCString());
+    document.cookie = c_name + "=" + c_value + ";path=/";
+}
+
+function BindLessMoreMouseEvents(doMinimize, isTik) {
+    if (doMinimize) {
+        if (isTik) {
+            document.getElementById("lessTik").onmouseover = function () {
+                document.getElementById("portfolio_imgLess").src = "https://images.globes.co.il/images/site2/pass/minimizeOver.png";
+            }
+            document.getElementById("lessTik").onmouseout = function () {
+                document.getElementById("portfolio_imgLess").src = "https://images.globes.co.il/images/site2/pass/minimize.png";
+            }
+        } else {
+            document.getElementById("lessFed").onmouseover = function () {
+                document.getElementById("agency_imgLess").src = "https://images.globes.co.il/images/site2/pass/minimizeOver.png";
+            }
+            document.getElementById("lessFed").onmouseout = function () {
+                document.getElementById("agency_imgLess").src = "https://images.globes.co.il/images/site2/pass/minimize.png";
+            }
+        }
+    } else {
+        if (isTik) {
+            document.getElementById("lessTik").onmouseover = function () {
+                document.getElementById("portfolio_imgLess").src = "https://images.globes.co.il/images/site2/pass/openMoreOver.png";
+            }
+            document.getElementById("lessTik").onmouseout = function () {
+                document.getElementById("portfolio_imgLess").src = "https://images.globes.co.il/images/site2/pass/openMore.png";
+            }
+        } else {
+            document.getElementById("lessFed").onmouseover = function () {
+                document.getElementById("agency_imgLess").src = "https://images.globes.co.il/images/site2/pass/openMoreOver.png";
+            }
+            document.getElementById("lessFed").onmouseout = function () {
+                document.getElementById("agency_imgLess").src = "https://images.globes.co.il/images/site2/pass/openMore.png";
+            }
+        }
+    }
+}
+
+function TikIFrameIsLoaded(isFromStartup) {
+    tik_loaded = true;
+    document.getElementById("loading_tik").style.display = "none";
+    
+    if (isFromStartup) {
+        less_frame(2);
+    }
+}
+
+function FeedIFrameIsLoaded(isFromStartup) {
+    feed_loaded = true;
+    document.getElementById("loading_feed").style.display = "none";
+    
+    if (isFromStartup) {
+        less_frame(1);
+    }
+}
+
+function LoadFeedIFrame(isFromStartup) {
+    if (isFromStartup == null) {
+        isFromStartup = false;
+    }
+    if (document.getElementById('pass_iframe_rss').src.indexOf("empty.html") > -1) {
+        document.getElementById('pass_iframe_rss').src = "/news/passmadadim/uc/agancy.aspx?ifs=" + isFromStartup;
+    }
+}
+
+function OpenFeedIFrame(isFromStartup) {
+    if (tik_loaded) {
+        close_frame(2, false);
+    }
+    close_frame(3, false);
+
+    var mainbox = parent.document.getElementById("feed_box");
+    mainbox.style.right = "70px";
+    mainbox.style.bottom = "32px";
+    mainbox.style.display = "block";
+    mainbox.style.zIndex = global_zIndex++
+
+    if (!feed_loaded) {
+        // show loading ...
+        document.getElementById("loading_feed").style.display = "block";
+        //setTimeout("OpenFeedIFrame(" + isFromStartup + ");", 1000);
+    } else {
+        try {
+            if (user_id > 0) {
+                document.getElementById('pass_iframe_rss').contentWindow.document.getElementById('top_header').style.display = "block";
+                document.getElementById('pass_iframe_rss').contentWindow.document.getElementById('left').style.display = "block";
+            }
+
+            // control bar
+            document.getElementById('fedLess').innerHTML = " מזער ";
+            document.getElementById('agency_imgLess').src = "https://images.globes.co.il/images/site/finance/less.png";
+            document.getElementById('iframeBar').contentWindow.document.getElementById("rss_btm").onclick = function () { parent.close_frame(1); }
+
+            // reset the list
+            document.getElementById('pass_iframe_rss').contentWindow.document.getElementById('right').getElementsByTagName('li')[0].style.margin = "15px 0 0";
+        } catch (ex) { }
+    }
+
+    var tc = document.getElementById('pass_iframe_rss').contentWindow.TagsCount;
+    if (tc != null && tc > 0) {
+        document.getElementById('agency_showMoreBlock').style.display = "block";
+    }
+    document.getElementById('agency_nav').style.display = "block";
+    document.getElementById("pass_iframe_rss").style.height = "268px";
+    document.getElementById("feed_box").style.height = "268px";
+
+    document.getElementById('agency_showMore').innerHTML = " הצג יותר";
+    document.getElementById("imgFeedMore").src = "https://images.globes.co.il/images/site2/pass/openMore.png";
+
+    feeder_pos = 1;
+
+    // minimize button
+    document.getElementById('fedLess').innerHTML = " מזער ";
+    document.getElementById("lessFed").onclick = function () {
+        parent.less_frame(1);
+    }
+
+    // hide clickable box
+    document.getElementById('agency_clickable_box').style.display = "none";
+
+    // move feed window
+    if (tik_pos == 2 || tik_pos == 1 || tik_was_minimized) {
+        parent.document.getElementById("feed_box").style.right = "335px";
+    }
+
+    if (user_id > 0) {
+//        if (isFromStartup) {
+//            less_frame(1);
+//        }
+    } else {
+        document.getElementById("agency_showMoreBlock").style.display = "none";
+        document.getElementById("lessFed").style.display = "none";
+    }
+
+    BindLessMoreMouseEvents(true, false);
+}
+
+function LoadTikIFrame(isFromStartup) {
+    if (isFromStartup == null) {
+        isFromStartup = false;
+    }
+    if (document.getElementById('pass_iframe_portfolio').src.indexOf("empty.html") > -1) {
+        document.getElementById('pass_iframe_portfolio').src = "/news/passmadadim/uc/portfolio.aspx?ifs=" + isFromStartup; ;
+    }
+}
+
+function OpenTikIFrame(isFromStartup) {
+    if (feed_loaded) {
+        close_frame(1, false);
+    }
+    close_frame(3, false);
+
+    var mainbox = parent.document.getElementById("tik_box");
+    mainbox.style.right = "70px";
+    mainbox.style.bottom = "32px";
+    mainbox.style.zIndex = "100";
+    mainbox.style.display = "block";
+
+    parent.document.getElementById("pass_iframe_portfolio").style.height = "268px";
+    document.getElementById("tik_box").style.height = "268px";
+
+    document.getElementById('portfolio_showMore').innerHTML = " הצג יותר";
+    document.getElementById("imgTikMore").src = "https://images.globes.co.il/images/site2/pass/openMore.png";
+
+
+    document.getElementById('portfolio_nav').style.display = "block";
+
+    if (!tik_loaded) {
+        document.getElementById("loading_tik").style.display = "block";
+    } else {
+        try {
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('tabs').style.display = "block";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('mpTop').style.display = "block";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('mpTop2').style.display = "block";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('top_header').style.display = "block";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('stocks_title1').style.display = "";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('stocks_title2').style.display = "";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('mpBorder').style.marginTop = "auto";
+        } catch (ex) { }
+
+        // control bar
+        document.getElementById('portfolio_showMoreBlock').style.display = "block";
+        document.getElementById('tikLess').innerHTML = " מזער ";
+        document.getElementById('portfolio_imgLess').src = "https://images.globes.co.il/images/site/finance/less.png";
+        document.getElementById('iframeBar').contentWindow.document.getElementById("portfoilio_btm").onclick = function () { parent.close_frame(2); }
+
+        tik_pos = 1;
+    }
+
+    // minimize button
+    document.getElementById("lessTik").onclick = function () {
+        parent.less_frame(2);
+    }
+
+    // hide clickable box
+    document.getElementById('portfolio_clickable_box').style.display = "none";
+
+    // move feed window
+    if (feeder_pos == 2 || feed_was_minimized) {
+        parent.document.getElementById("feed_box").style.right = "335px";
+    }
+
+    if (user_id > 0) {
+//        if (isFromStartup) {
+//            less_frame(2);
+//        }
+    } else {
+        document.getElementById("portfolio_showMoreBlock").style.display = "none";
+        document.getElementById("lessTik").style.display = "none";
+    }
+
+    BindLessMoreMouseEvents(true, true);
+}
+
+function pass_open_mainbox(flag, isFromStartup) {
+    hide_pass_tooltip();
+    switch (flag) {
+        case 1: // כלים
+            if (document.getElementById('pass_iframe_tools').src.indexOf("empty.html") > -1) {
+                document.getElementById('pass_iframe_tools').src = "/news/passmadadim/uc/tools.asp?v=1.01";
+            }
+
+            close_frame(1, false);
+            close_frame(2, false);
+
+            var mainbox = parent.document.getElementById("tools_box");
+            mainbox.style.right = "70px";
+            mainbox.style.zIndex = "15";
+            mainbox.style.bottom = "32px";
+            mainbox.style.display = "block";
+            mainbox.style.zIndex = global_zIndex++
+
+            document.getElementById('iframeBar').contentWindow.document.getElementById("tools_btm").onclick = function () { parent.close_frame(3); }
+
+            tools_pos = 1;
+            break;
+        case 2: // פיד
+            LoadFeedIFrame(isFromStartup);
+
+            OpenFeedIFrame(isFromStartup);
+            break;
+        case 3: // תיק
+            LoadTikIFrame(isFromStartup);
+
+            OpenTikIFrame(isFromStartup);
+            break;
+    }
+
+    show_active_btn(flag);
+}
+
+function hide_pass_tooltip() {
+    document.getElementById("pass_tooltip").style.display = "none";
+}
+
+function iframe_seting(id) {
+    switch (id) {
+        case "pass_iframe_tools":
+            top_id = "tools_box";
+            break;
+        case "pass_iframe_rss":
+            top_id = "feed_box";
+            break;
+        case "pass_iframe_portfolio":
+            top_id = "tik_box";
+            break;
+    }
+}
+
+function close_frame(flag, isFromUpperBar) {
+    var top_id = "";
+    var sub_flag = 0;
+
+    switch (flag) {
+        case 1: // feed
+            if (feed_was_minimized && !isFromUpperBar) {
+                parent.less_frame(1);
+                return;
+            }
+
+            top_id = "feed_box";
+            setCookie("fed", "off", 365);
+
+            document.getElementById('iframeBar').contentWindow.document.getElementById("rss_btm").onclick = function () { parent.pass_open_mainbox(2, false); }
+
+            feeder_pos = 3;
+            feed_was_minimized = false;
+            sub_flag = 2;
+            parent.document.getElementById(top_id).style.display = "none";
+
+            BindLessMoreMouseEvents(true, false);
+            break;
+        case 2: // tik
+            if (tik_was_minimized && !isFromUpperBar) {
+                parent.less_frame(2);
+                return;
+            }
+
+            top_id = "tik_box";
+            document.getElementById("feed_box").style.right = "70px";
+            setCookie("tik", "off", 365);
+
+            document.getElementById('iframeBar').contentWindow.document.getElementById("portfoilio_btm").onclick = function () { parent.pass_open_mainbox(3, false); }
+
+            document.getElementById("lessTik").onclick = function () {
+                parent.less_frame(2);
+            }
+
+            tik_pos = 3;
+            tik_was_minimized = false;
+
+            sub_flag = 3;
+            parent.document.getElementById(top_id).style.display = "none";
+
+            BindLessMoreMouseEvents(true, true);
+            break;
+        case 3: // tools
+            parent.document.getElementById("tools_box").style.display = "none";
+            document.getElementById('iframeBar').contentWindow.document.getElementById("tools_btm").onclick = function () { parent.pass_open_mainbox(1, false); }
+
+            sub_flag = 1;
+            tools_pos = 3;
+            break;
+    }
+    hide_active_btn(sub_flag);
+}
+
+function more_frame(flag) {
+    var sub_flag = 0;
+    switch (flag) {
+        case 1: // fed
+            var h = parseInt(parent.document.getElementById('pass_iframe_rss').style.height, 0);
+            document.getElementById('pass_iframe_rss').contentWindow.document.getElementById('top_header').style.display = "block";
+            document.getElementById('agency_showMoreBlock').style.display = "block";
+            document.getElementById('pass_iframe_rss').contentWindow.document.getElementById('left').style.display = "block";
+            document.getElementById('agency_nav').style.display = "block";
+
+            if (h != 450 && feeder_pos != 2) {
+                parent.document.getElementById('pass_iframe_rss').style.height = "450px";
+                document.getElementById("feed_box").style.height = "450px";
+                document.getElementById('agency_showMore').innerHTML = " הצג פחות";
+                document.getElementById("imgFeedMore").src = "https://images.globes.co.il/images/site2/pass/showLess.png";
+            }
+            else {
+                parent.document.getElementById('pass_iframe_rss').style.height = "268px";
+                document.getElementById("feed_box").style.height = "268px";
+
+                document.getElementById('agency_showMore').innerHTML = " הצג יותר";
+                document.getElementById("imgFeedMore").src = "https://images.globes.co.il/images/site2/pass/openMore.png";
+                document.getElementById("lessFed").onclick = function () {
+                    parent.less_frame(1);
+                }
+                document.getElementById('fedLess').innerHTML = " מזער ";
+                document.getElementById('agency_imgLess').src = "https://images.globes.co.il/images/site/finance/less.png";
+            }
+
+            // reset the list
+            document.getElementById('pass_iframe_rss').contentWindow.document.getElementById('right').getElementsByTagName('li')[0].style.margin = "15px 0 0";
+
+            feeder_pos = 1;
+            parent.document.getElementById('pass_iframe_rss').style.zIndex = global_zIndex++
+            // hide clickable box
+            document.getElementById('agency_clickable_box').style.display = "none";
+
+            BindLessMoreMouseEvents(true, false);
+
+            sub_flag = 2;
+            break;
+        case 2: //tik
+            var h1 = parseInt(parent.document.getElementById('pass_iframe_portfolio').style.height, 0);
+            if (h1 != 450 && tik_pos != 2) {
+                parent.document.getElementById('pass_iframe_portfolio').style.height = "450px";
+                document.getElementById("tik_box").style.height = "450px";
+                document.getElementById('portfolio_showMore').innerHTML = " הצג פחות";
+                document.getElementById("imgTikMore").src = "https://images.globes.co.il/images/site2/pass/showLess.png";
+            } else {
+                parent.document.getElementById('pass_iframe_portfolio').style.height = "268px";
+                document.getElementById("imgTikMore").src = "https://images.globes.co.il/images/site2/pass/openMore.png";
+                document.getElementById("tik_box").style.height = "268px";
+
+                document.getElementById('portfolio_showMore').innerHTML = " הצג יותר";
+                document.getElementById("lessTik").onclick = function () {
+                    parent.less_frame(2);
+                }
+
+                document.getElementById('tikLess').innerHTML = " מזער ";
+                document.getElementById('portfolio_imgLess').src = "https://images.globes.co.il/images/site/finance/less.png";
+
+                BindLessMoreMouseEvents(true, true);
+            }
+
+            document.getElementById('portfolio_nav').style.display = "block";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('tabs').style.display = "block";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('mpTop').style.display = "block";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('mpTop2').style.display = "block";
+            document.getElementById('portfolio_showMoreBlock').style.display = "block";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('top_header').style.display = "block";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('stocks_title1').style.display = "";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('stocks_title2').style.display = "";
+            parent.document.getElementById('pass_iframe_portfolio').style.zIndex = global_zIndex++;
+
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('mpBorder').style.marginTop = "auto";
+
+            tik_pos = 1;
+
+            // hide clickable box
+            document.getElementById('portfolio_clickable_box').style.display = "none";
+
+            sub_flag = 3;
+            break;
+    }
+
+    show_active_btn(sub_flag);
+}
+
+function less_frame(flag) {
+    var sub_flag = 0;
+    switch (flag) {
+        case 1: // פיד
+            document.getElementById("feed_box").style.display = "none";
+            try {
+                document.getElementById('pass_iframe_rss').contentWindow.document.getElementById('top_header').style.display = "none";
+                document.getElementById('pass_iframe_rss').contentWindow.document.getElementById('left').style.display = "none";
+            } catch (ex) { }
+            document.getElementById('agency_showMoreBlock').style.display = "none";
+            document.getElementById('agency_nav').style.display = "none";
+
+            document.getElementById('pass_iframe_rss').style.height = "20px";
+            document.getElementById("feed_box").style.height = "20px";
+
+            feeder_pos = 2;
+            feed_was_minimized = true;
+
+            document.getElementById('iframeBar').contentWindow.document.getElementById("rss_btm").onclick = function () { parent.pass_open_mainbox(2, false); }
+
+            document.getElementById('agency_imgLess').src = "https://images.globes.co.il/images/site/finance/more.jpg";
+            document.getElementById('fedLess').innerHTML = "פתח";
+            document.getElementById("lessFed").onclick = function () {
+                // parent.more_frame(1);
+                parent.pass_open_mainbox(2, false);
+            }
+
+            // show clickable box
+            document.getElementById('agency_clickable_box').style.display = "block";
+
+            // bring the list closer
+            var elRight = document.getElementById('pass_iframe_rss').contentWindow.document.getElementById('right');
+            if (elRight != null) {
+                var elLi = elRight.getElementsByTagName('li')[0];
+                if (elLi != null) elLi.style.marginTop = "5px";
+            }
+
+            setCookie("fed", "on", 365);
+
+            BindLessMoreMouseEvents(false, false);
+
+            sub_flag = 2;
+            document.getElementById("feed_box").style.display = "block";
+
+            var tc = document.getElementById('pass_iframe_rss').contentWindow.TagsCount;
+            if (tc != null && tc == 0) {
+                feed_was_minimized = false;
+                close_frame(flag, false);
+            } else {
+                // move feed window
+                if (tik_pos == 2 || tik_pos == 1 || tik_was_minimized) {
+                    parent.document.getElementById("feed_box").style.right = "335px";
+                }
+            }
+            break;
+        case 2: // תיק 
+            document.getElementById("tik_box").style.display = "none";
+            document.getElementById('portfolio_nav').style.display = "none";
+            document.getElementById('portfolio_showMoreBlock').style.display = "none";
+            parent.document.getElementById('pass_iframe_portfolio').style.height = "20px";
+            document.getElementById("tik_box").style.height = "20px";
+
+            document.getElementById('tikLess').innerHTML = "פתח";
+            document.getElementById('portfolio_imgLess').src = "https://images.globes.co.il/images/site/finance/more.jpg";
+            setCookie("tik", "on", 365);
+
+            document.getElementById('iframeBar').contentWindow.document.getElementById("portfoilio_btm").onclick = function () { parent.pass_open_mainbox(3, false); }
+
+            document.getElementById("lessTik").onclick = function () {
+                // parent.more_frame(2);
+                parent.pass_open_mainbox(3, false);
+            }
+
+            tik_pos = 2;
+            tik_was_minimized = true;
+
+            // show clickable box
+            document.getElementById('portfolio_clickable_box').style.display = "block";
+
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('mpTop').style.display = "none";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('mpTop2').style.display = "none";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('tabs').style.display = "none";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('top_header').style.display = "none";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('stocks_title1').style.display = "none";
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('stocks_title2').style.display = "none";
+
+            document.getElementById('pass_iframe_portfolio').contentWindow.document.getElementById('mpBorder').style.marginTop = "-5px";
+
+            BindLessMoreMouseEvents(false, true);
+
+            sub_flag = 3;
+            document.getElementById("tik_box").style.display = "block";
+
+            var sc = document.getElementById('pass_iframe_portfolio').contentWindow.StocksCount;
+            if (sc != null && sc == 0) {
+                tik_was_minimized = false;
+                close_frame(flag, false);
+            } else {
+                // move feed window
+                if (feeder_pos == 2 || feed_was_minimized) {
+                    parent.document.getElementById("feed_box").style.right = "335px";
+                }
+            }
+            break;
+    }
+
+    hide_active_btn(sub_flag);
+}
+
+function minimizepass(type) {
+    try {
+        switch (type) {
+            case 1: // פיד
+                pass_open_mainbox(2, true);
+                break;
+            case 2: // תיק 
+                pass_open_mainbox(3, true);
+                break;
+        }
+    } catch (ex) { }
+}
+
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+    var regexS = "[\\?&]" + name + "=([^&#]*)";
+    var regex = new RegExp(regexS);
+    var results = regex.exec(window.location.search);
+    if (results == null)
+        return "";
+    else
+        return decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+function is_ie_6_0() { return navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion.substring(22, 25) == "6.0" }
+var is_barable = (is_pas_on && is_barable_FromServer && ((IsHomePage && window.screen.availWidth >= 1024) || !is_ie_6_0()))
+var isiPad = navigator.userAgent.match(/iPad/i) != null;
+var isiPhone = navigator.userAgent.match(/iPhone/i) != null;
+var pas = {
+    id: 'passMadadim'
+			, position: 'fixed'
+			, restore: function () {
+			    var elapsed = (new Date()).getTime() - this.scrolled_at.getTime()
+			    if (elapsed > 500) {
+			        if (!isiPad) {
+			            var e = document.getElementById(this.id)
+			            //e.style.bottom = '-1px'
+			            e.style.display = ''
+			        } else {
+			            var e = document.getElementById(this.id)
+			            var f = document.getElementById('Globes_Footer');
+			        //    var adL = document.getElementById('ads.expandBar.2');
+			        //    var adR = document.getElementById('ads.bar.1');
+
+			            var sxy = getScrollXY();
+			            var ws = getWindowSize();
+			            e.style.position = pas.position;
+			            e.style.top = (sxy[1] + ws[1] - 38) + 'px';
+			            e.style.display = '';
+
+			            f.style.position = 'relative';
+			            f.style.top = '2px';
+			            f.style.bottom = '';
+
+			        //    adL.style.top = (sxy[1] + ws[1] - 36) + 'px';
+			        //    adR.style.top = (sxy[1] + ws[1] - 36) + 'px';
+			        }
+			    }
+			}
+}
+
+function getWindowSize() {
+    var myWidth = 0, myHeight = 0;
+    if (typeof (window.innerWidth) == 'number') {
+        //Non-IE
+        myWidth = window.innerWidth;
+        myHeight = window.innerHeight;
+    } else if (document.documentElement && (document.documentElement.clientWidth || document.documentElement.clientHeight)) {
+        //IE 6+ in 'standards compliant mode'
+        myWidth = document.documentElement.clientWidth;
+        myHeight = document.documentElement.clientHeight;
+    } else if (document.body && (document.body.clientWidth || document.body.clientHeight)) {
+        //IE 4 compatible
+        myWidth = document.body.clientWidth;
+        myHeight = document.body.clientHeight;
+    }
+    return [myWidth, myHeight];
+}
+
+function getScrollXY() {
+    var scrOfX = 0, scrOfY = 0;
+    if (typeof (window.pageYOffset) == 'number') {
+        //Netscape compliant
+        scrOfY = window.pageYOffset;
+        scrOfX = window.pageXOffset;
+    } else if (document.body && (document.body.scrollLeft || document.body.scrollTop)) {
+        //DOM compliant
+        scrOfY = document.body.scrollTop;
+        scrOfX = document.body.scrollLeft;
+    } else if (document.documentElement && (document.documentElement.scrollLeft || document.documentElement.scrollTop)) {
+        //IE6 standards compliant mode
+        scrOfY = document.documentElement.scrollTop;
+        scrOfX = document.documentElement.scrollLeft;
+    }
+    return [scrOfX, scrOfY];
+}
+
+function hide_active_btn(flag) {
+    switch (flag) {
+        case 1:
+            document.getElementById('iframeBar').contentWindow.document.getElementById("tools_btm").style.backgroundPosition = "-81px 0";
+            break;
+        case 2:
+            document.getElementById('iframeBar').contentWindow.document.getElementById("rss_btm").style.backgroundPosition = "-41px 0";
+            break;
+        case 3:
+            document.getElementById('iframeBar').contentWindow.document.getElementById("portfoilio_btm").style.backgroundPosition = "-1px 0";
+            break;
+    }
+}
+
+function show_active_btn(flag) {
+    switch (flag) {
+        case 1:
+            item_iframe_btm = document.getElementById('iframeBar').contentWindow.document.getElementById("tools_btm");
+            item_iframe_btm.style.backgroundPosition = "-81px 33px";
+            break;
+        case 2:
+            item_iframe_btm = document.getElementById('iframeBar').contentWindow.document.getElementById("rss_btm");
+            item_iframe_btm.style.backgroundPosition = "-41px 33px";
+            break;
+        case 3:
+            item_iframe_btm = document.getElementById('iframeBar').contentWindow.document.getElementById("portfoilio_btm");
+            item_iframe_btm.style.backgroundPosition = "-1px 33px";
+            break;
+    }
+}
+
+function CloseAllOpenWindows() {
+    if (feeder_pos == 1) {
+        parent.close_frame(1);
+    }
+    if (tik_pos == 1) {
+        parent.close_frame(2);
+    }
+    if (tools_pos == 1) {
+        parent.close_frame(3);
+    }
+}
+
+function ReloadFeedWindow() {
+    document.getElementById('pass_iframe_rss').contentWindow.location.reload();
+}
+
+function NavClick(passItemNum) {
+    if (passItemNum == 1) {
+        pass_open_mainbox(3);
+    } else if (passItemNum == 2) {
+        pass_open_mainbox(2);
+    }
+}
+
+var mouseOverFeed = false;
+var mouseOverTik = false;
+
+function agency_showTopButs() {
+    mouseOverFeed = true;
+    if (parent.feeder_pos == 2 && parent.getCookie("fed") && parent.getCookie("fed") == "on") {
+        document.getElementById('agency_nav').style.display = "block";
+
+        parent.document.getElementById("pass_iframe_rss").style.height = "42px";
+        parent.document.getElementById("feed_box").style.height = "42px";
+
+        document.getElementById('fedLess').innerHTML = " פתח ";
+        // document.getElementById('agency_imgLess').src = "https://images.globes.co.il/images/site/finance/more.jpg";
+    }
+
+    if (parent.feeder_pos == 2) {
+        BindLessMoreMouseEvents(false, false);
+    }
+}
+
+function agency_hideTopButs() {
+    mouseOverFeed = false;
+    if (parent.feeder_pos == 2 && parent.getCookie("fed") && parent.getCookie("fed") == "on") {
+        document.getElementById('agency_nav').style.display = "none";
+        parent.document.getElementById("pass_iframe_rss").style.height = "20px";
+        parent.document.getElementById("feed_box").style.height = "20px";
+    }
+}
+
+function portfolio_showTopButs() {
+    mouseOverTik = true;
+    if (parent.tik_pos == 2 && parent.getCookie("tik") && parent.getCookie("tik") == "on") {
+        document.getElementById('portfolio_nav').style.display = "block";
+
+        parent.document.getElementById("pass_iframe_portfolio").style.height = "41px";
+        parent.document.getElementById("tik_box").style.height = "42px";
+
+        document.getElementById('tikLess').innerHTML = " פתח ";
+        // document.getElementById('portfolio_imgLess').src = "https://images.globes.co.il/images/site/finance/more.jpg";
+    }
+
+    if (parent.tik_pos == 2) {
+        BindLessMoreMouseEvents(false, true);
+    }
+}
+
+function portfolio_hideTopButs() {
+    mouseOverTik = false;
+    if (parent.tik_pos == 2 && parent.getCookie("tik") && parent.getCookie("tik") == "on") {
+        document.getElementById('portfolio_nav').style.display = "none";
+        parent.document.getElementById("pass_iframe_portfolio").style.height = "20px";
+        parent.document.getElementById("tik_box").style.height = "20px";
+    }
+}
+
+function OverCloseImg(img) {
+    document.getElementById(img).src = "https://images.globes.co.il/images/site2/pass/CloseOver.png";
+}
+
+function OutCloseImg(img) {
+    document.getElementById(img).src = "https://images.globes.co.il/images/site2/pass/close.png";
+}
+
+var drawNewPas = true;
+if (is_barable && !isiPad && !isiPhone) {
+    if (drawNewPas) {
+    document.write('<div id="' + pas.id + '">'
+	+ '<div style="position:relative; width:100%; height:1px;top:0px;left:0px;">'
+	+ '<div id="pass_tooltip" class="pass_tooltip"><span id="pass_tooltip_span">תיק השקעות אישי</span></div>'
+	+ '</div>'
+//	+ '<div id="ads.expandBar.2"  style="left:0px; bottom:2px; z-index: 5; position:fixed; margin-bottom:-5px;"></div>'
+	/// + ad_handler.google_div({url:'/7263/Bar_madadim/Bar_madadim.Left',sizes:'[70,33]',style:'left:0px; bottom:2px; z-index: 5; position:fixed; margin-bottom:-5px'})
+    + '<div id="tools_box" class="p_main_box">'
+    + '     <span>'
+    + '         <iframe id="pass_iframe_tools" src="/news/passmadadim/empty.html" scrolling="no" frameborder="0" onmouseover="iframe_seting(this.id)"></iframe>'
+    + '     </span>'
+    + '</div>'
+	+ ''
+    + '<div id="feed_box" class="p_main_box">'
+    + '     <div id="agency" onmouseover="agency_showTopButs()" onmouseout="agency_hideTopButs()">'
+    + '          <div id="agency_nav" class="nav_bar">'
+    + '              <a onclick="parent.more_frame(1);" id="agency_showMoreBlock"  class="more">'
+    + '                  <img id="imgFeedMore" src="https://images.globes.co.il/images/site/finance/more.jpg" width="17" height="17"/>'
+    + '                  <span id="agency_showMore"> הצג יותר</span>'
+    + '              </a>'
+    + '              <div id="agency_clickable_box" class="class1" onclick="parent.NavClick(2);" onmouseover="mouseOverFeed = true;" onmouseout="mouseOverFeed = false;"></div>'
+    + '              <a onclick="parent.close_frame(1,true)" class="close" onmouseover="OverCloseImg(\'imgCloseFeed\');" onmouseout="OutCloseImg(\'imgCloseFeed\');">'
+    + '                  <img id="imgCloseFeed" src="https://images.globes.co.il/images/site2/pass/close.png" width="17" height="17"/> סגור </a>'
+    + '              <a onclick="parent.less_frame(1)" id="lessFed" class="less">'
+    + '                  <img id="agency_imgLess" src="https://images.globes.co.il/images/site/finance/less.png" width="17" height="17"/>'
+    + '                  <span id="fedLess"> מזער </span>'
+    + '              </a>'
+    + '          </div>'
+    + '          <div id="loading_feed" style="height: 134px;padding-top: 112px;text-align: center;width: 524px;display:none;">'
+    + '             <img alt="loading..." src="https://images.globes.co.il/images/site/Loading30x30.gif" />'
+    + '          </div>'
+    + '          <span>'
+    + '              <iframe id="pass_iframe_rss" src="/news/passmadadim/empty.html" scrolling="no" frameborder="0" onmouseover="iframe_seting(this.id)"></iframe>'
+    + '          </span>'
+    + '     </div>'
+    + '</div>'
+    + ''
+	+ '<div id="tik_box" class="p_main_box">'
+    + '     <div id="portfolio" onmouseover="portfolio_showTopButs()" onmouseout="portfolio_hideTopButs()">'
+    + '         <div id="portfolio_nav" class="nav_bar" style="width:244px;">'
+    + '             <a id="portfolio_showMoreBlock" onclick="parent.more_frame(2)" class="more">'
+    + '                 <img id="imgTikMore" src="https://images.globes.co.il/images/site/finance/more.jpg" width="17" height="17"/>'
+    + '                 <span id="portfolio_showMore"> הצג יותר</span>'
+    + '             </a>'
+    + '             <div id="portfolio_clickable_box" class="class4" onclick="parent.NavClick(1);" onmouseover="mouseOverTik = true;" onmouseout="mouseOverTik = false;" ></div>'
+    + '             <a onclick="parent.close_frame(2,true)" class="close" onmouseover="OverCloseImg(\'imgCloseTik\');" onmouseout="OutCloseImg(\'imgCloseTik\');">'
+    + '                 <img id="imgCloseTik" src="https://images.globes.co.il/images/site2/pass/close.png" width="17" height="17"/> סגור </a>'
+    + '             <a id="lessTik" onclick="parent.less_frame(2);"  class="less">'
+    + '                 <img id="portfolio_imgLess" src="https://images.globes.co.il/images/site/finance/less.png" width="17" height="17"/>'
+    + '                 <span id="tikLess"> מזער </span>'
+    + '             </a>'
+    + '         </div>'
+    + '         <div id="loading_tik" style="height: 134px;padding-top: 112px;text-align: center;width: 254px;display:none;">'
+    + '            <img alt="loading..." src="https://images.globes.co.il/images/site/Loading30x30.gif" />'
+    + '         </div>'
+    + '         <span>'
+    + '             <iframe id="pass_iframe_portfolio" src="/news/passmadadim/empty.html" scrolling="no"frameborder="0" onmouseover="iframe_seting(this.id)"></iframe>'
+    + '         </span>'
+    + '     </div>'
+    + '</div>'
+    + ''
+	+ '<div id="Globes_Footer" style="bottom:0px; left:0px; width:100%; height:36px; z-index:0; position:fixed;">'
+    + '     <iframe id="iframeBar" src="/news/passmadadim/pass.aspx" style="margin-top:2px; height:34px;" frameborder="0" marginheight="0" marginwidth="0" height="35" width="100%" scrolling="No"></iframe>'
+    + '</div>'
+//	+ '     <div id="ads.bar.1" style="right:0px; bottom:2px; z-index: 5; position:fixed; margin-bottom:-5px;"></div>'
+	/// + ad_handler.google_div({url:'/7263/Bar_madadim/Bar_madadim.Right',sizes:'[70,33]',style:'right:0px; bottom:2px; z-index: 5; position:fixed; margin-bottom:-5px'})
+	+ '</div>');
+    }
+    else {
+        document.write('<div id="' + pas.id + '">'
+				+ '<div id="ads.expandBar.2"  style="left:0px; bottom:2px; z-index: 5; position:fixed;"></div>'
+				+ '<div id="Globes_Footer" style="bottom:0px; left:0px; width:100%; height:35px; z-index:0; position:fixed;"><iframe id="iframeBar" src="/news/cache/pas.html?ver=1" style="border-top: solid 1px #c0c0c0;" frameborder="0" marginheight="0" marginwidth="0" height="35" width="100%" scrolling="No"></iframe></div>'
+				+ '</div>');
+    }
+    if (is_ie_6_0() || is_mobile) {
+        pas.position = 'absolute'
+        window.onscroll = function () {
+            var e = document.getElementById(pas.id)
+            if (e) {
+                pas.scrolled_at = new Date()
+                e.style.display = 'none'
+                setTimeout('pas.restore()', 1000)
+            }
+        }
+    }
+}
+
+document.write('<' + 'style type="text/css"><!-- '
+			+ '#' + pas.id + ' { '
+			+ 'position:' + pas.position + '; '
+			+ 'left:0px;'
+			+ 'width:100%;height:35px; '
+			+ 'z-index:5; '
+			+ '}'
+			+ ' --></' + 'style>')
+
+
+$(document).ready(function () {
+
+
+    $(".articleDD b:first-child").click(function (event) {
+
+        $("#navWrap .articleDD").css("overflow","visible");
+        $(".articleDD ul").toggle();
+        $("#navWrap .articleDD").toggleClass(" active");
+        event.stopPropagation();
+
+        $(".searchW").hide();
+        $(".search").removeClass(" active");
+        $("#menuDD").hide();
+        $(".menuDD").removeClass(" active");
+
+    });
+
+
+    $("body").click(function () { $(".articleDD ul").hide(); });
+
+
+    $(".search").click(function () {
+
+        if (top.location.href.toLowerCase().indexOf("/portal/") > 0) {
+            $("#s_select div:eq(1)").click();
+        }
+
+
+        $(".searchW").toggle();
+        $(".search").toggleClass(" active");
+        document.getElementById("query_for_site").focus();
+
+        $(".articleDD ul").hide();
+        $("#navWrap .articleDD").removeClass(" active");
+        $("#menuDD").hide();
+        $(".menuDD").removeClass(" active");
+
+    });
+
+    $(".menuDD").hover(function () {
+        // $("#menuDD").toggle();
+        //$(".menuDD").toggleClass(" active");
+
+        $(".articleDD ul").hide();
+        $("#navWrap .articleDD").removeClass(" active");
+
+    });
+
+
+    $(".sectionName").hover(function () {
+        $("#menuDD").toggle();
+        $(".menuDD").toggleClass(" active");
+
+        $(".articleDD ul").hide();
+        $("#navWrap .articleDD").removeClass(" active");
+
+    });
+
+
+
+
+    $(".userPH").append(getUserMenuString())
+
+
+
+
+    // add long line to aside
+    //$("aside.col").height($("#wrapper").height() - 250);
+
+    $(window).scroll(function () {
+        // ****** hide social links on bottom
+        var scroll = $(window).scrollTop();
+        var socialLinks = $("#wrapper").height() - 1650;
+
+        if (scroll > socialLinks) {
+            $("#social").addClass(" hidden");
+        }
+        else {
+            $("#social").removeClass(" hidden");
+        }
+    });
+
+});
+
+function getUserMenuString() {
+	try { 
+		if (user_id > 0) {
+			var t = typeof(user_name) == 'string' && user_name.match(/[a-zא-ת]{2}/i) ? user_name : login_id
+			if (t.length > 8) { t = t.substr(0, 8) + "..."}
+			return "<div id='userLinks' class='user'><i></i><span>" + t + "</span><ul>"
+				+ "<li class='HeaderUserUpdate'><a href='/news/alerts/?fid=3840'>עדכון פרטים</a></li>"
+				+ "<li class='HeaderUserPortfolio'><a href='/portfolio/'>תיק אישי</a></li>"
+				+ "<li class='HeaderUserArticleList'><a href='/news/home.aspx?fid=10041'>רשימת קריאה</a></li>"
+				+ show_user_product()
+				+ "<li class='HeaderUserDisconnect'><a onclick=\"try{localStorage.removeItem('glsup')}catch(ex){}\" href='/pay/rlogin.asp?disconnect'>התנתקות</a></li>"
+				+ "</ul></div>"
+		}
+	} catch (ex) { }
+	return "<div class='userNo'><i></i><a href=\"javascript:connector.signin();\"  id='Login_connect_Span'>התחברות</a></div>";
+}
+function show_user_product() {
+	var premium_products = [
+		{ ids: [8,35], name: 'עיתון דיגיטלי', link: '/news/home.aspx?fid=2701' },
+		{ ids: [12], name: 'Stocks Online', link: '/portal/instrument.aspx?instrumentid=979&mode=composition&rt=1' },
+		{ ids: [13], name: 'Options Online', link: '/portal/optionlist/?TypeID=15&tabid=3' },
+		{ ids: [14], name: 'Tel-Aviv Online', link: '/portal/instrument.aspx?instrumentid=979&mode=composition&rt=1' }
+	]
+	try {
+		console.log('show_user_product',premium_products)
+		var premiumProductIds = user_properties.ids.split('-')
+		var productsHTML = []
+		for (var i = 0; i < premiumProductIds.length; i++) {
+			var productId = premiumProductIds[i];
+			for (var p = 0; p < premium_products.length; p++) {
+				for(var j=0; j < premium_products[p].ids.length ;j++) {
+					if (premium_products[p].ids[j] == productId) {
+						productsHTML.push('<li class="HeaderUserProduct' + productId + '"><a ' + " onmousedown=\"_gaq.push(['_trackEvent', 'תפריט ראשי', 'ניווט', 'המוצרים שלי - " + premium_products[p].name + "', undefined, false]);\"" + ' href="' + premium_products[p].link + '#fromelement=toplinks">' + premium_products[p].name + '</a></li>')
+						premium_products[p].ids = [] // disable duplication
+					}
+				}
+			}
+		}
+		return productsHTML.join('')
+	} catch(ex) {console.log(ex); return ''}
+}
+function ruleriMoreArticlesEvent(key, value) {
+    try {
+        e_counter.count(unescape(value), key, null, GetRuleriEventCategoryValue());
+    }
+    catch (e) { }
+}
+
+
+
+
+
+/* lazyload.js (c) Lorenzo Giuliani
+* MIT License (http://www.opensource.org/licenses/mit-license.html)
+*
+* expects a list of:
+* `<img src="blank.gif" data-src="my_image.png" width="600" height="400" class="lazy">`
+*/
+$(function () {
+    var $q = function (q, res) {
+        if (document.querySelectorAll) {
+            res = document.querySelectorAll(q);
+        } else {
+            var d = document
+	            , a = d.styleSheets[0] || d.createStyleSheet();
+            a.addRule(q, 'f:b');
+            for (var l = d.all, b = 0, c = [], f = l.length; b < f; b++)
+                l[b].currentStyle.f && c.push(l[b]);
+
+            a.removeRule(0);
+            res = c;
+        }
+        return res;
+    }
+	    , addEventListener = function (evt, fn) {
+	        window.addEventListener
+	          ? this.addEventListener(evt, fn, false)
+	          : (window.attachEvent)
+	            ? this.attachEvent('on' + evt, fn)
+	            : this['on' + evt] = fn;
+	    }
+	    , _has = function (obj, key) {
+	        return Object.prototype.hasOwnProperty.call(obj, key);
+	    }
+	    ;
+
+    function loadImage(el, fn) {
+        var img = new Image()
+	      , src = el.getAttribute('data-src');
+        img.onload = function () {
+            if (!!el.parent)
+                el.parent.replaceChild(img, el)
+            else
+                el.src = src;
+
+            fn ? fn() : null;
+        }
+        if(src.indexOf('https://res.cloudinary.com/globes/image/upload/')>-1){
+
+             if(src.indexOf('/upload/v1')>-1){
+                src=src.replace('/upload/v1','/upload/f_auto/v1');
+             }else {
+                src=src.replace('/v1',',f_auto/v1');
+
+                }
+        }
+        img.src = src;
+    }
+
+    function elementInViewport(el) {
+        var rect = el.getBoundingClientRect()
+
+        return (
+	       rect.top >= 0
+	    && rect.left >= 0
+	    && rect.top <= (window.innerHeight || document.documentElement.clientHeight)
+	    )
+    }
+
+    var images = new Array()
+	      , query = $q('img.lazy')
+	      , processScroll = function () {
+	          for (var i = 0; i < images.length; i++) {
+	              if (elementInViewport(images[i])) {
+	                  loadImage(images[i], function () {
+	                      images.splice(i, 1);
+	                  });
+	              }
+	          };
+	      }
+	      ;
+    // Array.prototype.slice.call is not callable under our lovely IE8
+    for (var i = 0; i < query.length; i++) {
+        images.push(query[i]);
+    };
+
+    processScroll();
+    addEventListener('scroll', processScroll);
+
+});
+
+
+function makeCustomSlider(_itemClass, _containerID, _scrollerID, _srightID, _sleftID, _paddingWidth) {
+    function cs(_itemClass, _containerID, _scrollerID, _srightID, _sleftID, _paddingWidth) {
+        var paddingWidth = _paddingWidth;
+        var itemsCount = 0;
+        var itemWidth = 0;
+        var scrollerWidth = 0;
+        var containerWidth = 0;
+        var itemClass = _itemClass;
+        var containerID = _containerID;
+        var scrollerID = _scrollerID;
+        var srightID = _srightID;
+        var sleftID = _sleftID;
+        var scrollSize = 0;
+        var itemsInFrame = 0;
+        var animating = false;
+
+        itemsCount = $("#" + containerID + " ." + itemClass).length;
+        if (itemsCount > 0) {
+
+            itemWidth = $("#" + containerID + " ." + itemClass)[0].offsetWidth;
+            containerWidth = (itemWidth + paddingWidth) * itemsCount; // $("#" + containerID)[0].offsetWidth
+            $("#" + containerID).css('width', containerWidth);
+            scrollerWidth = $("#" + scrollerID)[0].offsetWidth
+            scrollSize = itemWidth + paddingWidth;
+            itemsInFrame = parseInt(Math.round(Math.floor(scrollerWidth / (itemWidth + paddingWidth))));
+
+            $("#" + containerID).attr('ic', itemsCount);
+            $("#" + containerID).attr('iw', itemWidth);
+            $("#" + containerID).attr('cw', containerWidth);
+            $("#" + containerID).attr('pw', paddingWidth);
+            $("#" + containerID).attr('ss', scrollSize);
+            $("#" + containerID).attr('iif', itemsInFrame);
+
+            $("#" + srightID).click(function () {
+                if (!animating) {
+                    animating = true;
+                    var ic = 1 * $("#" + containerID).attr('ic');
+                    var iif = 1 * $("#" + containerID).attr('iif');
+                    var iw = 1 * $("#" + containerID).attr('iw');
+                    var cw = 1 * $("#" + containerID).attr('cw'); // $("#" + containerID).parent().width();  //
+                    var pw = 1 * $("#" + containerID).attr('pw');
+                    var ss = 1 * $("#" + containerID).attr('ss');
+
+                    if (Math.abs(parseInt($("#" + containerID).css('right').replace("auto", "0"))) + (iif * (iw + pw)) < cw) {
+                        $("#" + containerID).animate({ 'right': '-=' + ss + 'px' }, 'slow', function () {
+                            animating = false;
+                            if (!(Math.abs(parseInt($("#" + containerID).css('right').replace("auto", "0"))) + (iif * (iw + pw)) < cw)) {
+                                $("#" + srightID).addClass("notactive");
+                            } else {
+                                $("#" + srightID).removeClass("notactive");
+                            }
+                            if (!(parseInt($("#" + containerID).css('right').replace("auto", "0")) != 0 && !isNaN(parseInt($("#" + containerID).css('right'))))) {
+                                $("#" + sleftID).addClass("notactive");
+                            } else {
+                                $("#" + sleftID).removeClass("notactive");
+                            }
+                        });
+                    } else {
+                        animating = false;
+
+                    }
+                }
+            });
+
+            $("#" + sleftID).click(function () {
+                if (!animating) {
+                    animating = true;
+                    var ic = 1 * $("#" + containerID).attr('ic');
+                    var iif = 1 * $("#" + containerID).attr('iif');
+                    var iw = 1 * $("#" + containerID).attr('iw');
+                    var cw = 1 * $("#" + containerID).attr('cw');
+                    var pw = 1 * $("#" + containerID).attr('pw');
+                    var ss = 1 * $("#" + containerID).attr('ss');
+                    if (parseInt($("#" + containerID).css('right').replace("auto", "0")) != 0 && !isNaN(parseInt($("#" + containerID).css('right')))) {
+                        $("#" + containerID).animate({ 'right': '+=' + scrollSize + 'px' }, 'slow', function () {
+                            animating = false;
+                            if (!(parseInt($("#" + containerID).css('right').replace("auto", "0")) != 0 && !isNaN(parseInt($("#" + containerID).css('right'))))) {
+                                $("#" + sleftID).addClass("notactive");
+                            } else {
+                                $("#" + sleftID).removeClass("notactive");
+                            }
+                            if (!(Math.abs(parseInt($("#" + containerID).css('right').replace("auto", "0"))) + (iif * (iw + pw)) < cw)) {
+                                $("#" + srightID).addClass("notactive");
+                            } else {
+                                $("#" + srightID).removeClass("notactive");
+                            }
+                        });
+                    } else {
+                        animating = false;
+                    }
+                }
+            });
+
+            if (!(parseInt($("#" + containerID).css('right').replace("auto", "0")) != 0 && !isNaN(parseInt($("#" + containerID).css('right'))))) {
+                $("#" + sleftID).addClass("notactive");
+            } else {
+                $("#" + sleftID).removeClass("notactive");
+            }
+            if (!(Math.abs(parseInt($("#" + containerID).css('right').replace("auto", "0"))) + (itemsInFrame * (itemWidth + paddingWidth)) < containerWidth)) {
+                $("#" + srightID).addClass("notactive");
+            } else {
+                $("#" + srightID).removeClass("notactive");
+            }
+        }
+    }
+
+    var test = new cs(_itemClass, _containerID, _scrollerID, _srightID, _sleftID, _paddingWidth);
+}
+
+
+/* Client-side access to querystring name=value pairs
+	Version 1.2.3
+	22 Jun 2005
+	Adam Vandenberg
+*/
+function Querystring(qs) { // optionally pass a querystring to parse
+	this.params = new Object()
+	this.get=Querystring_get
+	
+	if (qs == null)
+	    qs = location.search.substring(1)
+	
+
+	if (qs.length == 0) return
+
+// Turn <plus> back to <space>
+// See: http://www.w3.org/TR/REC-html40/interact/forms.html#h-17.13.4.1
+	qs = qs.replace(/\+/g, ' ')
+	var args = qs.split('&') // parse out name/value pairs separated via &
+	
+// split out each name=value pair
+	for (var i=0;i<args.length;i++) {
+	    var value;
+	    var pos = args[i].indexOf('=')
+	    if(pos > 0 )
+	    {
+	        var name = args[i].substring(0,pos)
+	        var value = args[i].substring(pos+1)            
+            this.params[name] = unescape(value)
+	    }
+		
+	}
+}
+
+function Querystring_get(key, default_) {
+	// This silly looking line changes UNDEFINED to NULL
+	if (default_ == null) default_ = null;
+	
+	var value=this.params[key]
+	if (value==null) value=default_;
+	
+	return value
+}
+
+var currentProviderUID;
+var currentProviderUserName;
+var currentProviderEmail;
+var currentProviderFirstName;
+var currentProviderLastName;
+var currentProviderGender;
+var currentProviderBirthday;
+var isLogin = false;
+var registerUserToAds = false;
+
+function InitFacebookConnect() {
+    window.fbAsyncInit = function () {
+        FB.init({ appId: '159652850757022', status: true, cookie: true, xfbml: true, version: 'v5.0' });
+    };
+    (function () {
+        var e = document.createElement('script');
+        e.type = 'text/javascript';
+       // e.src = 'https://connect.facebook.net/en_US/all.js#xfbml=1';
+        e.src = 'https://connect.facebook.net/en_US/sdk.js'
+        e.async = true;
+        var first_script = document.getElementsByTagName('script')[0];
+        first_script.parentNode.insertBefore(e, first_script);
+        // document.getElementById('fb-root').appendChild(e);
+    }());
+}
+// alert('InitGoogleConnect')
+function InitGoogleConnect() {
+    var googleLoginBtn = document.getElementsByClassName('google-btn')[0];
+    window.googleClient = {
+        auth2: null,
+        init: function () {
+            gapi.load('auth2', function () {
+                googleClient.auth2 = gapi.auth2.init({
+                    client_id: '19898694440-kvku2tomvrqvhcb9gm60qroo1umls1li.apps.googleusercontent.com',
+                    cookie_policy: null
+                });
+                googleClient.auth2.attachClickHandler(googleLoginBtn, {}, googleClient.signIn, googleClient.onfailure)
+            });
+        }(),
+        signIn: function onSignIn(googleUser) { // on google-btn clicked
+            // alert(1)
+            document.getElementById('imgLoading').style.display = 'block';
+            var profile = googleUser.getBasicProfile();
+            ConnectUserToSocialNetwork('2', googleUser.getId(), profile.getEmail(), profile.getName(), profile.getGivenName(), profile.getFamilyName(), "", profile.getImageUrl(), "he");
+        },
+        failure: function onfailure(error) {
+            console.log(error);
+        },
+        signOut: function signOut() {
+            var auth2 = gapi.auth2.getAuthInstance();
+            auth2.signOut().then(function () {
+                console.log('User signed out.');
+            });
+        }
+    }
+}
+
+
+function InitLinkedInConnect() {
+    window.LinkedInClient = {
+        // Handle the successful return from the API call
+        //onSuccess: function onSuccess(data) {
+        //console.log(data);
+        //var linkedinData = data.values[0];;
+        //if (linkedinData != null) {
+        //    ConnectUserToSocialNetwork('3', linkedinData.id, linkedinData.emailAddress, linkedinData.firstName + linkedinData.lastName, linkedinData.firstName, linkedinData.lastName, "", linkedinData.pictureUrl, "he");
+        //}
+        // },
+        onLoad: function onLinkedInLoad() {
+            // on linkedin btn clicked
+            var backUrl = getParameterByNameInLogin("backto");
+            if (backUrl != undefined && backUrl != "" && !is_mobile) {
+                localStorage.setItem("backUrl", backUrl);
+            }
+            else {
+                if (!is_mobile)
+                    localStorage.setItem("backUrl", window.location.href);
+            }
+
+            var k = 'linkedinlogin';
+            localStorage.removeItem(k);
+
+            var w2 = window.open("https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=86u9qmb7axatst&scope=r_liteprofile%20r_emailaddress&redirect_uri=https://www.globes.co.il/news/login/linkedIn.ashx");
+            function continue_to_onsuccess(json) {
+                var response_object = { user_id: json.user_id, login_id: json.login_id, email: json.email, user_type: json.user_type, newsuser: json.newsuser, response_json: json }
+                connector.onsuccess(response_object)
+                return
+            }
+            function loop() {
+                console.log(new Date());
+                if (localStorage.getItem(k) != undefined) {
+                    w2.close();
+                    var data = "";
+                    try {
+                        data = eval('(' + localStorage.getItem(k) + ')');
+                    }
+                    catch (ex) {
+                        data = localStorage.getItem(k);
+                    }
+                    localStorage.removeItem(k)
+                    
+                    if (typeof (data) == "object")
+                        continue_to_onsuccess(data);
+                    else
+                        console.log("error");
+                    return;
+                }
+                setTimeout(loop, 1000)
+            }
+            loop();
+
+            
+        }
+
+        //onCheck: function onCheck(data) {
+        //    console.log(data);
+        //},
+        //// Handle an error response from the API call
+        //onError: function onError(error) {
+        //    console.log(error);
+        //},
+        //// Use the API call wrapper to request the member's basic profile data
+        //getData: function getProfileData() {
+        //    //document.getElementById('imgLoading').style.display = 'block';
+        //    //IN.API.Profile("me").fields("id", "first-name", "last-name", "headline", "email-address", "picture-url", "public-profile-url").result(LinkedInClient.onSuccess).error(LinkedInClient.onError);
+        //},
+    };
+    var linkedInBtn = document.getElementsByClassName('linkedIn-btn')[0];
+    linkedInBtn.addEventListener("click", function () { LinkedInClient.onLoad() }, false);
+}
+
+function getParameterByNameInLogin(name) {
+    var loginUrl = window.location.href;
+    name = name.replace(/[\[\]]/g, '\\$&');
+    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+        results = regex.exec(loginUrl);
+    if (!results) return '';
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
+
+function GetFacebookStatus(lang) {
+    // on facebook-btn clicked
+    document.getElementById('imgLoading').style.display = 'block';
+    FB.getLoginStatus(function (response) {   // See the onlogin handler
+        if (response.status === 'connected') {   // Logged into your webpage and Facebook.
+            ConnecBySocialNetworkLogic(response.authResponse.userID, lang);
+            document.getElementById('imgLoading').style.display = 'none';
+        } else { // Not logged into your webpage or we are unable to tell.
+            FB.login(function (response) {
+                if (response.authResponse) {
+                    ConnecBySocialNetworkLogic(response.authResponse.userID, lang);
+                }
+                else {
+                    document.getElementById('imgLoading').style.display = 'none';
+                }
+            },
+            {
+                scope: 'email,public_profile'
+            });
+        }
+    });
+}
+
+function ConnecBySocialNetworkLogic(uid, lang) {
+    currentProviderUID = uid;
+    ConnecBySocialNetwork(lang);
+}
+
+function LogoutFromFacebook() {
+    document.location = '/';
+}
+
+//function ConnecBySocialNetwork_old(lang) {
+//    FB.api({ method: 'fql.query', query: 'SELECT name,email,first_name,last_name,sex FROM user WHERE uid=' + currentProviderUID }, function (response) {
+//        currentProviderEmail = response[0].email;
+//        currentProviderUserName = response[0].name;
+//        currentProviderFirstName = response[0].first_name;
+//        currentProviderLastName = response[0].last_name;
+//        currentProviderGender = response[0].sex;
+//        currentProviderBirthday = ''; // response[0].birthday;
+//        ConnectUserToSocialNetwork('1', currentProviderUID, currentProviderEmail, currentProviderUserName, currentProviderFirstName, currentProviderLastName, currentProviderGender, lang);
+//    });
+//}
+
+function ConnecBySocialNetwork(lang) {
+    FB.api('/me?fields=name,email,first_name,last_name,gender,picture', function (response) {
+        currentProviderEmail = response.email;
+        currentProviderUserName = response.name;
+        currentProviderFirstName = response.first_name;
+        currentProviderLastName = response.last_name;
+        currentProviderGender = response.gender;
+        currentProviderPicture = response.picture.data.url;
+        ConnectUserToSocialNetwork('1', currentProviderUID, currentProviderEmail, currentProviderUserName, currentProviderFirstName, currentProviderLastName, currentProviderGender, currentProviderPicture, lang);
+    });
+}
+
+function userInfoCallback(response) {
+    console.log('userInfoCallback:' + response.email);
+}
+
+function ConnectUserToSocialNetwork(providerId, providerUId, providerEmail, providerUserName, currentProviderFirstName, currentProviderLastName, currentProviderGender, currentProviderimage, lang) {
+    var enProviderId = encodeURIComponent(providerId);
+    var enProviderUId = encodeURIComponent(providerUId);
+    var enProviderEmail = encodeURIComponent(providerEmail);
+    var enProviderUserName = encodeURIComponent(providerUserName);
+    var enProviderFirstName = encodeURIComponent(currentProviderFirstName);
+    var enProviderLastName = encodeURIComponent(currentProviderLastName);
+    var enProviderGender = encodeURIComponent(currentProviderGender);
+    var enProviderimage = encodeURIComponent(currentProviderimage);
+
+    var url = "/news/ashx_handlers/SocialNetworks/ConnectUserToSocialNetwork.ashx?providerId=" + enProviderId + "&providerUId=" + enProviderUId + "&providerEmail=" + enProviderEmail + "&providerUserName=" + enProviderUserName + "&providerFirstName=" + enProviderFirstName + "&providerLastName=" + enProviderLastName + "&providerGender=" + enProviderGender + "&providerImage=" + enProviderimage;
+    if (isLogin) {
+        url += "&isLogin=1";
+    }
+    registerUserToAds = connector ? connector.get_property('cb_acceptads') : false
+    registerUserToFromGlobes = connector ? connector.get_property('cb_fromglobes') : false
+    var connector_language = connector ? connector.get_property('language') : null
+
+    if (registerUserToAds) { url += "&ads=1" }
+    if (registerUserToFromGlobes) { url += "&fromglobes=1" }
+    if (connector_language == 'en') { url += '&lang=en'}
+    var xhr = new XMLHttpRequest()
+    xhr.onreadystatechange = function () { if (this.readyState == 4 && this.status == 200) { ConnectUserToSocialNetworkCallback(this.responseText, lang) } }
+    xhr.open("GET", url)
+    xhr.send()
+
+    // GetAsynchronousData(url, "ConnectUserToSocialNetworkCallback(xmlHttp.responseText,lang)")
+}
+
+function ConnectUserToSocialNetworkCallback(result, lang) {
+    try {
+        var json = eval('(' + result + ')')
+        if (connector && json != null) {
+            var response_object = { user_id: json.user_id, login_id: json.login_id, email: json.email, user_type: json.user_type, newsuser: json.newsuser, response_json: json }
+            connector.onsuccess(response_object)
+            return
+        }
+    } catch (ex) { }
+
+    var connectionData = result.split('-@@@-');
+    if (connectionData[0] == 'Linked') {
+        //var backToUrl = top.location.href;
+        connector.onsuccess(connectionData[7], connectionData[1]);
+        return
+        // DoSocialLogin(connectionData[1], connectionData[2], connectionData[3], '', '/news/m/login/globesloginsuccess.aspx?lang=' + lang, lang);
+    }
+    else if (connectionData[0] == 'isLogin') {
+        //location.href = '/pay/globesloginsuccess.asp?backTo=/news';
+        var backTo = lang == "en" ? "en" : "news";
+        location.href = '/news/m/login/globesloginsuccess.aspx?backTo=/' + backTo + '&lang=' + lang;
+    }
+    else {
+        if (typeof (ShowErrorMessage) == 'function') { ShowErrorMessage('ארעה שגיאה - עקב הגדרות אבטחה בחשבון הפייסבוק שלך לא ניתן להשלים את תהליך הרישום', "txtEmail") }
+        document.getElementById('imgLoading').style.display = 'none';
+    }
+}
+
+function DoSocialLogin(loginName, loginCO, loginVC, p_backTo, loginBackTo, lang) {
+    var qs = new Querystring();
+    var callbackPage = encodeURIComponent(qs.get("p_backTo"));
+    if (callbackPage != null && callbackPage != 'null' && callbackPage != '') {
+        loginBackTo = callbackPage;
+    }
+
+    //var url = "/pay/loginsubmitn.asp?loginType=social&loginName=" + escape(loginName) + "&loginCO=" + escape(loginCO) + "&loginVC=" + escape(loginVC) + "&p_backTo=" + p_backTo + "&loginBackTo=" + loginBackTo ;
+    var url = "/news/m/login/socialloginsubmit.aspx?loginName=" + escape(loginName) + "&loginCO=" + escape(loginCO) + "&loginVC=" + escape(loginVC) + "&p_backTo=" + escape(p_backTo) + "&loginBackTo=" + escape(loginBackTo) + "&lang=" + lang;
+
+    document.location = url;
+}
+
+function GetProviderLoginImage() {
+    var qs = new Querystring();
+    var provider = qs.get("socialId");
+    document.getElementById("imgProvider").src = 'http://images.globes.co.il/images/site2/SocialNetworks/' + provider + '_50_on.png';
+}
+
+function PostContentOnUserFacebookWall(content, title, caption, description, url) {
+    FB.api({ method: 'fql.query', query: 'SELECT publish_stream FROM permissions WHERE uid=' + 'me()' }, function (resp) {
+        if (resp[0] == null) {
+            RequestFacebookWallPermissions();
+        }
+        else {
+            if (resp[0]['publish_stream'] == 1) {
+                PostContentOnUserFacebookWallApi(content, title, caption, description, url);
+            }
+            else {
+                RequestFacebookWallPermissions();
+            }
+        }
+    });
+}
+
+function RequestFacebookWallPermissions() {
+    var data =
+        {
+            method: 'permissions.request',
+            perms: 'publish_stream',
+            display: 'popup'
+        }
+    FB.ui(data, RequestFacebookWallPermissionsCallback);
+}
+
+function RequestFacebookWallPermissionsCallback(response) {
+    if (!response || response.error) {
+    }
+    else {
+        PostContentOnUserFacebookWallApi();
+    }
+}
+function PostContentOnUserFacebookWallApi(content, title, caption, description, url) {
+    FB.api('/me/feed', 'post', {
+        message: content,
+        name: title,
+        caption: caption,
+        description: description,
+        link: url
+    },
+        function (response) {
+            if (!response || response.error) {
+            }
+            else {
+                //alert('posted!');
+            }
+        });
+}
+
+///**** Login  *****/////
+var _cs_loginHeader = 'כניסה לחשבון קיים';
+var _cs_facebookTxt = 'התחברות דרך פייסבוק';
+var _cs_email = {
+    mosad : 'מייל של מוסד אקדמי' 
+    ,default: 'מייל'
+}; 
+var _cs_password = 'סיסמה';
+var _cs_forgotPassword = 'שכחתי סיסמה';
+var _cs_dontHaveAccount = 'אין לך חשבון בגלובס?';
+var _cs_register = 'ליצירת חשבון חדש';
+var loginBtn = ' כניסה לחשבון שלי';
+var emptyEmail = 'יש להזין מייל';
+var emptyPassword = 'יש להזין סיסמה';
+var signinError = 'הסיסמה שהוקלדה אינה תואמת את כתובת המייל. יש לבדוק שהסיסמה הוקלדה באופן תקין או ללחוץ על "שכחתי סיסמה"';
+var externalLogin = {
+    default: 'כניסה לחשבון באמצעות'
+	, client_service: 'בכדי שנוכל לוודא את פרטי המינוי שלכם אנא התחברו באמצעות'
+    , event: 'להרשמה יש להזדהות באמצעות'
+    , globesSchool: 'לקבלת גישה לתכני גלובסקול יש להזדהות באמצעות'
+    , mosad: 'לצורך מימוש ההטבה יש להרשם באמצעות חשבון המקושר למייל של מוסד אקדמי'
+	, personal_zone: 'בכדי להמשיך בתהליך נא להכנס לחשבון באמצעות'
+    , purchase: 'לקבלת גישה לכל תכני גלובס בדיגיטל, יש להזדהות באמצעות'
+    , sso: 'בכדי להגיב באתר גלובס, נא להכנס לחשבון באמצעות'
+	, meitav_dash_game: 'כניסה למשחק באמצעות'
+}
+
+var must_be_checked = 'כדי שנוכל לתקשר איתך לגבי המינוי, חובה לסמן שדה זה'
+
+/////**** Reister ****////
+var _cs_registerHeader = 'יצירת חשבון';
+var _cs_or = "או ליצור חשבון באמצעות מייל וסיסמה";
+var _cs_or_signin = "או כניסה באמצעות מייל וסיסמה";
+var _cs_or_register_and_signin = "או ליצור חשבון באמצעות מייל וסיסמה";
+var _cs_firstName = "שם פרטי";
+var _cs_lastName = "שם משפחה";
+var registerBtn = 'ליצירת חשבון';
+var haveAnAccount = ''; //'כבר יש לך חשבון בגלובס?';
+var _cs_login = 'כבר יש לי חשבון';
+var passwordRule = 'סיסמה תקנית מורכבת מלפחות 6 תווים, ומכילה אותיות באנגלית ומספרים';
+var emailExist = 'כתובת המייל שהזנת כבר בשימוש,  '
+    + '<span id=email_already_exists><a href="javascript:event.preventDefault()"> לכניסה לחשבון קיים </a></span>'
+var registerFailed = 'לצערנו לא ניתן לבצע את תהליך הרישום כעת. אנא נסו שנית במועד מאוחר יותר או צרו קשר עם שירות הלקוחות *5988';
+var incorrectFirstName = 'השם שהזנת מכיל תווים לא חוקיים';
+var incorrectLastName = 'השם שהזנת מכיל תווים לא חוקיים';
+var incorrectEmail = 'המייל שהזנת אינו תקין';
+var acceptTerms = 'על ידי התחברות אני מאשר/ת את <a target="_blank" href="/news/article.aspx?did=1000252043">תנאי השימוש </a> ואת <a target="_blank" href="/news/article.aspx?did=1001243948&fid=3038">מדיניות הפרטיות</a>.'
+// var acceptMarketing = 'אני מאשר קבלת עדכונים, הטבות ומידע שיווקי מגלובס'
+var acceptMarketing = 'אני מאשר/ת קבלת דוא"ל פרסומי ושיווקי'
+// var acceptFromGlobes = 'אני רוצה לקבל מידע על המינוי שלי והטבות רלבנטיות (מגלובס בלבד)'
+var acceptFromGlobes = 'אני רוצה לקבל מידע חשוב לגבי המינוי שלי, הזמנות לוועידות וכנסים ודיוור רלוונטי עבורי מאתר גלובס'
+
+var externalRegisterandLogin = {
+    default: 'יצירת חשבון באמצעות'
+	, client_service: 'בכדי שנוכל לוודא את פרטי המינוי שלכם אנא התחברו באמצעות'
+    , event: 'להרשמה יש ליצור חשבון באמצעות'
+    , globesSchool: 'לקבלת גישה לתכני גלובסקול והטבות בלעדיות למיטב הקורסים יש לבצע הרשמה לאתר גלובס'
+    , mosad: 'לצורך מימוש ההטבה יש להרשם באמצעות חשבון המקושר למייל של מוסד אקדמי'
+	, personal_zone: 'בכדי להמשיך בתהליך נא להרשם באמצעות'
+    , purchase: 'לקבלת גישה לתכני גלובס בדיגיטל, יש ליצור חשבון באמצעות'
+    , sso: 'בכדי להגיב באתר גלובס, נא ליצור חשבון באמצעות'
+	, meitav_dash_game: 'יצירת חשבון למשחק באמצעות'
+};
+
+
+//////********** change password  **********/////
+var changePasswordHeader = 'החלפת סיסמה';
+var newPassword = 'סיסמה חדשה';
+var ConfirmPassword = 'אימות סיסמה';
+var ChangePasswordBtn = 'עידכון והתחברות';
+var incorrectPassword = 'לפחות 8 ספרות/אותיות באנגלית ואחת גדולה';
+var changePasswordSuccess = 'הסיסמה הוחלפה בהצלחה';
+var changePasswordFailed = 'החלפת הסיסמה נכשלה';
+var notMatchPassword = 'יש להקפיד להקליד סיסמה כמו למעלה.';
+var rechangePassword = 'יש לאפס סיסמה מחדש';
+var backToHomePage = 'חזרה לעמוד הבית';
+
+
+/////****** resetPassword  ******///////
+var resetPasswordHeader = 'איפוס סיסמה';
+var userEmail = 'יש למלא את כתובת המייל באמצעותה נרשמת.';
+var resetPasswordBtn = 'איפוס סיסמה';
+var backBtn = 'חזרה';
+var emailNotFound = 'כתובת המייל שהקלדת לא נמצאה במערכת';
+var resetPasswordGuidelines = 'הנחיות לאיפוס סיסמה נשלחו לכתובת המייל';
+
+var connector = (function () {
+    var me;
+    var lng;
+    var fromApp = false;
+    var veil = null;
+    var submit_handler = null
+    var calling_context = null
+    var internal_container
+    var remove_container = false
+    var isBackBtn = false;
+    var active = false
+    var gaParameter3 = ''
+    var gaParameter4 = ''
+
+    function ph(s) { return '' + s.replace(/"/g, '&quot;') }
+    function is_email(email) { return email.match(/^([\w\-\.]+)@((\[([0-9]{1,3}\.){3}[0-9]{1,3}\])|(([\w\-]+\.)+)([a-zA-Z]{2,4}))$/i) }
+    function is_valid_password(password) {
+        password = '' + password
+        return password.length > 5
+            && password.match(/[0-9]/)
+            && password.match(/[a-z]/i)
+            ? true : false
+    }
+    function containsHebs(password) {
+        var regex = /^[א-ת]{2,20}$/;
+        return (regex.test(password));
+    }
+    function validateNames(name) {
+        var regex = /^[\sA-Zא-תa-z'-]{2,20}$/;
+        return (regex.test(name));
+    }
+    function header(title) {
+        if (fromApp)
+            return "";
+        return '<h1>' + title.replace(/\s+/g, '&nbsp;') + '</h1>'
+    }
+    function cancelbtn(with_cancel) {
+        if (!with_cancel)
+            return "";
+        return '<div id="cancel_login"><!-- img src="https://images.globes.co.il/images/Site2/wizard/Icon_Close_v3.png" / --></div>';
+    }
+    function socialBuild(str) {
+        if (fromApp) {
+            return "";
+        }
+        return '<div class="text2 n3">' + str + '</div>'
+            + '<section id="socialLogin" class="socialConnect">'
+            + (calling_context.without_google ? '' : '<div id=google_connector class="g social google-btn"></div>')
+            + '<div id=facebook_connector class="f social"></div>'
+            + '<div id=linkedin_connector class="linkedIn-btn l social ">'
+            //+ '<div id=apple_connector class="apple-btn l social ">'
+            + '</div>'
+            + '</section>';
+    }
+
+    function getParameterByNameInLogin(name) {
+        var loginUrl = window.location.href;
+        name = name.replace(/[\[\]]/g, '\\$&');
+        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+            results = regex.exec(loginUrl);
+        if (!results) return '';
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
+
+    function qs(id) {
+        var prefix = id.match(/^[a-z]/i) ? '#' : ''
+        return calling_context && calling_context.container ? calling_context.container.querySelector(prefix + id) : null
+    }
+    function url_encoded(s) { return s == null ? '' : encodeURIComponent('' + s) }
+    function ajax(querystring, formdata, f) {
+        var imgLoading = qs('imgLoading')
+        if (imgLoading && (typeof (calling_context.show_loading) != 'boolean' || calling_context.show_loading)) { imgLoading.style.display = 'block' }
+        var xhr = new XMLHttpRequest()
+        xhr.onreadystatechange = function () {
+            if (this.readyState == 4) {
+                if (imgLoading) { imgLoading.style.display = 'none' }
+                if (this.status == 200) {
+                    f(this.responseText)
+                } else {
+                    alert('ajax failed')
+                }
+            }
+        }
+        xhr.open("POST", "/news/login/ajaxhandler.ashx?" + querystring)
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+        xhr.send(formdata + (lng == "en" ? '&lang=en' : ''));
+    }
+    function css(internal_container_id) {
+        return ''
+    }
+
+    function build_container(internal_container_id) {
+        var body = document.querySelector('BODY')
+        
+            veil = document.createElement('DIV')
+            veil.style.position = 'absolute'
+            veil.style.top = 0
+            veil.style.left = 0
+            veil.style.width = '100%'
+            veil.style.height = body.clientHeight + 'px'
+            body.appendChild(veil)
+       
+        var div = document.createElement('DIV')
+        $('.loginContainer').hide()
+        div.className = 'loginContainer'
+        div.style.display = 'none'
+        body.insertBefore(div, body.firstChild)
+        remove_container = true
+        setTimeout(function () {
+            div.style.display = 'block';
+            try {
+                var mailinput = qs('email')
+                //console.log('mailinput', mailinput)
+                if (mailinput && mailinput.value.length == 0) {
+                    mailinput.focus();
+                } else {
+                    var passwordinput = qs('password')
+                    if (passwordinput == null) { passwordinput = qs('password1') }
+                    console.log('passwordinput', passwordinput)
+                    if (passwordinput) { passwordinput.focus() }
+                }
+            } catch (e) { console.log(e) }
+        }, 500)
+
+        return div
+    }    
+    function context_message(message,message_selector) {
+        if (typeof message == 'string') { return message }
+        if (arguments.length > 1 && typeof(message_selector) == 'string' && typeof(message[message_selector]) == 'string') { return message[message_selector] }
+        if (typeof calling_context.message_selector == 'string' && typeof message[calling_context.message_selector] == 'string') { return message[calling_context.message_selector] }
+        return message.default
+    }
+    function cancel_login() {
+        active = false
+        calling_context.container.innerHTML = ''
+        if (veil) { veil.parentNode.removeChild(veil) }
+        if (remove_container) {
+            calling_context.container.parentNode.removeChild(calling_context.container)
+            calling_context.container = null
+        }
+        if (typeof (calling_context.oncancel) == 'function') {
+            calling_context.oncancel()
+            return
+        }
+        var backUrl = getParameterByNameInLogin("backTo");
+        if (backUrl != '' && backUrl.indexOf("emagazine") > -1) {
+            window.location.href = "/news/emagazine/";
+        }
+        if (isBackBtn) {
+            window.history.go(-1);
+            return false;
+        }
+    }
+    function init(context, with_cancel) {
+        if (active && context != undefined && !context.ignore_active) { return }
+
+        active = true
+        veil = null
+        submit_handler = null
+        remove_container = false
+        isBackBtn = !with_cancel;
+        var internal_container_id = 'ilc_' + new Date().getTime()
+        context = context || {}
+		if (typeof(context.message_selector) == 'undefined' && location.pathname.match(/personal_zone/)) {
+			context.message_selector = 'personal_zone'
+		}
+		if (typeof (context.gaParameter3Prefix) == 'undefined' && typeof(context.message_selector) == 'string') {context.gaParameter3Prefix = context.message_selector}
+		if (typeof (context.gaParameter4Prefix) == 'undefined' && typeof(context.message_selector) == 'string') {context.gaParameter4Prefix = context.message_selector}
+        gaParameter3 = (typeof (context.gaParameter3Prefix) == 'string' ? context.gaParameter3Prefix : '') + 'Authentication'
+        gaParameter4 = typeof (context.gaParameter4Suffix) == 'string' ? ' - from ' + context.gaParameter4Suffix : '';
+
+        lng = context.lang
+        fromApp = context.isFromApp;
+        if (typeof (context.container) == 'string') { context.container = document.getElementById(context.container) }
+        // if (context.container instanceof JQuery) { context.container = context.container.get(0) }
+        $(context.container).show()
+        context.container = context.container || build_container(internal_container_id);
+        if (!fromApp) {
+            if (typeof (window.fbAsyncInit) == 'undefined') { InitFacebookConnect() }
+        }
+        // console.log(context)
+        // <link href="" rel="stylesheet" />
+        var cssSource = IsProductionServer ? "/news/Cache/css/login.css?v=15" : "/apps/fg.ashx?name=login.css";
+        
+        context.container.innerHTML = (context.internal_css ? css(internal_container_id) : '<link href="' + cssSource + '" rel="stylesheet" />')
+            + cancelbtn(with_cancel)
+            + '<div class="imgLoading_Div"><img id="imgLoading" alt="" style="display:none" src="https://images.globes.co.il/globes/icons/spinner-1s-200px.svg"></div>'
+            + '<div id="' + internal_container_id + '" class="loginWr">'
+        context.context = context.context || ''
+        calling_context = context
+        // console.log(calling_context)
+        internal_container = qs(internal_container_id)
+        if (!fromApp && with_cancel) {
+            qs('cancel_login').addEventListener('click', cancel_login)
+        }
+        document.addEventListener('keyup', function (e) { if (e.code == 'Enter' && submit_handler != null) { submit_handler() } })
+    }
+
+
+    function reset_password() {
+        internal_container.innerHTML = header(resetPasswordHeader)
+            + '<div id="messageTop" class="messageTop">' + userEmail + '</div>'
+            + '<span id="sent_email"></span>'
+            + input('email', 'email', 1, context_message(_cs_email,'default'), true, null)
+            //     + '<div class="input_container"><input id="email" placeholder="' + ph(email) + '"></div>'
+            //     + '<div id="reset_password_message" class=errmsg></div>'
+            + '<div class=btnWr>'
+            + '<div id=signin class="back ___rp2si" >' + backBtn + '</div>'
+            + '<div id="reset_password" class="textbox btn" >' + resetPasswordBtn + '</div>'
+            + '</div>'
+        //  debugger
+        $(qs('email')).addClass('reset_password')
+        qs('signin').addEventListener('click', signin)
+        submit_handler = function () {
+            var email = qs('email')
+            if (email.value.replace(/\s/g, '').length == 0) {
+                // qs('reset_password_message').innerHTML = emptyEmail
+                input_error(email, emptyEmail)
+                return
+            }
+            input_error(email, null)
+            ajax('reset_password', 'email=' + url_encoded(email.value) + (calling_context.backto ? '&backto=' + url_encoded(calling_context.backto) : '')
+                , function (responseText) {
+                    if (responseText != 'success') {
+                        input_error(email, emailNotFound)
+                        // qs('reset_password_message').innerHTML = emailNotFound
+                        return
+                    }
+                    $(qs('messageTop')).removeClass('messageTop').addClass('text3').html(resetPasswordGuidelines)
+                    $(qs('sent_email')).addClass('email').html(email.value)
+                    $(qs('email')).parent().parent().hide()
+                    $(qs('reset_password')).css('visibility', 'hidden')
+                    /*
+                                            internal_container.innerHTML = '<div class=message_successful><h1>איפוס סיסמה</h1>'
+                                                + '<span class=text3>' + resetPasswordGuidelines + '</span>'
+                                                + '<div class=btnWr><div id=back class=btn>' + backBtn + '</div></div>'
+                                                + '</div>'
+                    
+                                            qs('back').addEventListener('click', signin)
+                    */
+                }
+            )
+        }
+        qs('reset_password').addEventListener('click', submit_handler)
+        add_activator('reset_password', 'email')
+    }
+    function facebook_connect() {
+        GetFacebookStatus(lng == "en" ? lng : 'he')
+    }
+    function input_error(input, message) {
+        if (message == null) {
+            $(input).parent().find('.errMsg').html('')
+            $(input).parent().removeClass('mistake')
+        } else {
+            $(input).parent().find('.errMsg').html(message)
+            $(input).parent().addClass('mistake')
+            $(input).focus()
+        }
+    }
+    function set_backToBtn(backToBtn_Id, handler) {
+        if (arguments.length < 2) { handler = calling_context.backToCaller_handler }
+        if (arguments.length < 1) { backToBtn_Id = 'backToCaller' }
+        var backToBtn = qs(backToBtn_Id)
+        if (backToBtn == null || typeof (handler) != 'function') { return }
+        // console.log(backToBtn_Id, handler, qs(backToBtn_Id), typeof (handler))
+        backToBtn.addEventListener('click', function () { handler() })
+        $(backToBtn).addClass('back')
+        $(backToBtn).parent().addClass('btnWr')
+        // $(qs('signin')).addClass('textbox')
+    }
+
+    var _cs_validate_subscriber_title = 'אימות פרטי מנוי'
+    // var _cs_validate_subscriber_text = 'נא להזין מספר ת.ז. עימו נרשמת כמנוי/ה לעיתון המודפס'
+
+    var _cs_validate_subscriber_text = 'הגעתם לאזור המכיל מידע אישי,'
+        + '<br>אנחנו רוצים לוודא את פרטי המנוי שלכם, בכדי שנוכל להתקדם'
+        + '<br>אנא הזינו מספר ת.ז. עימו נרשמתם כמנוי/ה לעיתון המודפס:'
+
+    var _cs_send_code_text = 'המשך'
+    var _cs_tz = 'ת.ז.'
+    var _cs_invalid_tz = 'ת.ז. לא תקינה'
+
+    function check_code_callback(responseText) {
+        var json = eval('(' + responseText + ')')
+        if (json.status == 'success') {
+            //sessionStorage.setItem('tzui', json.tz + ':' + json.ui);
+            onsuccess({ tz: json.tz, ui: json.ui })
+            return
+        }
+        $(qs('WaitForCode')).find('.error_message').html('קוד לא תקין')
+    }
+    function check_code() {
+        send_clientService_event('code');
+        $(qs('WaitForCode')).find('.error_message').html('')
+        var code = qs('code1').value + qs('code2').value + qs('code3').value + qs('code4').value
+        if (code.match(/\d{4}/)) {
+            ajax('check_code', 'tz=' + qs('tz').value.trim() + '&code=' + code, check_code_callback)
+            return
+        }
+        $(qs('WaitForCode')).find('.error_message').html('נא להקליד קוד תקין')
+    }
+
+
+    function IsTZ(tz) {
+        tz = parseInt('' + tz, 10)
+        if (isNaN(tz) || tz < 9999 || tz > 999999999) { return false }
+        var s = tz.toString()
+        var nb = s.substring(0, s.length - 1)
+        var iMultNum = 2
+        var iTmp, iSum = 0
+        while (nb.length > 0) {
+            iTmp = parseInt(nb.substring(nb.length - 1)) * iMultNum;
+            if (iTmp >= 10) { iTmp = Math.round((iTmp / 10) - 0.5) + (iTmp % 10) }
+            iSum = iSum + iTmp;
+            iMultNum = (iMultNum % 2) + 1;
+            nb = (nb.length > 1) ? nb.substring(0, nb.length - 1) : '';
+        }
+        var bikoret = tz % 10;
+        var result = (10 - (iSum % 10)) % 10;
+        return bikoret == result
+    }
+
+    function codedigit(event) {
+        console.log(event)
+        var etv = event.target.value
+        if (!etv.toString().match(/[0-9]/)) {
+            event.target.value = ''
+            return
+        }
+        var d = parseInt(event.target.id.match(/\d/i, ''))
+        // console.log(d,'#code' + (d == 4 ? 0 : d + 1))
+        $('#code' + (d == 4 ? 1 : d + 1)).focus()
+        //console.log(event)
+    }
+    function validate_subscriber() {
+        
+        
+        //  calling_context.backToCaller_handler = function () { }
+        internal_container.innerHTML = header(_cs_validate_subscriber_title)
+            + '<p>' + _cs_validate_subscriber_text + '</p>'
+            + '<br>'
+            + input('tz', 'text', 1, _cs_tz, true, null)
+            + '<div>'
+            + (typeof (calling_context.backToCaller_handler) == 'function'
+                ? '<div id=backToCaller>' + backBtn + '</div>'
+                : ''
+            )
+            + '<div id=send_code class=btn>' + _cs_send_code_text + '</div>'
+            + '</div>'
+            + '<div id="WaitForCode" style= "display:none" >'
+            + '<div class="steptitle">'
+            + '<div class="text2 n1">'
+            + '<span > הודעת SMS עם קוד נשלחה למספר הנייד </span > <span id="cell"> ###-#XXXX## </span>'
+            + '<br><span>זה לא הנייד שלך ? נא לפנות <a class="red_bottom" href="mailto:sherut@globes.co.il" > לשירות לקוחות </a> </span>'
+            + '</div > '
+            + '</div>'
+            + '<div class="activatePhone">'
+            + '<input id="code4" class="codedigit" maxlength="1" autocomplete="off">'
+            + '<input id="code3" class="codedigit" maxlength="1" autocomplete="off">'
+            + '<input id="code2" class="codedigit" maxlength="1" autocomplete="off">'
+            + '<input id="code1" class="codedigit" maxlength="1" autocomplete="off">'
+            + '</div>'
+            + '<div class="error_message errMsg"></div>'
+            + '<div class="btnWr">'
+            + '<div class="back" id=backToValidateSubscriber >חזרה</div>'
+            + '<div id=check_code class="textbox clickable" > המשך </div>'
+            + '</div>'
+
+            + '<div class="text3 n2">'
+            + 'לא קיבלת את הקוד?'
+            + '<span class="red_bottom clickable" onclick="ResendCode()"> לנסות שוב </span>'
+            + 'או לפנות'
+            + '<a class="red_bottom" href="mailto:sherut@globes.co.il" > לשירות לקוחות </a>'
+            + '</div>'
+
+            + '</div>'
+
+
+
+        qs('code1').addEventListener('keyup', function (event) { codedigit(event) })
+        qs('code2').addEventListener('keyup', function (event) { codedigit(event) })
+        qs('code3').addEventListener('keyup', function (event) { codedigit(event) })
+        qs('code4').addEventListener('keyup', function (event) { codedigit(event) })
+        set_backToBtn()
+        add_activator('send_code', 'tz')
+        submit_handler = function () {
+            var tz = qs('tz')
+            input_error(tz, null)
+            if (!IsTZ(tz.value)) {
+                input_error(tz, _cs_invalid_tz)
+                return
+            }
+            ajax('send_code', 'tz=' + tz.value
+                , function (responseText) {
+                    console.log(responseText)
+
+                    send_clientService_event('tz')
+
+                    var json = eval('(' + responseText + ')')
+                    if (json.status == 'success') {
+                        qs('send_code').parentNode.style.display = 'none'
+                        $(qs('tz')).attr('readonly', 'readonly')
+                        $(qs('tz')).prop('disabled', true)
+                        $(qs('tz')).parent().parent().addClass('readonly')
+                        $(qs('cell')).html(json.cell)
+                        qs('WaitForCode').style.display = 'block'
+                        qs('code1').focus()
+                        add_activator('check_code', 'code1,code2,code3,code4')
+                        set_backToBtn('backToValidateSubscriber', validate_subscriber)
+                        qs('check_code').addEventListener('click', check_code)
+						return
+                    }
+
+                    if (json.status == 'invalid tz') {
+                        input_error(qs('tz'), 'נא להקליד ת.ז. תקינה')
+                        return;
+                    }
+                    if (json.status == 'no cell') {
+                        input_error(qs('tz'), 'לא אותר מספר נייר עבור המנוי, נא לפנות לשירות לקוחות')
+                        return;
+                    }
+                    input_error(qs('tz'), 'ת.ז לא אותרה במערכת, נא לפנות לשירות לקוחות לבירור')
+                }
+            )
+
+
+        }
+        qs('send_code').addEventListener('click', submit_handler)
+    }
+
+    function send_clientService_event(stage) {
+        var serviceName = '', formName = '';
+        var page = top.location.search.replace('?', '').replace(/(.*)(page=)(\d{1,3})(.*)/, "$3")
+        if (!isNaN(page)) {
+            var iPage = parseInt(page);
+            switch (iPage) {
+                case 1: serviceName = 'מינוי דיגיטלי'; formName = 'בעיה בהתחברות'; break;
+                case 2: serviceName = 'מינוי דיגיטלי'; formName = 'פניה כללית'; break;
+                case 3: serviceName = 'מינוי דיגיטלי'; formName = 'ביטול מינוי דיגיטלי'; break;
+                case 5: serviceName = 'מינוי לעיתון המודפס'; formName = 'לא קיבלתי עיתון'; break;
+                case 6: serviceName = 'מינוי לעיתון המודפס'; formName = 'הקפאת מינוי'; break;
+                case 7: serviceName = 'מינוי לעיתון המודפס'; formName = 'פניה כללית'; break;
+                case 8: serviceName = 'מינוי לעיתון המודפס'; formName = 'שינוי כתובת'; break;
+                case 9: serviceName = 'מינוי לעיתון המודפס'; formName = 'ביטול מינוי לעיתון המודפס'; break;
+                case 101: serviceName = 'מינוי לעיתון המודפס/דיגיטלי'; formName = 'בעיית גישה לעיתון הדיגיטלי'; break;
+                case 105: serviceName = 'מינוי לעיתון המודפס'; formName = 'עיתון רטוב/קרוע'; break;
+
+            }
+        }
+        else {
+            if (location.href.indexOf('tz.aspx') > 0) {
+                serviceName = 'מינוי לעיתון המודפס';
+                formName = 'הפעלת מנוי דיגיטלי';
+            }
+        }
+
+        if (serviceName != '' && formName != '') {
+            var stageName = stage = 'tz' ? 'אימות פרטי מנוי' : 'אימות טלפוני';
+            ga('send', 'event', 'Personal zone', 'Contact us - ' + serviceName + ' - ' + formName, 'Submit form - ' + stageName);
+        }
+    }
+/*
+    function cb_fromglobes_changed(b) {
+        var cb_fromglobes = qs('cb_fromglobes')
+        if (cb_fromglobes.checked == true) {
+            $(qs('must_be_checked')).removeClass('errMsg').hide()
+            call_activator(cb_fromglobes.getAttribute('data-button'), cb_fromglobes.getAttribute('data-fields'))
+        } else {
+            $(qs('must_be_checked')).addClass('errMsg').show()
+            $(qs(b)).removeClass('active')
+        }
+    }
+*/
+    function parsed_signin_response(responseText) {
+        console.log("responseText", responseText)
+        try {
+            return eval('(' + responseText + ')')
+        } catch (ex) { return null }
+    }
+    function add_connector_blocker(connector_btn) {
+        if (connector_btn == null) { return }
+        // alert(connector_btn.id)
+        connector_btn.addEventListener('click', function (e) {
+            // debugger
+            var cb = qs('cb_fromglobes')
+            if (cb != null && cb.checked == false) {
+                e.stopImmediatePropagation()
+            }
+        })
+    }
+    function register_and_signin() { 
+        internal_container.innerHTML = header(_cs_registerHeader)
+            + '<div class="loginConfirmation3"><span class="text3">' + haveAnAccount + '</span> <a id=signin class=press2acc> ' + _cs_login + ' </a>'
+            + socialBuild(context_message(externalRegisterandLogin))
+            + '<div class=or><span>' + _cs_or_register_and_signin + '</span></div>'
+            + input('email', 'email', 1, context_message(_cs_email), true, null)
+            + input('password1', 'password', 2, _cs_password, true, 'eye1')
+            + input('password2', 'password', 3, ConfirmPassword, true, 'eye2')
+
+            + '<div class="loginConfirmation" ><input type=checkbox id=cb_acceptads /><label for=cb_acceptads> ' + acceptMarketing + '</label></div>'
+            + '<div class="loginConfirmation" ><input type=checkbox checked=checked id=cb_fromglobes /><label for=cb_fromglobes> ' + acceptFromGlobes + '</label></div>'
+           // + '<div id="must_be_checked" style="display:none">' + must_be_checked + '</div>'
+
+            + '<div>'
+            + (typeof (calling_context.backToCaller_handler) == 'function'
+                ? '<div id=backToCaller>' + backBtn + '</div>'
+                : ''
+            )
+            + '<div id=register_and_signin class=btn>' + registerBtn + '</div>'
+            + '</div>'
+
+            + '<div class="loginConfirmation2">' + acceptTerms + '</div>'
+
+            + '</div>'
+        if (!fromApp) {
+            add_connector_blocker(qs('facebook_connector'))
+            add_connector_blocker(qs('google_connector'))
+            add_connector_blocker(qs('linkedin_connector'))
+
+            qs('facebook_connector').addEventListener('click', facebook_connect)
+            if (typeof (window.googleClient == 'undefined')) { try { InitGoogleConnect(); } catch(ex) {} }
+            if (typeof (window.LinkedInClient == 'undefined')) { InitLinkedInConnect(); }
+           
+        }
+        if (typeof (calling_context.email) == 'string') {
+            qs('email').value = calling_context.email
+            set_filled_class(qs('email'))
+            qs('password1').focus()
+        }
+
+        if (calling_context.gaParameter3Prefix == 'Paywall') {
+            var readingStatus = calling_context.gaParameter4Suffix == "blocked article" ? "Blocked_free_article" : "Guest_article";
+            try { new_event('Register', 'guest', readingStatus, null, null, null, 'create_account_in purchase_screen', null, null) } catch (ex) { }
+        }
+
+
+        //qs('cb_fromglobes').checked = true
+        //qs('cb_fromglobes').addEventListener('click', function () { cb_fromglobes_changed('register_and_signin') })
+        qs('signin').addEventListener('click', function () { signin(qs('email').value) })
+        qs('password2').parentNode.parentNode.style.display = 'none'
+        $(qs('password2')).parent().find('.errMsg').addClass('externalMessageContainer')
+
+        qs('password1').addEventListener('keyup', function () { qs('password2').parentNode.parentNode.style.display = '' })
+
+        setPositionForSmallScreens();
+
+
+
+        submit_handler = function () {
+            //if (!qs('cb_fromglobes').checked) { return }
+            var email = qs('email')
+            if (!is_email(email.value.replace(/^\s+/).replace(/\s+$/))) {
+                input_error(email, incorrectEmail)
+                return;
+            }
+            input_error(qs('email'), null)
+            //if (!validateNames(qs('firstName'))) {
+            //    qs('register_and_signin_message').innerHTML = incorrectFirstName;
+            //    return;
+            //}
+            //if (!validateNames(qs('lastName'))) {
+            //    qs('register_and_signin_message').innerHTML = incorrectLastName;
+            //    return;
+            //}
+            var password1 = qs('password1')
+            if (!is_valid_password(password1.value)) {
+                input_error(password1, passwordRule)
+                // qs('register_and_signin_message').innerHTML = passwordRule;
+                return;
+            }
+            input_error(qs('password1'), null)
+            var password2 = qs('password2')
+            if (password2.value != password1.value) {
+                input_error(password2, notMatchPassword)
+                // qs('register_and_signin_message').innerHTML = passwordRule;
+                return;
+            }
+            input_error(qs('password2'), null)
+            ajax('register_and_signin'
+                , 'email=' + url_encoded(email.value)
+                + '&password=' + url_encoded(password1.value)
+                + '&cb_fromglobes=' + qs('cb_fromglobes').checked
+                + '&cb_acceptads=' + qs('cb_acceptads').checked
+                + '&backto=' + (typeof calling_context.backto == "string" ? encodeURI(calling_context.backto) : "https://www.globes.co.il/")
+                , function (responseText) {
+                    var json = parsed_signin_response(responseText)
+                    if (json != null) {
+                        try { ga('send', 'event', gaParameter3, 'Sign Up or Sign in', 'Sign Up' + gaParameter4) } catch (ex) { }
+                        try { new_event('Signup', 'registered', null, null, null, null, 'finished_registration', null, null) } catch (ex) { }
+
+                        if (calling_context.gaParameter3Prefix == 'Paywall') {
+                            try { new_event('Purchase', null, null, null, null, null, 'finished_registration_before_purchase', null, null) } catch (ex) { }
+                        }
+
+                        var response_object = { user_id: json.user_id, login_id: json.login_id, email: json.email, user_type: json.user_type, newsuser: true, response_json: json }
+                        showValidatedWindow(response_object)
+                        return
+                    }
+                    if (('' + responseText).match(/^success \d+/)) {
+                        try { ga('send', 'event', gaParameter3, 'Sign Up or Sign in', 'Sign Up' + gaParameter4) } catch (ex) { }
+                        try { new_event('Signup','registered',null,null,null,null,'finished_registration',null,null) } catch (ex) { }
+                        var response_object = { user_id: responseText.match(/\d+/)[0], email: email.value, newsuser: true }
+                        showValidatedWindow(response_object)
+                        return
+                    }
+                    if (responseText == 'email already exists') {
+                        input_error(qs('email'), emailExist)
+                        // debugger
+                        qs('email_already_exists').addEventListener('click', function () { signin(qs('email').value) })
+                        // qs('register_and_signin_message').innerHTML = emailExist
+                        return
+                    }
+                    alert(registerFailed)
+                    // qs('register_and_signin_message').innerHTML = registerFailed
+                }
+            )
+        }
+        //captcha
+        if (document.getElementById("captchaScript") == null) {
+            var hiddenElement = document.createElement("input");
+            hiddenElement.type = "hidden";
+            hiddenElement.setAttribute("id", "hidden_sitekey");
+            hiddenElement.setAttribute("name", "hidden_sitkey");
+            hiddenElement.setAttribute("value", "6LfpU30UAAAAAE6A0xXs0E26qoEK48VjhjpM1H-X");
+            document.body.appendChild(hiddenElement);
+            var scriptElement = document.createElement("script");
+            scriptElement.type = 'text/javascript';
+            scriptElement.setAttribute("id", "captchaScript");
+            scriptElement.setAttribute("src", "https://www.google.com/recaptcha/api.js?render=" + document.getElementById("hidden_sitekey").value)
+            document.getElementsByTagName("head")[0].appendChild(scriptElement);
+        }
+
+        ///debugger
+        qs('eye1').addEventListener('click', function () { toggle_password('password1', 'eye1') })
+        qs('eye2').addEventListener('click', function () { toggle_password('password2', 'eye2') })
+        qs('email').addEventListener('blur', function () { qs('password1').focus(); set_filled_class(this) })
+        qs('password1').addEventListener('blur', function () { qs('password2').focus(); set_filled_class(this) })
+        /// ??? input_error(qs('password1'), passwordRule)
+        qs('password2').addEventListener('blur', set_filled_class)
+        $(qs('password2')).parent().addClass('lastFieldset')
+        qs('register_and_signin').addEventListener('click', function (e) {
+            if (location.host == "1.1.1.67" || (typeof getCookie != 'undefined' && getCookie("nocaptcha") == "true")) {
+                submit_handler();
+            } else {
+                grecaptcha.ready(function () {
+                    console.log('grecaptcha.ready');
+
+                    grecaptcha.execute(document.getElementById("hidden_sitekey").value, { action: 'login_submit' })
+                        .then(function (token) {
+                            fetch("/news/login/verifyCaptcha.ashx?token=" + token)
+                                .then(response => response.json())
+                                .then(data => {
+                                    console.log(data)
+                                    if (data.success == true && data.score > 0.1 && data.action == "login_submit") {
+                                        submit_handler();
+                                    } else {
+                                        console.log('captcha Error 2212-1');
+                                        alert('Error 2212-1')
+                                    }
+                                })
+                                .catch((error) => {
+                                    console.error('Error:', error);
+                                });
+                        })
+                });
+            }
+        });
+
+        //qs('register_and_signin').addEventListener('click', submit_handler)
+
+        set_backToBtn()
+        //qs('email').value = 'test'
+        //console.log('email value: ' + qs('email').value)
+        // qs('email').value = ''
+
+        add_activator('register_and_signin', 'email,password1,password2')
+        qs('email').focus()
+        if (typeof (calling_context.email) == 'string') {
+            qs('email').value = calling_context.email
+            set_filled_class(qs('email'))
+            qs('password1').focus()
+        }
+        if (arguments.length > 0 && is_email(arguments[0])) {
+            qs('email').value = arguments[0]
+            set_filled_class(qs('email'))
+            qs('password1').focus()
+        }
+    }
+    function input(id, type, tabindex, label, errmsg, eyeid) {
+        return '<div class="form-label form-css-label">'
+            + '<fieldset>'
+            + '<input id=' + id + ' type="' + type + '" tabindex="' + tabindex + '" required  />'
+            + '<label for="' + id + '">' + label + '</label>'
+            + (errmsg ? '<span class="errMsg"></span>' : '')
+            + (eyeid ? '<span id="' + eyeid + '" class="eye" ></span>' : '')
+            + '</fieldset>'
+            + '</div>'
+    }
+    function signin() {
+        
+        internal_container.innerHTML = header(_cs_loginHeader)
+
+            + '<div class="loginConfirmation3"><div class="noAccount text2">'
+            //+ _cs_dontHaveAccount
+            + '<a id="register" class="register"> ' + _cs_register + ' </a>'
+            + '</div>'
+            + socialBuild(context_message(externalLogin))
+            + '<div class=or><span>' + _cs_or_signin + ' </span></div>'
+            + input('email', 'email', 1, context_message(_cs_email,'default'), true, null)
+            + input('password', 'password', 2, _cs_password, true, 'eye')           
+            + '<div id="signin_message" class="errmsg externalMessageContainer">' + (typeof (calling_context.signin_message) == 'string' ? calling_context.signin_message : '') + '</div>'
+            + '<div id=forgot_password class="fieldTitle">' + _cs_forgotPassword + '</div>'
+
+            // + '<div class="loginConfirmation" ><input type=checkbox id=cb_acceptads /><label for=cb_acceptads> ' + acceptMarketing + '</label></div>'
+            + '<div class="loginConfirmation" ><input type=checkbox checked id=cb_fromglobes /><label for=cb_fromglobes> ' + acceptFromGlobes + '</label></div>'
+            // + '<div id="must_be_checked" style="display:none">' + must_be_checked + '</div>'
+
+            + '<div>'
+            + (typeof (calling_context.backToCaller_handler) == 'function'
+                ? '<div id=backToCaller>' + backBtn + '</div>'
+                : ''
+            )
+            + '<div id=signin_btn class=btn>' + loginBtn + '</div>'
+            + '</div>'
+
+            + (calling_context.termsConfirmation_required ? ''
+                + '<div class="loginConfirmation2">' + acceptTerms + '</div>'
+                : ''
+            )
+            + '</div>'
+
+        
+
+
+        // + '<div class=noAccount>'
+        // + dontHaveAccount
+        //  + '<a id="register"> '+register+'</a>'
+        //  + '</div>';
+        if (!fromApp) {
+
+            add_connector_blocker(qs('facebook_connector'))
+            add_connector_blocker(qs('google_connector'))
+            add_connector_blocker(qs('linkedin_connector'))
+
+            qs('facebook_connector').addEventListener('click', facebook_connect)
+            if (typeof (window.googleClient == 'undefined')) { try { InitGoogleConnect() } catch (ex) { } }
+            if (typeof (window.LinkedInClient == 'undefined')) { InitLinkedInConnect(); }
+            //if (typeof (window.appleClient == 'undefined')) { InitAppleConnect(); }
+        }
+
+        setPositionForSmallScreens();
+
+        submit_handler = function () {
+            // alert(3)
+            // debugger
+           // if (!qs('cb_fromglobes').checked) { return }
+            var email = qs('email')
+            if (email.value.replace(/\s/g, '').length == 0) {
+                input_error(email, emptyEmail)
+                return
+            }
+            input_error(email, null)
+            var password = qs('password')
+            if (password.value.length == 0) {
+                input_error(password, emptyPassword)
+                return
+            }
+            input_error(password, null)
+
+            ajax('signin',
+                'email=' + url_encoded(email.value)
+                + '&password=' + url_encoded(password.value)
+                + '&cb_fromglobes=' + qs('cb_fromglobes').checked
+                // + '&cb_acceptads=' + qs('cb_acceptads').checked
+                , function (responseText) {
+                    // console.log(responseText)
+                    var json = parsed_signin_response(responseText)
+                    if (json != null) {
+                        try {
+                            ga('send', 'event', gaParameter3, 'Sign Up or Sign in', 'Sign In')                            
+                        } catch (ex) { console.log('ga(Sign in) failed:', ex) }
+                        try { new_event('login',user_id > 0 ? 'registered' : 'guest',null,null,null,null,'Logged-in',null,null) } catch (ex) {console.log('new_event(logged-in))') }
+                        // json.validated &= json.user_id != 275
+                        var response_object = { user_id: json.user_id, login_id: json.login_id, email: json.email, user_type: json.user_type, emailValidated: json.validated, newsuser: false, response_json: json }
+                        showValidatedWindow(response_object)
+                        return
+                    }
+                    if (('' + responseText).match(/^success \d+/)) {
+                        //debugger
+                        try { ga('send', 'event', gaParameter3, 'Sign Up or Sign in', 'Sign In') } catch (ex) { }
+                        var validated = ('' + responseText).match(/^success \d+ false/) ? false : true
+                        var response_object = { user_id: responseText.match(/\d+/)[0], email: email.value, emailValidated: validated, newsuser: false }
+                        if (validated) { onsuccess(response_object); }
+                        else { showValidatedWindow(response_object); }
+                    } else {
+                        qs('signin_message').innerHTML = signinError
+                    }
+                }
+            )
+        }
+        qs('eye').addEventListener('click', function () { toggle_password('password', 'eye') })
+        qs('email').addEventListener('blur', function () { qs('password').focus(); set_filled_class(this); })
+        qs('password').addEventListener('blur', set_filled_class)
+        $(qs('password')).parent().addClass('lastFieldset')
+        // qs('signin_btn').addEventListener('click', function (e) { alert(1); e.stopImmediatePropagation() /* ; e.preventDefault(); e.stopPropagation() */ })
+        // qs('signin_btn').addEventListener('click', function (e) { alert(2);  })
+
+        //captcha
+        //qs('signin_btn').setAttribute("data-sitekey", document.getElementById("hidden_sitekey").value)
+        //qs('signin_btn').setAttribute("data-callback", c_submit_handler)
+        //qs('signin_btn').setAttribute("data-action", "login_submit") 
+
+        if (document.getElementById("captchaScript") == null) {
+            var hiddenElement = document.createElement("input");
+            hiddenElement.type = "hidden";
+            hiddenElement.setAttribute("id", "hidden_sitekey");
+            hiddenElement.setAttribute("name", "hidden_sitkey");
+            hiddenElement.setAttribute("value", "6LfpU30UAAAAAE6A0xXs0E26qoEK48VjhjpM1H-X");
+            document.body.appendChild(hiddenElement);
+            var scriptElement = document.createElement("script");
+            scriptElement.type = 'text/javascript';
+            scriptElement.setAttribute("id", "captchaScript");
+            scriptElement.setAttribute("src", "https://www.google.com/recaptcha/api.js?render=" + document.getElementById("hidden_sitekey").value)
+            document.getElementsByTagName("head")[0].appendChild(scriptElement);
+            
+
+        }
+        qs('signin_btn').addEventListener('click', function (e) {
+            if (location.host == "1.1.1.67" || (typeof(getCookie)!= 'undefined' && getCookie("nocaptcha") == "true")) {
+                submit_handler();
+            } else {
+                grecaptcha.ready(function () {
+                    console.log('grecaptcha.ready');
+
+                    grecaptcha.execute(document.getElementById("hidden_sitekey").value, { action: 'login_submit' })
+                        .then(function (token) {
+                            fetch("/news/login/verifyCaptcha.ashx?token=" + token)
+                                .then(response => response.json())
+                                .then(data => {
+                                    console.log(data)
+                                    if (data.success == true && data.score > 0.1 && data.action == "login_submit") {
+                                        submit_handler();
+                                    } else {
+                                        console.log('captcha Error 2212');
+                                        alert('Error 2212')
+                                    }
+                                })
+                                .catch((error) => {
+                                    console.error('Error:', error);
+                                });
+
+                        })
+
+                });
+            }
+
+        });
+        //qs('signin_btn').addEventListener('click', submit_handler)
+
+        qs('forgot_password').addEventListener('click', reset_password)
+        qs('register').addEventListener('click', function () {
+			// debugger
+            try { ga('send', 'event', gaParameter3, 'Registration', 'Clicked to Signup - from login') } catch (ex) { }
+            try { new_event('Register', 'guest', null, null, null, null, 'create_account_in_login_screen') } catch (ex) { }
+
+            register_and_signin(qs('email').value)
+        })
+        set_backToBtn()
+        add_activator('signin_btn', 'email,password')
+        // console.log('email', qs('email'))
+        qs('email').focus()
+        if (typeof (calling_context.email) == 'string') {
+            qs('email').value = calling_context.email
+            set_filled_class(qs('email'))
+            qs('password').focus()
+        }
+        if (arguments.length > 0 && is_email(arguments[0])) {
+            qs('email').value = arguments[0]
+            set_filled_class(qs('email'))
+            qs('password').focus()
+        }
+        // qs('cb_fromglobes').onclick = function () { qs('cb_fromglobes').checked = true; $(qs('must_be_checked')).addClass('errMsg').show() }
+        // qs('cb_fromglobes').addEventListener('click', function () { cb_fromglobes_changed('signin') })
+    }
+
+    
+
+    function updateDetails() {
+        internal_container.innerHTML = "<h1 class='title_update'>השלמת פרטים</h1>"
+            + "<div class='update-comment'><p>כדי להשלים את התהליך, נא למלא את הפרטים הבאים:</p></div>"
+            + input('nick_name', 'text', 1, "כינוי (שדה חובה - יוצג בתגובות)", true, null)
+            + input('first_name', 'text', 2, "שם פרטי", true, null)
+            + input('last_name', 'text', 3, "שם משפחה", true, null)
+            + '<div id="update_message" class="error_message errmsg">' + (typeof (calling_context.signin_message) == 'string' ? calling_context.signin_message : '') + '</div>'
+            + '<div id="update_btn" class="btn">לשמירת פרטים ופרסום התגובה</div>';
+
+        if (user_name != "") {
+            qs('first_name').value = user_name;
+            qs("first_name").parentElement.style.pointerEvents = 'none';
+        }
+        if (last_name != "") {
+            qs('last_name').value = last_name;
+            qs("last_name").parentElement.style.pointerEvents = 'none';
+        }
+        if (nick_name != "")
+            qs('nick_name').value = nick_name;
+
+        setPositionForSmallScreens();
+
+        submit_handler = function () {
+
+            if (qs('first_name').value.trim().length > 0 && !validateNames(qs('first_name').value.trim())) {
+                qs('update_message').innerHTML = incorrectFirstName;
+                return;
+            }
+            if (qs('last_name').value.trim().length > 0 && !validateNames(qs('last_name').value.trim())) {
+                qs('update_message').innerHTML = incorrectLastName;
+                return;
+            }
+            if (qs('nick_name').value.trim().length <= 0) {
+                qs('update_message').innerHTML = "יש לבחור כינוי ייחודי";
+                return;
+            }
+
+            ajax('updatedetails',
+                'first_name=' + url_encoded(qs('first_name').value.trim())
+                + '&last_name=' + url_encoded(qs('last_name').value.trim())
+                + '&nick_name=' + url_encoded(qs('nick_name').value.trim())
+                + '&user_id=' + user_id
+                , function (responseText) {
+                    var result = responseText;
+                    if (responseText != null) {
+                        if (responseText == "error nick name") {
+                            qs('update_message').innerHTML = "הכינוי שבחרת כבר תפוס, יש לבחור כינוי אחר";
+                        } else {
+                            last_name = qs('last_name').value.trim();
+                            user_name = qs('first_name').value.trim();
+                            nick_name = qs('nick_name').value.trim();
+                            var response_object = { response_json: { user_id: user_id, login_id: login_id, email: login_id, user_name: qs('first_name').value.trim(), last_name: qs('last_name').value.trim(), nick_name: qs('nick_name').value.trim()  } };
+                            onsuccess(response_object);
+                            return;
+                        }
+                    }
+                }
+            )
+        }
+        function checkInputs() {
+            if (qs('nick_name').value !== '') {
+                qs('update_btn').classList.add('active');
+                qs('update_btn').addEventListener('click', submit_handler)
+            } else {
+                qs('update_btn').classList.remove('active');
+                qs('update_btn').removeEventListener('click', submit_handler)
+            }
+        }
+        if (qs('nick_name').value === '') {
+            qs('nick_name').addEventListener('keyup', checkInputs)
+        } else {
+            qs('update_btn').classList.add('active');
+            qs('update_btn').addEventListener('click', submit_handler)
+        }
+        document.querySelector('.loginWr').addEventListener('change', checkInputs)
+    }
+
+    function showFirstCommentPopup(mode) {
+        internal_container.innerHTML = "<div class='comment_title'>עשינו שינוי קטן כדי שיהיה פה יותר נעים</div>"
+            + showFirstMessage()
+            + "<p class='login-external-links'><a href='/news/article.aspx?did=1001325993' target='_blank'>למה צריך להזדהות</a>  | <a href='/news/article.aspx?did=1001325990' target='_blank'> תנאי הקהילה שלנו</a></p>"
+            + "<div id='continue_btn' class='btn active'>המשך</div>";
+
+        qs('continue_btn').addEventListener('click', function () {
+            //try { ga('send', 'event', gaParameter3, 'Registration', 'Clicked to Signup - from login') } catch (ex) { }
+            if (mode == 2)
+                updateDetails();
+            else if (mode == 1) {
+                calling_context.message_selector = 'sso';
+                register_and_signin();
+            }
+            else {
+                calling_context.container.parentNode.removeChild(calling_context.container);
+            }
+        })
+
+        setPositionForSmallScreens();
+    }
+
+    function showFirstMessage() {
+        if (user_id <= 0) {
+            return "<p>שיפרנו את מערכת התגובות שלנו ומעכשיו כל מגיב ומגיבה יזדהו בכינוי קבוע, כדי שנוכל ליהנות משיח ענייני, הוגן ומכבד. כדי להצטרף לקהילת המגיבים שלנו יש לבצע תהליך רישום קצר לאתר ולבחור כינוי שילווה אתכם בכל התגובות.</p>";
+        }
+        else {
+            if (nick_name != "") {
+                return "<p>שיפרנו את מערכת התגובות שלנו ומעכשיו כל מגיב ומגיבה יזדהו בכינוי קבוע, כדי שנוכל ליהנות משיח ענייני, הוגן ומכבד. מעתה הכינוי שבחרתם ילווה אתכם בכל התגובות, ניתן לשנות את הכינוי באזור האישי.</p>";
+            }
+            else {
+                return "<p>שיפרנו את מערכת התגובות שלנו ומעכשיו כל מגיב ומגיבה יזדהו בכינוי קבוע, כדי שנוכל ליהנות משיח ענייני, הוגן ומכבד. כדי להצטרף לקהילת המגיבים שלנו יש לבחור כינוי שילווה אתכם בכל התגובות.</p>";
+            }
+        }
+    }
+
+    function setPositionForSmallScreens() {
+        if (window.innerHeight < 840 && !is_mobile) {
+            var elmnt = document.getElementsByClassName("loginContainer")[0];
+            //let scrollHeight = window.pageYOffset;
+            if (elmnt != undefined) {
+                var scrollHeight = (window.pageYOffset !== undefined) ? window.pageYOffset : (document.documentElement || document.body.parentNode || document.body).scrollTop;
+                elmnt.style.top = scrollHeight + "px";
+            }
+        }
+    }
+
+    function call_activator(button, fields) {
+        var a = fields.split(',')
+        for (var i = 0; i < a.length; i++) { if (qs(a[i]).value.trim().length == 0) { return } }
+        console.log(button, fields)
+        $(qs(button)).addClass('active')
+    }
+    function add_activator(button, fields) {
+       // var cb_fromglobes = qs('cb_fromglobes')
+       // if (cb_fromglobes) {
+         //   cb_fromglobes.setAttribute('data-button', button)
+         //   cb_fromglobes.setAttribute('data-fields', fields)
+       // }
+        var a = fields.split(',')
+        for (var i = 0; i < a.length; i++) { qs(a[i]).addEventListener('keyup', function () { call_activator(button, fields) }) }
+        setTimeout(function () { call_activator(button, fields) }, 1000)
+    }
+    function toggle_password(passwordid, eyeid) {
+        var password = qs(passwordid)
+        var password_type = password.getAttribute('type')
+        if (password_type == 'password' && password.value.length > 0) {
+            password.setAttribute('type', 'text')
+            $(password).addClass('visible_password')
+            $(qs(eyeid)).addClass('show')
+        } else {
+            password.setAttribute('type', 'password')
+            $(password).removeClass('visible_password')
+            $(qs(eyeid)).removeClass('show')
+        }
+    }
+    function set_filled_class(caller) {
+        if (arguments.length == 0) { caller = this }
+        if (caller == null || typeof (caller) != 'object' || typeof (caller.value) != 'string') { return }
+        console.log(caller)
+        if (caller.value.trim().length > 0) {
+            $(caller).parent().addClass('filled')
+        } else {
+            $(caller).parent().removeClass('filled')
+            if (caller.id == 'password') { $(caller).attr('type', 'password') }
+        }
+    }
+    function change_password(responseText) {
+        if (responseText != 'success') {
+            reset_password();
+            qs('reset_password_message').innerHTML = rechangePassword
+            return
+        }
+        internal_container.innerHTML = header(changePasswordHeader)
+            + input('password1', 'password', 1, _cs_password, true, 'eye1')
+            + input('password2', 'password', 2, ConfirmPassword, true, 'eye2')
+            // + '<div class="input_container"><input type="password" id="password1" placeholder="' + ph(newPassword) + '" /></div>'
+            // + '<div class="input_container"><input type="password" id="password2" placeholder="' + ph(ConfirmPassword) + '" /></div>'
+            + '<div id="change_password_message" class=errmsg>&nbsp;</div>'
+            + '<div id=change_password_and_signin class=btn>' + ChangePasswordBtn + '</div>'
+
+        submit_handler = function () {
+            var password1 = qs('password1')
+            if (!is_valid_password(password1.value)) {
+                input_error(password1, passwordRule)
+                // qs('register_and_signin_message').innerHTML = passwordRule;
+                return;
+            }
+            input_error(qs('password1'), null)
+            var password2 = qs('password2')
+            if (password2.value != password1.value) {
+
+                input_error(password2, notMatchPassword)
+                // qs('register_and_signin_message').innerHTML = passwordRule;
+                return;
+            }
+            input_error(qs('password2'), null)
+            ajax('change_password'
+                , 'token=' + url_encoded(calling_context.token)
+                + '&user_id=' + url_encoded(calling_context.user_id)
+                + '&password=' + url_encoded(password1.value)
+                , function (responseText) {
+                    //	debugger
+
+
+
+                    if (responseText == 'reset_password') {
+                        reset_password()
+                        qs('reset_password_message').innerHTML = rechangePassword;
+                        return
+                    }
+                    var json = parsed_signin_response(responseText)
+                    if (json != null && json.status == 'success') {
+                        password_changed(json.user_id)
+                        return
+                    }
+                    if (('' + responseText).match(/success \d+/)) {
+                        password_changed(responseText.match(/\d+/))
+                        return
+                    }
+                    qs('change_password_message').innerHTML = changePasswordFailed;
+                }
+            )
+        }
+        qs('eye1').addEventListener('click', function () { toggle_password('password1', 'eye1') })
+        qs('eye2').addEventListener('click', function () { toggle_password('password2', 'eye2') })
+        add_activator('change_password_and_signin', 'password1,password2')
+        qs('change_password_and_signin').addEventListener('click', submit_handler)
+        $(internal_container).addClass('change_password')
+    }
+    function password_changed(user_id) {
+        internal_container.innerHTML = header(changePasswordHeader)
+            + '<div class=message><picture><source srcset="https://images.globes.co.il/globes/icons/icn-password.svg" class="successful"   media="(max-width: 480px)"><img class="successful" src="https://images.globes.co.il/globes/icn-cancel-successful.svg"></picture> <span>' + changePasswordSuccess + '</span></div>'
+            + '<div id=back class="btn active" >' + backToHomePage + '</div>'
+
+        submit_handler = function () { onsuccess(user_id, null) }
+        qs('back').addEventListener('click', submit_handler)
+    }
+    function onsuccess(response_object) {
+
+        active = false
+        submit_handler = null
+
+        if (response_object.user_id > 0 && window.hj) {
+            window.hj('identify', response_object.user_id, { 'user_type': response_object.user_type })            
+        }
+
+        if (veil != null) { veil.parentNode.removeChild(veil) }
+        if (remove_container) { calling_context.container.parentNode.removeChild(calling_context.container) }
+
+        if (response_object.user_id > 0) {
+	        var tlh = document.querySelector('.top-left-header')
+			if (typeof(response_object.response_json) == 'object' && tlh && tlh.children.length > 0 && typeof(getLoginString) == 'function') {
+				var lc = tlh.children[tlh.children.length - 1].outerHTML
+				user_id = response_object.user_id
+				user_name = response_object.response_json.user_name
+				user_properties.ids = response_object.response_json.attributes
+				user_properties.paywall = response_object.response_json.paywall
+				tlh.innerHTML = getLoginString() + lc
+				if (typeof(fixedMenu) == 'function') {$(".menuLeft").html(fixedMenu())}
+				$(".menuLeft .user_name_fixed").click(function () { $(".user_links_fixed").toggle() })
+				$("#header .user_name").click(function () { $(".user_links").toggle() })
+			}
+			$("a[class='userLink'][href='/news/m/personal_zone.aspx']").addClass('connected') // mobile
+        }
+	//	console.log($("a[class='userLink'][href='/news/m/personal_zone.aspx']")[0])
+
+        if (typeof (calling_context.onsuccess) == 'function') { calling_context.onsuccess(response_object.user_id, response_object.email); return }
+        if (typeof (calling_context.onsuccess2) == 'function') { calling_context.onsuccess2(response_object); return }
+
+        document.location.href = document.location.href + (document.location.href.indexOf("?") > -1 ? "&after_registration" : "?after_registration");
+
+        //location.reload()
+    }
+
+    function sendEmailWithSuccessMessage(response_object) {
+        //only in exists user            
+       // var backtoParam = typeof calling_context.backto == "string" ? calling_context.backto : "https://www.globes.co.il/";
+        ajax("send_email_validation", "lang=" + lng, function () { /* if (calling_context.ignoreValidated != true) { document.location.href = "/news/login/uservalidation.aspx"; } */
+            if ($('#successMsg').length > 0) {
+                $('#successMsg').html('<span class="inner-msg">המייל נשלח בהצלחה</span></div>').show(300).delay(3000).fadeOut();
+            }
+            else {
+                $('<div id="successMsg" class="hide"><span class="inner-msg">המייל נשלח בהצלחה</span></div>').insertAfter("#menu").show(300).delay(3000).fadeOut();
+            }
+        });
+    }
+
+    function showValidatedWindow(response_object) {
+        //  console.log(response_object)
+        //  debugger
+        //onsuccess(response_object )
+
+        //return -- only in air
+       
+
+
+        var _new_user_title = "רגע לפני שממשיכים...";
+        var _exists_user_title = "כתובת המייל עדיין לא אומתה";
+        var title = response_object.newsuser == true ? _new_user_title : _exists_user_title;
+
+        if (response_object.emailValidated == false) {//only in exists user            
+            var backtoParam = typeof calling_context.backto == "string" ? calling_context.backto : "https://www.globes.co.il/";
+            //send mail by ajax
+            ajax("send_email_validation", "lang=" + lng + "&backto=" + encodeURI(backtoParam), function () { /* if (calling_context.ignoreValidated != true) { document.location.href = "/news/login/uservalidation.aspx"; } */ });
+
+        }
+
+
+        if (response_object.emailValidated == true || calling_context.ignoreValidated) {
+            onsuccess(response_object);
+            return;
+        }
+        //if (response_object.newsuser) {
+        //    document.location.href = "/news/login/uservalidation.aspx";         
+        // }
+        //return;
+
+        internal_container.innerHTML = ''
+            + '<div id="successMsg">נרשמת בהצלחה </div>'
+            + '<div class="register_msg" >'
+            + '<h1 class="register_title">' + title + '</h1>'
+            + '<p class="register_text">לחצו על קישור האימות שנשלח לכתובת המייל'
+            + ' ' + response_object.email + '</p>'
+            + '<p class="register_error"></p>'
+            + '<div class="btns_row">'
+            + '<a id="btnNext" href="javascript:event.preventDefault()" class="foward bt">ביצעתי אימות</a>'
+            + '<a id="tryagain" href="javascript:event.preventDefault()" class="resend bt" >לא קיבלתי מייל</a >'
+            +'</div>'
+            + '</div >'
+        internal_container.setAttribute('class', 'email_validation')
+        /*
+                +  '<h1>' + title + '</h1>'
+                +  '<div class="content">'
+                +       '<div>נשלח אליך מייל</div>'
+                +       '<div>יש ללחוץ על כפתור האישור במייל שקבלת להמשך הגלישה באתר</div>'
+                +       '<div id="btnNext">חזרה לעמוד הבית</div>'
+                +       '<img src="https://images.globes.co.il/globes/collage-mail-confirmation.png"'
+                +           'srcset="https://images.globes.co.il/globes/collage-mail-confirmation@2x.png 2x, https://images.globes.co.il/globes/collage-mail-confirmation@3x. 3x"'
+                +           'class="collage---mail-confirmation" />'
+                +       '<div>המייל לא הגיע ? <a id="tryagain" href="">נסי שוב</a></div>'
+                + ' </div>'
+        */
+
+        $(qs("btnNext")).click(function () {
+            ajax('check_validation',
+                ""
+                , function (responseText) {
+                    //alert(responseText);
+                    if (responseText == "false") {
+                        $(".register_error").html('טרם בוצע אימות, נא ודאו שלחצתם על הקישור שנשלח אליכם לכתובת המייל').show();
+                    }
+                    else {
+                        onsuccess(response_object);
+                    }
+                }
+            )
+        });
+        $(qs("tryagain")).click(function () {
+            ajax("send_email_validation", "", null);
+            if (window.innerWidth < 600) {
+                $("#successMsg").html("המייל נשלח שוב");
+
+                $("#successMsg").animate({
+                    top: "0px",
+                }, 700, "swing",
+                        function () {
+                            setTimeout(function () {
+                                $("#successMsg").animate({
+                                    top: "-50px"
+                                }, 700)
+                            }, 1000)
+                        }
+                )
+            } else {
+                $(".register_error").html("<span>המייל נשלח שוב</span>").show();
+            }
+
+            return false;
+        });
+    }
+
+    function new_event(eventName, user_status, reading_status_number, No_of_articles_per_month, forder_name, kind_of_content, user_action, kind_of_article, words_in_article) {    
+        
+        var obj = { 'event': eventName, 'eventInfo': { 'action_screen': location.pathname, 'UserStatus': user_status, 'ReadingStatus': reading_status_number, 'FolderName': forder_name, 'No_of_articles_per_month': No_of_articles_per_month, 'Kind_of_content': kind_of_content, 'User_action': user_action } }
+        var cleanObj = JSON.stringify(obj, function (key, value) {
+            if (value == null)
+                return undefined;
+            return value;
+        });
+        dataLayer.push(JSON.parse(cleanObj));
+    }
+
+    return {
+        onsuccess: function (ro) { onsuccess(ro) }
+        , change_password: function (context, with_cancel) {
+            init(context, arguments.length > 1 ? with_cancel : true)
+            ajax('request_to_change_password', 'token=' + url_encoded(context.token) + '&user_id=' + url_encoded(context.user_id), change_password)
+        }
+        , signin: function (context, with_cancel) {
+            init(arguments.length > 0 ? context : null, arguments.length > 1 ? with_cancel : true)
+            signin()
+        }
+        , register_and_signin: function (context, with_cancel) {
+            init(arguments.length > 0 ? context : null, arguments.length > 1 ? with_cancel : true)
+            register_and_signin()
+        }
+        , switch_to_register_and_signin: function () { delete calling_context.email; register_and_signin() }
+        , showValidatedWindow: function (context, with_cancel) {
+            init(arguments.length > 0 ? context : null, arguments.length > 1 ? with_cancel : true)
+            showValidatedWindow({ user_id: user_id, login_id: login_id, email: login_id })
+        },
+        showValidationWithAlert: function (context, with_cancel) {
+           // init(arguments.length > 0 ? context : null, arguments.length > 1 ? with_cancel : true)
+            sendEmailWithSuccessMessage({ user_id: user_id, login_id: login_id, email: login_id })
+        }
+        , resetpassword: function (context) { // only for App
+            init(context, false);
+            reset_password();
+        }
+        , checkpoint: function (context, with_cancel) {
+            if (arguments.length < 2) { with_cancel = true }
+            if (arguments.length < 1) { context = {} }
+            calling_context = context
+            me = this
+            ajax('connection_status', '',
+                function (responseText) {
+                    if (responseText == 'connected') {
+                        if (typeof (context.onsuccess) == 'function') { context.onsuccess() }
+                    } else {
+                        me.signin(context, with_cancel)
+                        //	init(context,with_cancel)
+                        //	signin(context,with_cancel)
+                    }
+                }
+            )
+        }
+        , focus: function (name) { qs(name).focus() }
+        , is_valid_password: function (password) { return is_valid_password(password) }
+        , validate_subscriber: function (context, with_cancel) {
+            init(context, with_cancel);
+            validate_subscriber()
+        }
+        , ajax: function (operator, data, f) { ajax(operator, data, f) }
+        , get_property: function (name) {
+            if (name = 'language') { return lng }
+            if (name = 'cb_fromglobes') { return qs('cb_fromglobes') ? qs('cb_fromglobes').checked : false }
+            if (name = 'cb_acceptads') { return qs('cb_acceptads') ? qs('cb_acceptads').checked : false }
+            return null
+        }
+        , updateDetails: function (context, with_cancel) {
+            init(context, arguments.length > 1 ? with_cancel : true);
+            updateDetails();
+        }
+        , showFirstCommentPopup: function (context, with_cancel, mode) {
+            init(context, with_cancel);
+            showFirstCommentPopup(mode);
+        }
+        , appendExternalMessage: function (message) { $(qs('.externalMessageContainer')).html(message) }
+
+        , send_clientService_event: function (stage) {
+            send_clientService_event(stage);
+        }
+    }
+})()
+
+if (loginver == 2022 && typeof(connector22) == 'object') {connector = connector22}
+//===========================================User Favorite Articles========================================
+
+var sUserRemoveFromHistoryName = "userRemoveFromHistoryData";
+var sUserFavoriteDataName = "glUserFavoriteData";
+var sUserFavoriteFromLoginDataName = "glUserFavoriteFromLoginDataName";
+var iMinToGetUserFavoriteData = 10;
+var isFavoriteItemFromLogin = false;
+var sInFavoriteListClass = "inFavoriteList";
+var sNotInFavoriteListClass = "notInFavoriteList";
+var objUserFavoriteData = null;
+var sImgFavoriteClass = sNotInFavoriteListClass;
+var isHistoryHasItems = true;
+var gaStatParam = "";
+
+if (!String.prototype.format) {
+    String.prototype.format = function () {
+        var args = arguments;
+        return this.replace(/{(\d+)}/g, function (match, number) {
+            return typeof args[number] != 'undefined'
+              ? args[number]
+              : match
+            ;
+        });
+    };
+}
+
+function checkReadMore() {
+    $(".add2list").each(function (index, element) {
+        var did = $(element).attr('id').split('_')[1];
+        if (isInFavorite(did)) {
+            $(element).addClass("on");
+        }
+    });
+}
+
+
+function add2list(did, evt) {
+    console.log("add2list-" + did);
+    var obj = $("#add_" + did)[0];
+    onFavoriteItemClicked(evt, obj, did);
+    return false;
+}
+
+$(function () {
+    
+    try {
+        var did = getDidFromLink("did");
+
+        gaStatParam = isMobileApp() ? "home-page-mobile" : "desktop";
+
+        if (isLoggedIn()) {
+            objUserFavoriteData = getUserFavoriteDataObject();
+            var diffLastUpdateTime = (new Date().getTime() - new Date(objUserFavoriteData.lastUpdate).getTime()) / (60 * 1000);
+
+            var sDidFromLogin = localStorage.getItem(sUserFavoriteFromLoginDataName);
+
+            if (typeof sDidFromLogin != "undefined" && sDidFromLogin != null) {
+                setUserFavoriteData(user_id, parseInt(sDidFromLogin), true);
+                localStorage.removeItem(sUserFavoriteFromLoginDataName);
+
+                $(".favList").prop("class", "favList " + sInFavoriteListClass);
+            }
+
+
+            if (diffLastUpdateTime == 0 || diffLastUpdateTime > iMinToGetUserFavoriteData) {
+                $.post("/news/cache/userFavoritearticles.ashx", { userid: user_id, getids: true },
+                        function (resp) {
+                            updateLSUserFavoriteData(resp);
+                        }
+                );
+            }
+
+            if (isUserFavoriteArticlesPage() || isUserReadingHistoryPage()) {
+                if(isUserFavoriteArticlesPage())
+                    ga('article.send', 'event', gaStatParam, 'רשימת קריאה', 'כניסה לדף רשימת קריאה');
+                else
+                    ga('article.send', 'event', gaStatParam, 'היסטוריית קריאה', 'כניסה לדף היסטוריית קריאה');
+                buildFavItemsPage();
+            }
+        }
+
+        function isArticle() {
+            return ((typeof doc_type != "undefined" && parseInt(doc_type) === 35) || top.location.href.indexOf('/news/article.aspx') != -1 || top.location.href.indexOf('/news/sparticle.aspx') != -1);
+        }
+
+        if (isArticle()) {
+
+            sImgFavoriteClass = (isInFavorite(did) || isFavoriteItemFromLogin) ? sInFavoriteListClass : sNotInFavoriteListClass;
+            isFavoriteItemFromLogin = false;
+
+            $(".favList").each(function () {
+                $(this).prop("class", "favList " + sImgFavoriteClass);
+
+            });
+
+
+            $(".favList").click(function (evt) {
+                evt.preventDefault();
+                var linkRef = $(this).data("link");
+                var did = isInt(linkRef) ? linkRef : getDidFromLink("did", linkRef);
+
+                onFavoriteItemClicked(evt, this, did);
+            });
+
+
+            //$(".add2list").click(function (evt) {
+            //    evt.preventDefault();
+            //    var did = $(this).attr('id').split('_')[1];
+            //    onFavoriteItemClicked(evt, this, did);
+            //});
+
+            $(document).on("DOMNodeInserted", ".add2list", function () {
+                $(".add2list").each(function (index, element) {
+                    var did = $(element).attr('id').split('_')[1];
+                    if (isInFavorite(did)) {
+                        $(element).addClass("on");
+                    }
+                });
+            });
+
+
+        
+
+            //$(document).on('click', '.add2list', function (evt) {
+            //    var did = $(this).attr('id').split('_')[1];
+            //    onFavoriteItemClicked(evt, this, did);
+            //    return false;
+            //});
+
+        }
+        else //folders
+        {
+           
+
+            if (!isUserFavoriteArticlesPage() || !isUserReadingHistoryPage()) {
+                $(".favList").each(function () {
+                    var linkRef = $(this).data("link");
+                    var isID = isInt(linkRef);
+
+                    if (linkRef.indexOf("/news/article.aspx") != -1 || isID) {
+                        var did = isID ? linkRef : getDidFromLink("did", linkRef);
+
+                        if (parseInt(did) > 0) {
+
+                            if (isLoggedIn()) {
+                                var sClass = (isInFavorite(did) || isFavoriteItemFromLogin) ? sInFavoriteListClass : sNotInFavoriteListClass;
+                                $(this).addClass(sClass);
+                            }
+                            else {
+                                $(this).addClass(sNotInFavoriteListClass);
+                            }
+
+                            $(this).click(function (evt) {
+                                onFavoriteItemClicked(evt, this, did);
+                            });
+                        }
+                    }
+
+                });
+            }
+        }
+
+        $(document).mouseup(function (e) {
+            var container = $(".divFavSharing");
+
+            if (!container.is(e.target) && container.has(e.target).length === 0) {
+                container.fadeOut('slow');
+            }
+        });
+
+    }
+    catch (e) {
+        ll("Error: ", e);
+    }
+
+    $("#suspendHistoryBox span.btnSuspend.btnHistoryBox").click(function () { changeHistorySuspandState(true);});
+    $("#suspendHistoryBox span.btnCancel.btnHistoryBox").click(function () { $("#suspendHistoryBox").hide()});    
+    $("#deleteHistoryBox span.btnCancel.btnHistoryBox").click(function () { $("#deleteHistoryBox").hide()});
+    $("#deleteHistoryBox span.btnDelete.btnHistoryBox").click(function () {
+        try {
+            var params = { userid: user_id, removeallhistory: true }
+            $.post("/news/cache/userFavoritearticles.ashx", params, function (res) {
+                if (res == 'ok') {
+                    $("#divFavItemsData").html('');
+                    var $folderNameTitle = $("#DivFolderName h1").length > 0 ? $("#DivFolderName h1") : $("section.addon h2");
+                    $folderNameTitle.html('ספריית הקריאה ריקה');
+                    $("#deleteHistoryBox").hide();
+                    $("#historyTools").hide();
+                }
+            });
+        } catch (e) { }
+    });  
+});
+
+
+
+
+function buildHistoryNav() {
+    try {
+        var params = {userid: user_id,  disabledhistorystate: true }
+        $.post("/news/cache/userFavoritearticles.ashx", params, function (res) {
+            if (res) {
+                var data = JSON.parse(res);
+                if (typeof data.disabled != 'undefined') {
+                    if(data.disabled == 'true')                         
+                        buildNav(1);
+                    else
+                        buildNav(0); 
+                }
+            }
+        });
+
+    } catch (e) { }
+}
+
+
+
+function buildNav(disabled) {
+    var nav =''
+        + '<ul id="historyTools">'
+        + '<!-- li class="suspend" ' + (disabled == 1 ? 'style="display:none;"' : '') + '">השהיית היסטוריית קריאה</li -->'
+        + '<!-- li class="activateHistory "' + (disabled == 0 ? 'style="display:none;"' : '') + '">הפעלת היסטוריית קריאה</li -->'
+        + '<li class="delete">הסרת כל הכתבות מספריית הקריאה</li>'
+        + '</ul > '
+        
+    var $folderNameTitle = $("#DivFolderName h1").length > 0 ? $("#DivFolderName h1") : $("section.addon h2");
+    var $folderName = $("#DivFolderName").length > 0 ? $("#DivFolderName") : $("section.addon h2");
+
+    $folderName.after(nav);
+    $("#historyTools li.suspend").click(function () { $("#suspendHistoryBox").show() });
+    $("#historyTools li.delete").click(function () { $("#deleteHistoryBox").show() });
+    $("#historyTools li.activateHistory").click(function () { changeHistorySuspandState(false); });
+        
+    if (disabled == 1) {
+        //$("#historyTools li.suspend").addClass("notactive")        
+        $folderNameTitle.html('היסטוריית קריאה הושהתה');
+              
+    }
+    $(".closeBoxIcon").click(function () {$(".historyBox").hide() });
+}
+
+function buildActivateHistoryBtn() {
+    //var $folderName = $("#DivFolderName").length > 0 ? $("#DivFolderName") : $("section.addon h2");
+    //$folderName.after('<div id="activateHistory"><span class="btnHistoryBox">הפעלת היסטוריית קריאה</span></div>')
+    //$("#activateHistory").click(function () { changeHistorySuspandState(false); });
+    
+}
+
+    
+function changeHistorySuspandState(suspendVal) {
+    try {
+            var params = { userid: user_id, suspend: suspendVal }
+            $.post("/news/cache/userFavoritearticles.ashx", params, function (res) {
+                if (res) {
+                    if (res == 'ok') {
+                        var $folderNameTitle = $("#DivFolderName h1").length > 0 ? $("#DivFolderName h1") : $("section.addon h2");
+                        if (suspendVal) {                            
+                            $folderNameTitle.html('היסטוריית קריאה הושהתה');
+                            $("#historyTools li.suspend").css("display","none")
+                            $("#historyTools li.activateHistory").css("display","")
+                            $("#suspendHistoryBox").hide();                           
+
+                        } else {
+                            $folderNameTitle.html('היסטוריית קריאה ');
+                            $("#historyTools li.suspend").css("display", "")
+                            $("#historyTools li.activateHistory").css("display","none")                           
+                            showMsgBox('השהיית הסטורית הקריאה בוטלה')
+                        }
+                        
+
+                    }
+                };
+            });
+        } catch (e) { console.log('changeHistorySuspandState error:' + e.description) }
+}
+
+function showMsgBox(msg) {
+    if ($("#menu").hasClass("fixed")) {
+        $("#successMsg").addClass('stickyMsg');
+    }
+    $("#successMsg").removeClass("hide").delay(3000).fadeOut();
+    $("#successMsg").html('<span class="inner-msg">' + msg + '</span>');
+}
+
+
+function buildFavItemsPage(disabled) { 
+
+    $(".mgloading").show();
+
+    var params = { userid: user_id, getextenddata: true }
+    if (isUserReadingHistoryPage()) {
+        params = {userid: user_id,  getextenddata: true, readinghistory: true }
+    }
+
+    var $folderNameTitle = $("#DivFolderName h1").length > 0 ? $("#DivFolderName h1") : $("section.addon h2");
+    var $folderName = $("#DivFolderName").length > 0 ? $("#DivFolderName") : $("section.addon h2");
+
+    try {
+        $.post("/news/cache/userFavoritearticles.ashx", params , function (res) {
+            if (res) {
+
+                $(".mgloading").hide();
+
+                if (typeof (res.items) == "undefined" || res.items == null || res.items.length == 0) {
+                    $("#content .addon>h2").hide();
+                    if (isUserFavoriteArticlesPage()) {
+                        $folderName.hide();
+                    }
+                    else {
+                        $folderNameTitle.html("ספריית הקריאה ריקה");
+                        $folderNameTitle.show();
+                        isHistoryHasItems = false;
+                        $("#historyTools").hide();
+                    }
+                    if (isUserFavoriteArticlesPage()) {
+                        $("#divNoDataMessageWr").html($("#divNoDataMessage").html());
+
+                        if (typeof (res.mostpopular) != "undefined" && res.mostpopular.length > 0) {
+                            buildMostPopular(res.mostpopular);
+                        }
+
+                    }
+
+                    return;
+                }
+                if (isUserReadingHistoryPage() && isHistoryHasItems) {
+                    //buildHistoryNav();
+                    if (typeof res.disabled != 'undefined') {
+                        if (res.disabled == 'true')
+                            buildNav(1);
+                        else
+                            buildNav(0);
+                    }
+                }
+
+
+                var itemTemplate = isMobileApp() ? (isUserReadingHistoryPage() ? $("#divMobileHistoryItem").html() : $("#divMobileFavoriteItem").html()) : (isUserReadingHistoryPage() ? $("#divDesktopReadingItem").html() : $("#divDesktopFavoriteItem").html());
+                var deotItemTemplate = isMobileApp() ? (isUserReadingHistoryPage() ? $("#divMobileDeotHistoryItem").html() : $("#divMobileDeotFavoriteItem").html()) : "";
+                var tvItemTemplate = isMobileApp() ? (isUserReadingHistoryPage() ? $("#divMobileTVHistoryItem").html() : $("#divMobileTVFavoriteItem").html()) : "";
+
+                var responseTemplate = $("#divDesktopResponse").html();
+                var globalType = -1;
+                var sRes = "";
+
+                $(res.items).each(function (i, item) {
+                    try {
+                        if (item != null) {
+                            var did = item.did;
+                            var docType = item.DocType;
+                            var title = item.f62 != undefined && item.f62.length > 0 ? item.f62 : (item.Title != undefined ? item.Title : item.title);
+                            var subTitle = item.SubTitle;
+                            var modifiedOn = item.Modified;
+                            modifiedOn = new Date(modifiedOn.replace(/(\d{2})\/(\d{2})\/(\d{4})/, "$2/$1/$3"));
+                            var today = "";
+
+                            if (modifiedOn.toLocaleDateString() == new Date().toLocaleDateString()) {
+                                modifiedOn = formatDT(modifiedOn.getHours()) + ":" + formatDT(modifiedOn.getMinutes());
+                                today = "היום, ";
+                            }
+                            else {
+                                modifiedOn = modifiedOn.getDate() + "." + (modifiedOn.getMonth() + 1) + "." + modifiedOn.getFullYear().toString().substr(-2);
+                            }
+
+                            var author = item.Author;
+                            var canonical = item.Canonical;
+                            var nodeName = item.NodeName;
+                            var imageSrc = item.ImgSrc;
+                            var imageAlt = item.ImgAlt;
+
+                            var mobileImgSrc = item.MobileImgSrc != "" ? item.MobileImgSrc : imageSrc;
+                            mobileImgSrc = mobileImgSrc.replace(/http:/g, "https:");
+                            imageSrc = imageSrc.replace(/http:/g, "https:");
+
+                            var mobileImgAlt = item.MobileImgAlt;
+
+                            var responses = item.Responses;
+
+                            if (author != "" && !isMobileApp()) {
+                                author += ",";
+                            }
+
+                            if (parseInt(responses) > 0 && !isMobileApp()) {
+                                responses = responseTemplate.format(did, responses);
+                            }
+                            else {
+                                responses = "";
+                            }
+
+                            var type = parseInt(item.type); // 0 - article; 1 - deot; 2 - TV
+                            var link = "/news/article.aspx?did=" + did;
+                            var icon = item.Icon;
+                            var mainPic = item.Main_Pic;
+
+                            var tagit_id = item.tagit_id;
+                            var tagit_title = item.tagit_title;
+                            var category = item.f11;
+                            var cluster = item.cluster;
+
+                            if (isMobileApp()) {
+                                if (false && globalType != type && isUserFavoriteArticlesPage()) {
+                                    sRes += (globalType == -1) ? buildSectionByType(type) : ("</section>" + buildSectionByType(type));
+                                    globalType = type;
+                                }
+                                cluster = typeof tagit_title == 'undefined' || tagit_title.length == 0 ? "" : "<em class='al'>" + tagit_title + ((typeof category != 'undefined' && category != null && category.length > 0) ? "<span> | " + category + "</span>" : "") + "</em>";
+                                switch (type) {
+                                    case 0: //article
+                                        sRes += itemTemplate.format(link, mobileImgSrc, mobileImgAlt, title, author, modifiedOn, cluster, did);
+                                        break;
+                                    case 1: // deot                                        
+                                        sRes += deotItemTemplate.format(link, icon, author, title, cluster, did);
+                                        break;
+                                    case 2: // TV
+                                        sRes += tvItemTemplate.format(link, mobileImgSrc, title, modifiedOn, cluster, did);
+                                        break;
+                                }
+                            }
+                            else {
+                                sRes += itemTemplate.format(did, link, imageSrc, imageAlt, title, subTitle, responses, author, today, modifiedOn, cluster);
+                            }
+                        }
+                    }
+                    catch (e) { console.log(e); }
+                });
+
+
+
+                $("#divFavItemsData").html(sRes + "</section>");
+
+                if (isMobileApp() && isUserReadingHistoryPage()) {
+                    $("label.action_more").click(function () {
+                        $(this).parent().parent().find(".HistoryTools").show();
+                    });
+
+                    $(".showHistoryBlock").click(function (event) {
+                        $(this).parent().find(".HistoryTools").show();
+                        $("body").addClass("stopScrolling");
+                        $(".ListArticles").find($(this).parent()).hide();
+                        // $(".ListArticles").not($(this).parent()).hide();
+                        event.preventDefault();
+                    });
+                    $(".closeHistoryTools").click(function (event) {
+                        $(this).parent().hide();
+                        $("body").removeClass("stopScrolling");
+                        //$(".ListArticles").find($(this).parent()).show();
+                        //$(".ListArticles").not($(this).parent()).show();
+                        event.preventDefault();
+                    });
+
+                }
+
+                $(".sharing").mouseleave(function (e) {
+                    $(".divFavSharing").fadeOut("slow");
+                });
+
+
+                $(".favList").mouseover(function () {
+                    $(".divFavSharing").fadeOut("slow");
+                });
+
+                $(".divFavOpenSharing").bind("mouseover", function () {
+
+                    bindSharingMouseOver(this);
+                });
+
+                $(".removeFromHistory").click(function (event) {
+                    var id = $(this).data("id");
+                    var me = $(this);
+                    var params = { userid: user_id, itemid: id, removefromhistory: true }
+                    $.post("/news/cache/userFavoritearticles.ashx", params, function (res) {
+                        if (res == 'ok') {
+                            var obj = isMobileApp() ? $("label.removeFromHistory[data-id=" + id + "]").parent().parent() : $(".removeFromHistory[data-id=" + id + "]").parent();
+
+                            obj.animate({
+                                opacity: "0"
+                            }, 1000, function () { $(this).hide() });
+
+                        } else {
+                            console.log(res);
+                        }
+                    });
+                    if (isMobileApp()) {
+                        $("body").removeClass("stopScrolling");
+                    }
+                    event.preventDefault();
+
+                });
+
+                $(".favList").each(function () {
+
+                    var linkRef = $(this).data("link");
+                    var isID = isInt(linkRef);
+
+                    if (linkRef.indexOf("/news/article.aspx") != -1 || isID) {
+                        var did = isID ? linkRef : getDidFromLink("did", linkRef);
+                        var fid = getDidFromLink("fid");
+
+                        if (parseInt(did) > 0) {
+                            var sClass = (!isNaN(fid) && parseInt(fid) == 10041) ? sInFavoriteListClass : ((isInFavorite(did) || isFavoriteItemFromLogin) ? sInFavoriteListClass : sNotInFavoriteListClass);
+
+                            $(this).prop("class", "favList " + sClass);
+
+                            $(this).click(function (evt) {
+                                onFavoriteItemClicked(evt, this, did); // function defined in ga_lib.js
+                            });
+                        }
+                    }
+
+                });
+
+
+            }
+            else {
+                $(".mgloading").hide()
+                $folderNameTitle.html("ספריית הקריאה ריקה");
+                isHistoryHasItems = false;
+                $("#historyTools").hide();
+            }
+        });
+    }
+    catch (e) { }
+}
+
+function bindSharingMouseOver(obj)
+{
+    var objSharingBtns = $(obj).parent().find(".divFavSharing");
+    var objSocialButtonsTemplate = $("#divSocialButtons");
+
+    var did = $(obj).data("link");
+    var sShareURL = "";
+
+    if (parseInt(did) > 0) {
+        sShareURL = encodeURIComponent("https://www.globes.co.il/news/article.aspx?did=" + did + "#utm_source=facebook&utm_medium=referral&utm_campaign=facebook");
+
+        if ($(objSharingBtns).length == 0) {
+            $(obj).after("<div class=\"divFavSharing\"></div>");
+            objSharingBtns = $(obj).parent().find(".divFavSharing");
+        }
+
+        if (objSharingBtns.length == 1) {
+
+            objSharingBtns.fadeIn("slow");
+
+            var iMargin = $(objSharingBtns).css("marginRight");
+            var iDivWidth = $(objSharingBtns).width();
+
+            iDivWidth = (parseInt(iDivWidth) == 0) ? 200 : 0;
+
+            var isOpen = $(objSharingBtns).is(':visible') ? true : false;
+
+            if ($(objSharingBtns).html() == "") {
+                $(objSharingBtns).html($(objSocialButtonsTemplate).html());
+
+                $(objSharingBtns).find(".fb").prop("href", "http://www.facebook.com/sharer.php?u=" + sShareURL);
+                $(objSharingBtns).find(".wh").prop("href", "https://web.whatsapp.com/send?text=" + sShareURL);
+                $(objSharingBtns).find(".twitter").prop("href", "https://twitter.com/share?lang=he&url=" + sShareURL);
+                $(objSharingBtns).find(".mail").click(function () {
+                    sendIT(did, 2);
+                });
+            }
+        }
+    }
+}
+
+
+function buildMostPopular(arr) {
+    var sRes = "";
+    var itemTemplate = isMobileApp() ? $("#divMobileMostPopularItem").html() : $("#divDesktopMostPopularItem").html();
+    var divSectionTitle = $("#divSectionTitle").html();
+
+    $(arr).each(function (i, item) {
+        if (item) {
+            try {
+                var did = item.did;
+                var title = item.title;
+                var createdOn = item.createdOn;
+                var author = item.author;
+                var f3 = item.f3;
+                var f4 = item.f4;
+                var f90 = item.f90;
+                var canonical = item.canonical;
+                var link = "/news/article.aspx?did=" + did;
+
+                createdOn = new Date(createdOn.replace(/(\d{2})\/(\d{2})\/(\d{4})/, "$2/$1/$3"));
+
+                var today = "";
+
+                if (createdOn.toLocaleDateString() == new Date().toLocaleDateString()) {
+                    createdOn = formatDT(createdOn.getHours()) + ":" + formatDT(createdOn.getMinutes());
+                    today = "היום, ";
+                }
+                else {
+                    createdOn = createdOn.getDate() + "." + (createdOn.getMonth() + 1) + "." + createdOn.getFullYear();
+                }
+
+                if (isMobileApp()) {
+                    sRes += itemTemplate.format(link, f4, "", title, author, createdOn);
+                }
+                else
+                {
+                    sRes += itemTemplate.format(did, link, f3, title, title, "", "", author, today, createdOn);
+                }
+            }
+            catch (e) { console.error(e); }
+        }
+    });
+
+    $("#divFavItemsData").append(divSectionTitle.format("כתבות שאולי יעניינו אותך") + sRes);
+
+    
+
+
+
+    $(".favList").click(function (evt) {
+        evt.preventDefault();
+        var linkRef = $(this).data("link");
+        var did = isInt(linkRef) ? linkRef : getDidFromLink("did", linkRef);
+
+        onFavoriteItemClicked(evt, this, did);
+    });
+}
+
+
+
+
+function buildSectionByType(type) {
+    var sRes = "<section class=\"article\">";
+    switch (type) {
+        case 1:
+            sRes = "<section class=\"article\"><a href=\"/news/home.aspx?fid=845\" class=\"folder\"><h2>דעות</h2></a>";
+            break;
+        case 2:
+            sRes = "<section class=\"clip\"><a href=\"/news/home.aspx?fid=2007\" class=\"folder\"><h2>גלובס TV</h2></a>";
+            break;
+    }
+
+    return sRes;
+}
+
+function sendIT(docID, docFID) {
+    window.open("/serve/globes/sendITnew.asp?did=" + docID + "&fid=" + docFID + "", "Send_Doc", "width=410,height=420,left=100,top=100,screenx=150,screeny=0,resizable=no,scrollbars=auto")
+}
+
+function onFavoriteItemClicked(evt, obj, did) {
+    try {
+        evt.preventDefault();
+        evt.stopPropagation();
+
+        if (isLoggedIn()) {
+
+            var isInFav = isInFavorite(did);
+            setUserFavoriteData(user_id, did, false);
+
+            
+
+            if (obj.classList.contains("add2list")) {
+                if (!isInFav) {
+                    $(obj).addClass("on");
+                }
+                else {
+                    $(obj).removeClass("on");
+                }
+                return;
+            }
+
+            var sCssClass = isInFav ? sNotInFavoriteListClass : sInFavoriteListClass;
+
+            $(obj).prop("class", "favList " + sCssClass);
+
+            if (isUserFavoriteArticlesPage()) {
+                var parentDiv = $(obj).closest(".ListArticles, .dea, .TV");
+
+                if (isInFav) {
+
+                    $(parentDiv).animate({
+                                opacity: "0"
+                    }, 1000, function () { $(parentDiv).hide() });
+
+                    //$(parentDiv).animate({ opacity: 1 }, 500, function () {
+                    //    $(parentDiv).addClass("hideMe");
+
+                    //    $(obj).closest(".ListArticles").find("a").each(function (i, item) {
+                    //        $(item).click(function (e) {
+                    //            e.preventDefault();                                
+                    //        });
+                    //    });
+
+                    //    $(obj).closest(".ListArticles").click(function () {
+                    //        onFavoriteItemClicked(evt, obj, did);
+                    //    });
+
+                    //    $(obj).closest(".ListArticles").find(".divFavOpenSharing").unbind("mouseover");                   
+
+                    //});
+                }
+                else {
+                    $(parentDiv).animate({ opacity: 1 }, 500, function () {
+                        $(parentDiv).removeClass("hideMe");
+                        $(obj).closest(".ListArticles").find("a").each(function (i, item) {
+                            $(item).unbind('click');
+                        });                       
+
+                        $(obj).closest(".ListArticles").unbind("click");
+
+                        $(obj).closest(".ListArticles").find(".divFavOpenSharing").bind("mouseover", function () { bindSharingMouseOver(this) });
+                    });
+                }
+            }
+        }
+        else {
+
+            if (isMobileApp()) {
+                localStorage.setItem(sUserFavoriteFromLoginDataName, did);
+                top.location.href = "/news/m/login/?backto=" + document.location.href;
+            }
+            else {
+                connector.signin({
+                    onsuccess2: function (data) {
+                        try {
+                            if (data != null) {
+                                user_id = data.user_id;
+                                login_id = data.email;
+
+                                if (parseInt(user_id) > 0) {
+                                    setUserFavoriteData(user_id, did, true);
+                                    $(".userPH").append(getUserMenuString());
+                                    var isInFav = isInFavorite(did);
+
+                                    if (obj.classList.contains("add2list")) {
+                                        if (!isInFav) {
+                                            $(obj).addClass("on");
+                                        }
+                                        else {
+                                            $(obj).removeClass("on");
+                                        }
+                                        checkReadMore(); 
+                                        return;
+                                    }
+
+                                    $(obj).prop("class", "favList " + sInFavoriteListClass);
+                                }
+                            
+                            }
+                        }
+                        catch (e) { ll(e); }
+                    }
+                });
+            }
+        }
+    }
+    catch (e) { ll(e); }
+}
+
+
+function setUserFavoriteData(userID, did, isFromLogin) {
+
+    var message = isInFavorite(did) ? "הסרת כתבה" : "הוספת כתבה";
+
+    ga('article.send', 'event', gaStatParam, 'רשימת קריאה', message);
+        
+    $.post("/news/cache/userFavoritearticles.ashx",
+          { userid: userID, itemid: did, setItem: true, isFromLogin: isFromLogin },
+          function (resp) {
+              try {
+                  if (message == "הוספת כתבה") { clickables.show('myGHelp2b') }
+              } catch(ex) { }
+                updateLSUserFavoriteData(resp);
+            }
+    );
+}
+
+function updateLSUserFavoriteData(items) {
+    localStorage.setItem(sUserFavoriteDataName, JSON.stringify({ "ids": items.split(','), "lastUpdate": new Date() }));
+}
+
+function isInFavorite(did) {
+    if (typeof user_id != "undefined" && user_id == 0) { return false; }
+
+    objUserFavoriteData = getUserFavoriteDataObject();
+
+    if (objUserFavoriteData != null && objUserFavoriteData.ids.length > 0 && parseInt(did) > 0) {
+
+        //ll("ASSDSDSS: " + objUserFavoriteData.ids + "===" + did + "===" + objUserFavoriteData.ids.indexOf("" + did));
+
+        return objUserFavoriteData.ids.indexOf("" + did) != -1;
+    }
+
+    return false;
+}
+
+function getUserFavoriteDataObject() {
+    return localStorage.getItem(sUserFavoriteDataName) == null ? { "ids": [], "lastUpdate": new Date() } : JSON.parse(localStorage.getItem(sUserFavoriteDataName));
+}
+
+function getDidFromLink(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+
+function isMobileApp() {
+    return (typeof is_mobile != "undefined" && is_mobile);
+}
+
+function isInt(data) {
+    return data == parseInt(data, 10);
+}
+
+function isUserFavoriteArticlesPage() {
+    return typeof isUserFavArtPage != "undefined" && isUserFavArtPage;
+}
+
+function isUserReadingHistoryPage() {
+    return typeof isUserHistoryPage != "undefined" && isUserHistoryPage
+}
+
+function formatDT(val) {
+    if (parseInt(val) < 10)
+        return "0" + val;
+    return val;
+}
+
+function isLoggedIn() {
+    return (typeof user_id != "undefined" && user_id > 0);
+}
+
+//===========================================End User Favorite Articles====================================
+// Generated by CoffeeScript 1.4.0
+/*
+jQuery Waypoints - v2.0.2
+Copyright (c) 2011-2013 Caleb Troughton
+Dual licensed under the MIT license and GPL license.
+https://github.com/imakewebthings/jquery-waypoints/blob/master/licenses.txt
+*/
+(function(){var t=[].indexOf||function(t){for(var e=0,n=this.length;e<n;e++){if(e in this&&this[e]===t)return e}return-1},e=[].slice;(function(t,e){if(typeof define==="function"&&define.amd){return define("waypoints",["jquery"],function(n){return e(n,t)})}else{return e(t.jQuery,t)}})(this,function(n,r){var i,o,l,s,f,u,a,c,h,d,p,y,v,w,g,m;i=n(r);c=t.call(r,"ontouchstart")>=0;s={horizontal:{},vertical:{}};f=1;a={};u="waypoints-context-id";p="resize.waypoints";y="scroll.waypoints";v=1;w="waypoints-waypoint-ids";g="waypoint";m="waypoints";o=function(){function t(t){var e=this;this.$element=t;this.element=t[0];this.didResize=false;this.didScroll=false;this.id="context"+f++;this.oldScroll={x:t.scrollLeft(),y:t.scrollTop()};this.waypoints={horizontal:{},vertical:{}};t.data(u,this.id);a[this.id]=this;t.bind(y,function(){var t;if(!(e.didScroll||c)){e.didScroll=true;t=function(){e.doScroll();return e.didScroll=false};return r.setTimeout(t,n[m].settings.scrollThrottle)}});t.bind(p,function(){var t;if(!e.didResize){e.didResize=true;t=function(){n[m]("refresh");return e.didResize=false};return r.setTimeout(t,n[m].settings.resizeThrottle)}})}t.prototype.doScroll=function(){var t,e=this;t={horizontal:{newScroll:this.$element.scrollLeft(),oldScroll:this.oldScroll.x,forward:"right",backward:"left"},vertical:{newScroll:this.$element.scrollTop(),oldScroll:this.oldScroll.y,forward:"down",backward:"up"}};if(c&&(!t.vertical.oldScroll||!t.vertical.newScroll)){n[m]("refresh")}n.each(t,function(t,r){var i,o,l;l=[];o=r.newScroll>r.oldScroll;i=o?r.forward:r.backward;n.each(e.waypoints[t],function(t,e){var n,i;if(r.oldScroll<(n=e.offset)&&n<=r.newScroll){return l.push(e)}else if(r.newScroll<(i=e.offset)&&i<=r.oldScroll){return l.push(e)}});l.sort(function(t,e){return t.offset-e.offset});if(!o){l.reverse()}return n.each(l,function(t,e){if(e.options.continuous||t===l.length-1){return e.trigger([i])}})});return this.oldScroll={x:t.horizontal.newScroll,y:t.vertical.newScroll}};t.prototype.refresh=function(){var t,e,r,i=this;r=n.isWindow(this.element);e=this.$element.offset();this.doScroll();t={horizontal:{contextOffset:r?0:e.left,contextScroll:r?0:this.oldScroll.x,contextDimension:this.$element.width(),oldScroll:this.oldScroll.x,forward:"right",backward:"left",offsetProp:"left"},vertical:{contextOffset:r?0:e.top,contextScroll:r?0:this.oldScroll.y,contextDimension:r?n[m]("viewportHeight"):this.$element.height(),oldScroll:this.oldScroll.y,forward:"down",backward:"up",offsetProp:"top"}};return n.each(t,function(t,e){return n.each(i.waypoints[t],function(t,r){var i,o,l,s,f;i=r.options.offset;l=r.offset;o=n.isWindow(r.element)?0:r.$element.offset()[e.offsetProp];if(n.isFunction(i)){i=i.apply(r.element)}else if(typeof i==="string"){i=parseFloat(i);if(r.options.offset.indexOf("%")>-1){i=Math.ceil(e.contextDimension*i/100)}}r.offset=o-e.contextOffset+e.contextScroll-i;if(r.options.onlyOnScroll&&l!=null||!r.enabled){return}if(l!==null&&l<(s=e.oldScroll)&&s<=r.offset){return r.trigger([e.backward])}else if(l!==null&&l>(f=e.oldScroll)&&f>=r.offset){return r.trigger([e.forward])}else if(l===null&&e.oldScroll>=r.offset){return r.trigger([e.forward])}})})};t.prototype.checkEmpty=function(){if(n.isEmptyObject(this.waypoints.horizontal)&&n.isEmptyObject(this.waypoints.vertical)){this.$element.unbind([p,y].join(" "));return delete a[this.id]}};return t}();l=function(){function t(t,e,r){var i,o;r=n.extend({},n.fn[g].defaults,r);if(r.offset==="bottom-in-view"){r.offset=function(){var t;t=n[m]("viewportHeight");if(!n.isWindow(e.element)){t=e.$element.height()}return t-n(this).outerHeight()}}this.$element=t;this.element=t[0];this.axis=r.horizontal?"horizontal":"vertical";this.callback=r.handler;this.context=e;this.enabled=r.enabled;this.id="waypoints"+v++;this.offset=null;this.options=r;e.waypoints[this.axis][this.id]=this;s[this.axis][this.id]=this;i=(o=t.data(w))!=null?o:[];i.push(this.id);t.data(w,i)}t.prototype.trigger=function(t){if(!this.enabled){return}if(this.callback!=null){this.callback.apply(this.element,t)}if(this.options.triggerOnce){return this.destroy()}};t.prototype.disable=function(){return this.enabled=false};t.prototype.enable=function(){this.context.refresh();return this.enabled=true};t.prototype.destroy=function(){delete s[this.axis][this.id];delete this.context.waypoints[this.axis][this.id];return this.context.checkEmpty()};t.getWaypointsByElement=function(t){var e,r;r=n(t).data(w);if(!r){return[]}e=n.extend({},s.horizontal,s.vertical);return n.map(r,function(t){return e[t]})};return t}();d={init:function(t,e){var r;if(e==null){e={}}if((r=e.handler)==null){e.handler=t}this.each(function(){var t,r,i,s;t=n(this);i=(s=e.context)!=null?s:n.fn[g].defaults.context;if(!n.isWindow(i)){i=t.closest(i)}i=n(i);r=a[i.data(u)];if(!r){r=new o(i)}return new l(t,r,e)});n[m]("refresh");return this},disable:function(){return d._invoke(this,"disable")},enable:function(){return d._invoke(this,"enable")},destroy:function(){return d._invoke(this,"destroy")},prev:function(t,e){return d._traverse.call(this,t,e,function(t,e,n){if(e>0){return t.push(n[e-1])}})},next:function(t,e){return d._traverse.call(this,t,e,function(t,e,n){if(e<n.length-1){return t.push(n[e+1])}})},_traverse:function(t,e,i){var o,l;if(t==null){t="vertical"}if(e==null){e=r}l=h.aggregate(e);o=[];this.each(function(){var e;e=n.inArray(this,l[t]);return i(o,e,l[t])});return this.pushStack(o)},_invoke:function(t,e){t.each(function(){var t;t=l.getWaypointsByElement(this);return n.each(t,function(t,n){n[e]();return true})});return this}};n.fn[g]=function(){var t,r;r=arguments[0],t=2<=arguments.length?e.call(arguments,1):[];if(d[r]){return d[r].apply(this,t)}else if(n.isFunction(r)){return d.init.apply(this,arguments)}else if(n.isPlainObject(r)){return d.init.apply(this,[null,r])}else if(!r){return n.error("jQuery Waypoints needs a callback function or handler option.")}else{return n.error("The "+r+" method does not exist in jQuery Waypoints.")}};n.fn[g].defaults={context:r,continuous:true,enabled:true,horizontal:false,offset:0,triggerOnce:false};h={refresh:function(){return n.each(a,function(t,e){return e.refresh()})},viewportHeight:function(){var t;return(t=r.innerHeight)!=null?t:i.height()},aggregate:function(t){var e,r,i;e=s;if(t){e=(i=a[n(t).data(u)])!=null?i.waypoints:void 0}if(!e){return[]}r={horizontal:[],vertical:[]};n.each(r,function(t,i){n.each(e[t],function(t,e){return i.push(e)});i.sort(function(t,e){return t.offset-e.offset});r[t]=n.map(i,function(t){return t.element});return r[t]=n.unique(r[t])});return r},above:function(t){if(t==null){t=r}return h._filter(t,"vertical",function(t,e){return e.offset<=t.oldScroll.y})},below:function(t){if(t==null){t=r}return h._filter(t,"vertical",function(t,e){return e.offset>t.oldScroll.y})},left:function(t){if(t==null){t=r}return h._filter(t,"horizontal",function(t,e){return e.offset<=t.oldScroll.x})},right:function(t){if(t==null){t=r}return h._filter(t,"horizontal",function(t,e){return e.offset>t.oldScroll.x})},enable:function(){return h._invoke("enable")},disable:function(){return h._invoke("disable")},destroy:function(){return h._invoke("destroy")},extendFn:function(t,e){return d[t]=e},_invoke:function(t){var e;e=n.extend({},s.vertical,s.horizontal);return n.each(e,function(e,n){n[t]();return true})},_filter:function(t,e,r){var i,o;i=a[n(t).data(u)];if(!i){return[]}o=[];n.each(i.waypoints[e],function(t,e){if(r(i,e)){return o.push(e)}});o.sort(function(t,e){return t.offset-e.offset});return n.map(o,function(t){return t.element})}};n[m]=function(){var t,n;n=arguments[0],t=2<=arguments.length?e.call(arguments,1):[];if(h[n]){return h[n].apply(null,t)}else{return h.aggregate.call(null,n)}};n[m].settings={resizeThrottle:100,scrollThrottle:30};return i.load(function(){return n[m]("refresh")})})}).call(this);
+var isFirstVideo = true;
+function iframeclick() {
+    document.getElementById("mainClip").contentWindow.document.body.onclick = function () {
+        if (isFirstVideo) {
+            ga('homePage.send', 'event', 'וידאו', 'click', 'כתבה ראשית');
+            isFirstVideo = false;
+            g.StopPageReload = true;
+        }
+    }
+}
+
+function ChangePrimaryVideo(docId, id) {
+    //main box
+    isFirstVideo = false;
+    var allBox = document.getElementsByClassName('box');
+
+    for (var i = 0; i < allBox.length; i++) {
+        allBox[i].classList.remove("active");
+    }
+
+    //small box
+    var box = document.getElementById("box_" + docId);
+    box.classList.add("active");
+
+
+    //changing local js 
+    var newTitle = box.getElementsByClassName("ClipText")[0].innerHTML;
+    var cluster = box.getElementsByClassName("tagitSmall")[0];
+    var newPoster = box.getElementsByClassName("magazine_boxIMG")[0].src
+    mediaId = $(box).attr("data-mediaid");
+        
+    jw_docId = parseInt(docId)
+    jw_poster = newPoster;
+    jw_title = newTitle;
+    
+    //replace big
+    document.getElementById("mainClipText").innerHTML = newTitle;
+    //replace tagit
+    if (cluster != undefined)
+        document.getElementById("tagitBig").innerHTML = cluster.outerHTML;
+    else
+        document.getElementById("tagitBig").innerHTML = ""; 
+    
+    var pl = jwplayer().getPlaylist();
+
+    if (typeof (pl) != "undefined" && pl.length > id) {
+
+        var jwConfig = jwplayer().getConfig();
+        jwConfig.sharing.link = "https://www.globes.co.il/news/article.aspx?did=" + docId;
+
+        jwplayer().playlistItem(id);
+        return;
+    }
+    
+    //update the player
+    var jw = jwplayer($(".jwplayer").attr('id'));
+    var jwConfig = jw.getConfig();
+    //jwConfig.autostart = true;
+    //jwConfig.sharing.link = "/news/article.aspx?did=" + docId;    
+    //jwConfig.plugins["//akamai.advsnx.net/CDN/sdk/plugins/jw7/plugin.js"].videoId = docId;
+    //jwConfig.image = newPoster;
+
+    var pid = (jw.getConfig()).pid;
+
+    var selectedItem = [{
+        "sharing.link": "/news/article.aspx?did=" + docId,
+        "file" : "//cdn.jwplayer.com/videos/" + mediaId + "-P6P7OjCF.mp4", //"//cdn.jwplayer.com/videos/ktQB7Y84-P6P7OjCF.mp4", //"//content.jwplatform.com/videos/"+ mediaId + "-" + jw_player + ".mp4", 
+        "image": newPoster,
+        "title" : newTitle
+    }]
+
+
+    jwplayer().load(selectedItem);
+
+    ////jw.setup(jwConfig);
+
+   // xhr.open("GET", "https://cdn.jwplayer.com/v2/media/" + mediaId);
+   // xhr.send();
+}
+
+
+function onVideoComplete() {
+    var allBox = document.getElementsByClassName('box');
+
+    for (var i = 0; i < allBox.length; i++) {
+        if (allBox[i].classList.contains("active")) {
+            var boxId;
+            if (i == 3) {
+                boxId = allBox[0].id;
+            } else {
+                boxId = allBox[i + 1].id;
+            }
+            var docId = boxId.split("_")[1];
+            ChangePrimaryVideo(docId, i);
+            break;
+        }
+    }
+}
+
+function track_and_navigate(event) {
+	caller = event.target
+	while (caller && caller.tagName != 'A') {caller = caller.parentElement}
+	if (caller == null) {return}
+	// event.preventDefault() 
+	var section = null
+	var globalposition = null
+	var insectionposition = null
+	var element = caller
+	while(element != null && section == null) {
+		if (globalposition == null) {globalposition = element.getAttribute('globalposition')}
+		if (insectionposition == null) {insectionposition = element.getAttribute('insectionposition')}
+		section = element.getAttribute('data-tb-region')
+		element = element.parentElement
+	}
+	if (section == null) { return }
+	$.post('/tracker.ashx'
+		,{
+			section : section 
+			, globalposition : globalposition
+			, insectionposition : insectionposition
+			, link : caller.getAttribute('href') 
+			, user_id : user_id 
+			, is_subscriber : is_subscriber 
+			, ids : user_properties.ids 
+		}
+		,function(r) { console.log(r) }
+		,'text'
+	)
+}
+function mark_for_tracking(c,trackMarker) {
+    var links = Array.from(document.querySelectorAll('a')).filter (l => l.getAttribute('trackMarker') == null && l.getAttribute('href') != null
+                && l.getAttribute('href').match(/article\.aspx\?did=\d+/i)
+    )
+    console.log(links.map(e => e.getAttribute('href')))
+    links.forEach(function(e,i) { e.setAttribute('trackMarker',trackMarker); e.addEventListener('click',function(event) {track_and_navigate(event)}) })
+    if (--c > 0) {setTimeout(function() {mark_for_tracking(c,trackMarker)},3000)}
+}
+$(document).ready(function() {
+	if (typeof(MasterHomePage) == 'boolean' && MasterHomePage) {
+		mark_for_tracking(1,(new Date()).getTime())
+	}
+})

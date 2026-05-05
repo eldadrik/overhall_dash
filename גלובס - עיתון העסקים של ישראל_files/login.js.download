@@ -1,0 +1,2997 @@
+﻿var ll = function () { }; //console.log.bind(this);
+/* 2023-09-04 11:35:42*/
+var connector22 = (function() {
+	var use_captcha = false // !location.host.match(/zoro\.co\.il$/i) && location.host != '1.1.1.67'
+	var login_protocol_and_host = (function() {
+		if (location.host.match(/zoro\.co\.il$/i)) { return 'https://www.globes.co.il' }
+		return ''
+	})()
+	var login_path = login_protocol_and_host + '/news/login-2022'
+	var ajax_handler = login_path + '/ajax_handler.ashx'
+	var last_clicked_context = null
+	var ltr = {start : '&#x200E;' , end : '&#x200F;'}
+	var last_active_request = {}
+	var contexts = []
+	var messages = {
+		all_steps : {
+            next: { he: 'הבא', en: 'next' }
+            ,or: { he: 'או' , en: 'or'}
+            , back: { he: 'חזרה', en: 'back' }
+            , edit: { he: 'עריכה', en: 'Edit' }
+            , first_name_incorrect: { he: 'שם מורכב מאותיות בלבד', en: 'Invalid format' }
+            , last_name_incorrect: { he: 'שם משפחה מורכב מאותיות בלבד', en: 'Invalid format' }
+            , email: { he: 'דוא"ל', end: 'Email' }
+            , email_incorrect: { he: 'דוא"ל לא תקין', en: 'Invalid email address.' }
+            , password: { he: 'סיסמה', en: 'Password' }
+            , password_verification: { he: 'אימות סיסמה' , en: 'Password verification'}
+		} ,validate_subscriber : {
+			title : 'אימות פרטי מנוי'
+			,sub_title : 'הגעתם לאזור המכיל מידע אישי,'
+					+ '<br>אנחנו רוצים לוודא את פרטי המנוי שלכם, בכדי שנוכל להתקדם'
+					+ '<br>אנא הזינו מספר טלפון סלולארי עימו נרשמתם כמנוי/ה:'
+				//	+ '<br>אנא הזינו מספר ת.ז. עימו נרשמתם כמנוי/ה לעיתון המודפס:'
+			,tz : 'ת.ז.'
+			,mobile : 'טלפון'
+			,next : 'המשך'
+			,invalid_tz : 'ת.ז. לא תקינה'
+			,invalid_mobile : 'סלולארי לא תקין'
+		} ,start : {
+			title: { 
+				he: 'הזינו מייל או נייד'
+				,onboarding : 'הפעלת מינוי'
+				,en: 'Sign up or Log in' 
+			}
+			,sub_title: {
+				default : ''
+				,onboarding : 'בכדי להנות מההטבה יש להזין נייד'
+			}
+			,email_or_mobile: { 
+						he: 'מייל או מספר טלפון נייד'
+						, onboarding : 'הזינו נייד'
+						, en: 'Email or phone' 
+					}
+
+			,facebook: 'Continue with Facebook'
+			,google:'Continue with Google'
+			,linkedin: 'Continue with Linkedin'
+			,apple:'Continue with Apple'
+			,more: 'עוד דרכים להתחבר'
+		} ,globes : {
+			update_details : {
+				title : 'השלמת פרטים'
+				,sub_title : 'כדי להשלים את התהליך, נא למלא את הפרטים הבאים:'
+                , first_name: { he: 'שם פרטי', en: 'First name' } 
+				, last_name: { he: 'שם משפחה', en: 'Last name' }
+				,nick_name : 'כינוי (שדה חובה - יוצג בתגובות)'
+				,update_btn : 'לשמירת פרטים ופרסום התגובה'
+				,invalid_name : 'השם מכיל תווים לא חוקיים'
+				,select_unique_nick_name : 'יש לבחור כינוי ייחודי'
+				,select_another_nick_name : 'הכינוי שבחרת תפוס, נא לבחור כינוי אחר'
+				,replace_failed : 'ההחלפה נכשלה יש לפנות לשרות לקוחות'
+			}
+			,change_password : {
+				title : 'החלפת סיסמה'
+				,next : 'עידכון והתחברות'
+				,change_failed : 'ההחלפה נכשלה'
+			}
+			, value: {
+				title: { he: 'התחברות או יצירת חשבון'
+				, onboarding : 'הפעלת מינוי'
+				, en: 'signin or signup' 
+				}
+				, sub_title: {default : '', onboarding : 'בכדי להנות מההטבה יש להזין נייד'}
+                , place_holder: {
+                    email: { he: 'מייל', en: 'Email' }
+                    , email_or_mobile: { 
+						he: 'מייל או מספר טלפון נייד'
+						, onboarding : 'הזינו נייד'
+						, en: 'Email or phone' 
+					}
+                }
+                , invalid_value: '<label> לא תקין'
+                , invalid_mail: { he: 'מייל לא תקין', en: 'Invalid email address.' }
+                , invalid_mail_or_mobile: { he: 'יש להזין כתובת מייל תקינה או מספר נייד בעל 10 ספרות', en: 'You must enter a correct email or ten-digit mobile phone number' }
+				,required_parameter_missing : 'יש להקליד <label>'
+			}
+            , code: {
+                title: {
+					he: 'כניסה לחשבון'
+					,onboarding : 'התחברות'
+					, en: 'Log in' 
+				}
+                , sub_title: { he: 'נא להקליד את הקוד שקיבלת בהודעת SMS', en: 'Please enter the verification code we sent to your' }
+                , invalid_code: { he: 'קוד לא תקין', en: 'Wrong verification code' }
+                , code_not_found: 'קוד לא נמצא'
+                , connect_with_password: { he: 'התחברות עם סיסמה', en: 'Log in with your password' }
+                , code_not_received: { he: 'לא קיבלת קוד?', en: 'Didn’t receive the code?' }
+                , code_sent_again: { he: 'קוד נשלח שוב, זה יכול לקחת כמה דקות', en: 'The code was resent, please allow it a few minutes to arrive.' }
+                , resend_failed: { he: 'שליחה נכשלה', en: 'Failed to resend.'}
+                , customer_service: { he: 'לא קיבלת את הקוד? יש לפנות  <span class=line id=csLink>לשרות לקוחות</span>', en: 'Didn’t receive the code? Contact our’ <span class=line id=csLink>customer service.</span>' }
+			}
+            , password: {
+                title: { he: 'כניסה לחשבון', en: 'Log in' }
+                , sub_title: ''
+                , place_holder: {
+                    email: { he: 'מייל', en: 'Email' }
+                    , password: { he: 'סיסמה', en: 'Password' }
+                }
+                , connect_with_code: { he: 'התחברות עם קוד לנייד', en: 'Log in with code' }
+                , signin_failed: { he: 'הסיסמה אינה תואמת את כתובת המייל. יש לבדוק שהסיסמה הוקלדה באופן תקין או ללחוץ על "שכחתי סיסמה"', en: 'The password doesn’t match your account' }
+                , forgot_password: { he: 'שכחת סיסמה?', en: 'Forgot your password?' }
+                , reset_password: { he: 'איפוס סיסמה', en: 'Reset password' }
+                , reset_password_text: { he: 'הנחיות לאיפוס סיסמא נשלחו לכתובת מייל', en: 'Please check your email for password reset instructions' }
+                , email_not_recived: { he: 'לא קיבלת מייל?', en: 'Didn’t receive the email?' }
+                , email_sent_again: { he: 'מייל נשלח שוב, זה יכול לקחת כמה דקות', en: 'The email was resent, please allow it a few minutes to arrive.'}         
+                , next: { he: 'כניסה לחשבון', en: 'Log in' }
+				,cannot_be_empty: 'נא להקליד סיסמה'
+			}
+			,update : {
+                title: { he: 'פרטי החשבון עודכנו', en: 'Your account was  updated'}
+                , sub_title: { he: 'לעריכת פרטי החשבון', en: 'Edit account details' }
+                , next: { he: 'הבנתי, סיום', en: 'Got it'}
+			}
+            , registration: {
+                email: {
+                    title: { he: 'יצירת חשבון', en: 'Create Account' }
+                    , sub_title: ''
+                }
+                , password: {
+                    title: { he: 'בחירת סיסמא', en: 'Create a password' }
+                    , under_the_password: { he: 'לפחות 6 תווים הכוללים אותיות באנגלית וספרות.', en: 'At least six characters including both English letters and numbers ' }
+                    , next: { he: 'יצירת חשבון', en: 'Create Account' }
+                }
+                , place_holder: {
+                    first_name: { he: 'שם (חובה)', en: 'Name (required)' }
+                    , last_name: { he: 'שם משפחה', en: 'Last name' }
+                    , email: { he: 'מייל', en: 'Email' }
+                    , password: { he: 'סיסמה', en: 'Password' }
+                    , password2: { he: 'סיסמה', en: 'Password' }
+                }
+                , invalid_email: { he: 'דוא"ל לא תקין', en: 'Invalid email address.' }
+                , email_exists: {
+                    he: 'זהינו כי המייל שהזנת שייך לחשבון קיים. <br />נא  <span id=connect > להתחבר עם סיסמה </span>',
+                    en: 'There is already an account associated with. <br />please  <span id=connect >log in with your password </span>'
+                }
+                , failed: 'שגיאה'
+                , password_too_short: { he: 'סיסמה קצרה מידיי', en: 'Too short.' }
+                , password_does_not_contain_digits: { he: 'הסיסמא צריכה להכיל לפחות 6 תווים הכוללים אותיות באנגלית וספרות', en: 'Password should contain numbers.' }
+                , password_does_not_contain_letters: { he: 'הסיסמא צריכה להכיל לפחות 6 תווים הכוללים אותיות באנגלית וספרות', en: 'Password should contain letters.' }
+                , password_not_equals_password2: { he: 'יש להקפיד להקליד סיסמה כמו למעלה', en: 'Passwords have to match.'}
+
+			}
+			,mail_list : {
+                title: { he: 'כניסה לחשבון', en: 'Log in' }
+				,sub_title : 'זהינו כי הנייד שהזנת שייך למספר החשבונות הקיימים. מכיוון שזו ההתחברות הראשונה עם הנייד זה, לצורך הבטחת המידע נא להכנס לחשבון עם מייל וסיסמה:'
+                , other: { he: 'ליצור חשבון חדש', en: 'Create a new account' }
+                , connectWith: { he: 'להתחבר עם ', en: 'Continue with ' }
+			}
+			,email_verification: {
+                title: { he: 'אימות כתובת המייל', en: 'Verify your email'}
+                , sub_title: { he: 'יש ללחוץ על קישור האימות שנשלח לכתובת  המייל', en: 'To continue, please click on the verification link we sent you.' }
+                , email_not_received: { he: 'לא קיבלת מייל?', en: 'Didn’t receive the email?' }
+                , next: { he: 'הבנתי', en: 'Got it' }
+				, next_with_continue: { he: 'הבנתי, המשך', en: 'Got it'}
+				, next_with_end: { he: 'הבנתי, סיום', en: 'Got it'}
+                , wrong_email: { he: ' טעית בכתובת המייל? <span id=editAccount class=line>להחלפת כתובת</span>', en: '' }
+			}
+			,forgot_password : {
+				send_failed : 'השליחה נכשלה נא לפנות לשרות לקוחות'
+				,fill_email : 'יש למלא את כתובת המייל באמצעותה נרשמת.'
+			}
+			,validation_required: {
+                title: { he: 'נא לאמת את המייל', en: 'Verify your email' }
+                , sub_title: { he: 'כדי שנוכל להמשיך, נא להקליק על הקישור ששלחנו למייל ', en: 'To continue, please click on the verification link we sent you.' }
+				,next: 'בצעתי אימות, אפשר להמשיך'
+			}
+			,connect_phone: {
+                title: { he: 'לא רוצה לזכור סיסמה?', en: 'Don’t want to remember your password?' }
+                , sub_title: { he: 'ניתן להוסיף נייד לדרכי התחברות, ובפעמים הבאות להתחבר עם קוד לנייד.', en: 'Add your phone and next time log in password-free.' }
+                , next: { he: 'להוסיף מספר נייד', en: 'Add phone number' }
+                , close: { he: 'לא כרגע', en: 'Not now' }
+				,add: {
+					title:'הוספת נייד לדרכי התחברות'
+					,placeholder: 'מספר נייד'
+                    , invalid_phone: { he: 'טלפון לא תקין', en: 'Invalid phone number' }
+				}
+			,success:{
+                title: { he: 'הנייד התעדכן בהצלחה', en: 'Phone number was updated' }
+                , sub_title: { he: 'מעכשיו באפשרותך להתחבר עם קוד לנייד.', en: 'Next time you login, you can choose to receive a verification code to phone instead of entering your password.' }
+                , next: { he: 'הבנתי, סיום', en: 'Got it' }
+				}
+			}
+			,terms_conditions: {
+				title: 'רגע לפני שמתקדמים'
+                , checkbox1: {
+                    he: 'אני מאשר/ת לקבל מידע חשוב לגבי המינוי שלי, הזמנות לוועידות וכנסים ודיוור רלוונטי עבורי מאתר גלובס.',
+                    en: 'I agree to receive from Globes an important information regarding my subscription, invitations to conferences and conventions, and other updates relevant to me.'
+                }
+                , checkbox2: { he: 'אני מאשר/ת קבלת דוא״ל פרסומי ושיווקי.', en: 'I agree to receive marketing offers.' }
+                , confirm: {
+                    he: 'על ידי התחברות אני מאשר/ת את <span id=termsConditions class=line>תנאי השימוש</span> ואת <span id=privacyPolicy class=line>מדיניות הפרטיות</span>.',
+                    en: 'By creating an account you accept the <span id=termsConditions class=line>Terms of Service</span> and the <span id=privacyPolicy class=line>Privacy Policy</span>.'
+                }
+                , cb_information_must_be_checked: { he: 'חובה לסמן', en: 'Required to tick this box' } // 'יש לאשר את תנאי השימוש'
+			}
+		}
+	}
+	function is_competent_iosversion(os,ver) {
+		if (('' + os).toLowerCase() != 'ios') {return false}
+		var va = ('' + ver).split('.')
+		var min_va = '3.9.5'.split('.')
+		if (va.length != min_va.length) {return false}
+		for(var i = 0; i < va.length ;i++) {
+			if (va[i] < min_va[i]) {return false}
+			if (va[i] > min_va[i]) {return true}
+		}
+		return true
+	}
+	function is_null(v,n) {return v == null ? n : v}
+	function is_success(json) {return json.status == 'success'}
+	function is_domain(s) {return s && ('' + s).split('.').filter(s => s.match(/^[a-z0-9-]+$/i) == null) == 0}
+	function validateNames(name) {
+		var regex = /^[\sא-תa-z'-]{2,20}$/i;
+		return (regex.test(name));
+	}
+	function is_valid_password(password) {
+		password = '' + password
+		var r = {
+			not_too_short :  password.length > 5
+			, contains_digits : password.match(/[0-9]/) ? true : false
+			, contains_letters : password.match(/[a-z]/i) ? true : false
+		}
+		return r.not_too_short && r.contains_digits && r.contains_letters ? true : r
+	}
+	function isnull(expression,null_replacement) {return expression == null ? null_replacement : expression}
+	function stack_value(context,name,go_down) {
+		if (arguments.length < 3) {go_down = true}
+		for(var p = context.stack.length; p > 0 ;p--) {
+			if (context.stack[p-1][name] != undefined) {return context.stack[p-1][name]}
+			if (!go_down) {break}
+		}
+		return null
+	}
+	function url_encoded(s) { return s == null ? '' : encodeURIComponent('' + s) }
+	function ajax(querystring, formdata, response_handler) {
+	//	var imgLoading = qs('imgLoading')
+	//	if (imgLoading && (typeof(calling_context.show_loading) != 'boolean' || calling_context.show_loading)) { imgLoading.style.display = 'block' }
+		var xhr = new XMLHttpRequest()
+		xhr.onreadystatechange = function() {
+			if (this.readyState == 4) {
+			//	if (imgLoading) {imgLoading.style.display = 'none'}
+				if (this.status == 200) {
+					response_handler(this.responseText)
+				} else {
+					alert('ajax failed')
+				}
+			}
+		}
+		xhr.open("POST",ajax_handler + "?" + querystring)
+		xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+		xhr.send(formdata);
+	}
+	function formated_mobile(mobile) {return ('' + mobile).replace(/(\d{3})(\d{3})(\d{2})(\d{2})/,"$1-$2-$3-$4")}
+	function back(context) {stack_value(context,'back')()}
+	function pop(context) {
+		context.poped = context.stack.pop()
+	}
+	function local_classes(context,names) {
+		var sb = []
+		var a = names.split(',')
+		for(var i=0; i < a.length ;i++) {sb.push(a[i] + context.class_suffix)}
+		return sb.join(' ')
+	}
+	function qs(context,selector) { 
+		try {
+			console.log(arguments.length,arguments)
+			var selected = context.container.querySelector(selector) 
+			if (selected == null) {console.log(selector + ' not found')}
+			return selected
+		} catch(e) {alert('qs(context,' + (arguments.length > 1 ? selector : '(1) ' + context) + ') failed * ' + e.description)}
+	}
+	function get_context(e) {
+		var contextIndex = null
+		while(e != null && (contextIndex = e.getAttribute('data-contextIndex',true)) == null) {
+			e = e.parentElement
+		}
+		return contextIndex == null ? null : contexts[contextIndex]
+	}
+	function text(context,name) {
+		var a = name.split('.')
+		var m = messages
+		for(var i=0; i < a.length ;i++) {
+			m = m[a[i]]
+			if (m == undefined) {return name}
+		}
+		if (typeof(m) == 'string') {return m}
+		if (context.request.message_selector == undefined || m[context.request.message_selector] == undefined) {
+			if (m.default != undefined) { return m.default }
+			return Object.keys(m).length > 0 ? m[Object.keys(m)[0]] : name
+		}
+		return m[context.request.message_selector]
+	}
+	function show_error(context,message) {qs(context,"#errorMessage").innerHTML = text(context,message)}
+	function back_and_next(context,with_back) {
+		return (with_back ? '<span id="backBtn" class="login_backStage"></span>' : '')
+			+ '<div id="nextBtn" class="login_nextStage">' + text(context,'all_steps.next') + '</div>'
+	}
+	function cleaner(context) {
+        if (context.container) {context.container.parentNode.removeChild(context.container)}
+		if (context.veil) {context.veil.parentNode.removeChild(context.veil)}
+		contexts[context.index] = null
+		if (contexts.length == context.index + 1) { contexts.length = context.index }
+	}
+	function onsuccess(context) {
+		cleaner(context)
+		var f
+		if (typeof(context.request.onsuccess) == 'function') { f = context.request.onsuccess }
+		if (f == null && typeof(context.request.onsuccess2) == 'function') { f = context.request.onsuccess2 }
+		if (f == null && typeof(context.request.success) == 'function') { f = context.request.success }
+
+		if (typeof(context.connect_response) == 'object' && context.connect_response && context.connect_response.user_id > 0) {
+			var tlh = document.querySelector('.top-left-header')
+			if (tlh && tlh.children.length > 0 && typeof(getLoginString) == 'function') {
+				var lc = tlh.children[tlh.children.length - 1].outerHTML
+				user_id = context.connect_response.user_id
+				user_name = context.connect_response.user_name
+				user_properties.ids = context.connect_response.attributes
+                user_properties.paywall = context.connect_response.paywall
+                var href = tlh.children[tlh.children.length - 1].getAttribute('href')
+                if (href && href.match(/purchase/i)) {
+					lc = ''
+				}
+				tlh.innerHTML = getLoginString() + lc
+				if (typeof(fixedMenu) == 'function') {$(".menuLeft").html(fixedMenu())}
+				$(".menuLeft .user_name_fixed").click(function () { $(".user_links_fixed").toggle() })
+				$("#header .user_name").click(function () { $(".user_links").toggle() })
+			}
+			$("a[class='userLink'][href='/news/m/personal_zone.aspx']").addClass('connected') // mobile
+		}
+
+		if (typeof(f) == 'function') {
+			var t = {}
+			for(var p in context.connect_response) {
+				console.log(p)
+				if (typeof(context.connect_response[p]) == 'object') {continue}
+				t[p] = context.connect_response[p]
+			}
+			context.connect_response.response_json = t
+            f(context.connect_response)
+
+            //ll("connect_response___: " + context.connect_response);
+
+		} else {
+			// alert(stack_value(context, 'value_type') + ' *** connected');
+			console.log(stack_value(context, 'value_type') + ' *** connected')
+			location.reload()
+		}
+	}
+    function cancel(context) {
+
+        ll("cancel cancel cancel cancel cancel");
+
+		cleaner(context)
+        if (typeof (context.request.oncancel) == 'function') {
+			context.request.oncancel()
+		}
+	}
+
+	function create_container(context) {
+
+        //=================================Load Captcha==================================
+
+        if (document.getElementById("captchaScript") == null && use_captcha) {
+            var hiddenElement = document.createElement("input");
+            hiddenElement.type = "hidden";
+            hiddenElement.setAttribute("id", "hidden_sitekey");
+            hiddenElement.setAttribute("name", "hidden_sitkey");
+            hiddenElement.setAttribute("value", "6LfpU30UAAAAAE6A0xXs0E26qoEK48VjhjpM1H-X");
+            document.body.appendChild(hiddenElement);
+            var scriptElement = document.createElement("script");
+            scriptElement.type = 'text/javascript';
+            scriptElement.setAttribute("id", "captchaScript");
+            scriptElement.setAttribute("src", "https://www.google.com/recaptcha/api.js?render=" + document.getElementById("hidden_sitekey").value)
+            document.getElementsByTagName("head")[0].appendChild(scriptElement);
+        }
+
+
+        //===============================================================================
+
+		if (context.container != undefined) {return}
+		if (context.request.container == undefined) {
+			var body = document.querySelector('BODY')
+			context.veil = document.createElement('DIV')
+			context.veil.style.position = 'absolute'
+			context.veil.style.top = 0
+			context.veil.style.left = 0
+			context.veil.style.width = '100%'
+			context.veil.style.height = body.clientHeight + 'px'
+			context.veil.style.backgroundColor = 'gray'
+			context.veil.style.opacity = '.8'
+			context.veil.style.zIndex = "11111111111"
+			body.appendChild(context.veil)
+		}
+
+		context.container = document.createElement('DIV')
+		context.container.setAttribute('id', 'ContainerLogin');
+		context.container.setAttribute('data-contextIndex',contexts.length)
+		context.index = contexts.length
+		contexts.push(context)
+
+		//context.container.style.direction = context.request.direction == undefined ? 'rtl' : context.container.style.direction
+		if (context.request.container == undefined) {
+			document.body.appendChild(context.container)
+			context.container.classList.add('loginPopup');
+		} else {
+			context.request.container.appendChild(context.container)
+		}
+		context.class_suffix = (new Date()).getTime()
+		context.container.innerHTML = (context.request.with_close == false ? '' : '<span id=closeBtn class=login_close></span>')
+			+ '<div class=login_main ></div>'
+
+		var close = qs(context, '.login_close');
+		if (close) {
+			close.addEventListener('click', function (e) {
+				if (typeof (isApp) != "undefined" && isApp) {
+					try {app.cancel()} catch(e) {}
+					return;
+				}
+				cancel(get_context(e.target));
+			})
+		}
+		context.step_container = qs(context, '.login_main');
+	}
+	function create_stack(a) {
+		var stack = a
+		stack.last = function() {return stack[stack.length - 1]}
+		return stack
+	}
+	function for_debuggers(context) {
+		console.log(context.stack.last())
+
+	}
+	var steps = {
+		start : {}
+		,globes : {
+			terms : {}
+			,value : {}
+			,code : {}
+			,password : {}
+			,update : {}
+			,forgot_password :{}
+			,registration : {
+				email : {}
+				,password : {}
+			}
+			,email_verification:{}
+			,mail_list : {}
+			,connect_phone:{}
+			,connect_phone_add: {}
+			,phone_added:{}
+			,update_details:{}
+		}
+	}
+	var resources = [
+		'link:/news/Cache/combined/2019/form.css'
+		,'link:/news/login-2022/login2022.css'
+		,'script:/news/scripts/querystring.js'
+		,'script:/news/login-2022/social.js'
+		,'script:/news/login-2022/login-events.js'
+	]
+	var resource_counter = 0
+	var resource_loader_called = false
+	
+	function resource_loader() {
+			if (resource_loader_called) {return}
+			resource_loader_called = true
+
+			var version = "v=" + new Date().getTime(); //'638035142227142142@1h22'
+			for(var i=0; i < resources.length ;i++) {
+				var ri = resources[i]
+			//	console.log(ri)
+				var re = document.createElement(ri.match(/^[a-z]+/));
+				if (ri.match(/^link:/)) {
+					re.setAttribute('type','text/css');
+					re.setAttribute('rel','stylesheet');
+					re.setAttribute('href',login_protocol_and_host + ri.replace(/^[a-z]+:/i,'') + '?' + version);
+				}
+				if (ri.match(/^script:/)) {
+					re.setAttribute('src',login_protocol_and_host + ri.replace(/^[a-z]+:/i,'') + '?' + (new Date()).getTime());
+				}
+				re.addEventListener('load',function () {resource_counter++});
+				document.head.append(re);
+			}
+	}
+	function init(context) {
+		$('#aspnetForm').attr('onsubmit','return false');
+        last_active_request = context.request
+		// if (context.request.os == undefined) { context.request.os = 'unknown' }
+        if (context.request.language == undefined) {
+            context.request.language = (location.href.indexOf('/en/') > -1) ? 'en' : 'he';             
+        }
+		if (context.request.message_selector == undefined && context.request.language == 'en') {
+			context.request.message_selector = 'en'
+		}
+		for(var i=0; i < contexts.length ;i++) { // multiples connectors
+			var ci = contexts[i]
+			if (ci == null) {continue}
+			if (context.request.container == undefined && ci.request.container == undefined) {return}
+			if (context.request.container == undefined || ci.request.container == undefined) {continue}
+			if (context.request.container == ci.request.container) {return}
+		}
+		create_container(context)
+		if (context.request.language == undefined) {context.request.language = 'he'}
+		context.stack = create_stack([])
+	//	context.stack.last = function() {return this.length > 0 ? this[this.length - 1] : null}
+		switch(context.request.start_at) {
+			case 'showFirstCommentPopup' :
+				showFirstCommentPopup(context)
+				break
+			case 'globes.value' :
+				steps.globes.value.show(context)
+				break
+			case 'validate_subscriber' :
+				validate_subscriber(context)
+				break
+			case 'update_details' :
+				update_details(context)
+				break
+			case 'change_password' :
+				$.post(ajax_handler + '?request-to-change-password'
+				,{
+					token : context.request.token
+					,user_id : context.request.user_id
+				}
+				,function(r) {
+					var json = eval('(' + r + ')')
+				//	console.log(json)
+					if (is_success(json)) {
+						steps.globes.change_password(context)
+						return
+					}
+					if (json.error == "not found") {
+						steps.globes.forgot_password.show(context)
+						return
+					}
+					ll(r)
+				}
+				,'text')
+				break
+			case 'connect_phone_add' :
+				steps.globes.connect_phone_add.show(context)
+				break;
+			case 'edit-mobile' :
+				context.stack.push({})
+				context.stack.push({value : context.request.mobile})
+				steps.globes.value.show(context)
+				break
+			case 'connect-mobile-with-password' :
+				context.stack.push({})
+				context.stack.push({
+							value : context.request.mobile 
+							,mobile : context.request.mobile
+							,value_type : 'authenticated-mobile'
+							,edit : true
+							,edit_initial_value : function() {
+								pop(context)
+								steps.globes.value.show(context,true)
+							}
+					}
+				)
+				steps.globes.password.show(context,true)
+				break
+
+			default :
+				steps.start.show(context)
+		}
+	}
+	function information_error(context, message) {
+		if (message == null) {
+				$(qs(context,'#cb_information')).parent().find('.errMsg').html('')
+			//	qs(context,'#square').style.backgroundColor = 'transparent'
+			//	$(qs(context,'#square')).removeClass('error')
+				$(qs(context,'.login_confirmation')).removeClass('error')
+			
+			} else {
+				$(qs(context,'#cb_information')).parent().find('.errMsg').html(message)
+			//	qs(context,'#square').style.backgroundColor = 'red'
+			//	$(qs(context,'#square')).addClass('error')
+				$(qs(context,'.login_confirmation')).addClass('error')
+			}
+
+	}
+	function input_error(input, message) {
+		if (message == null) {
+			$(input).parent().find('.errMsg').html('')
+			$(input).parent().removeClass('mistake')
+		} else {
+			$(input).parent().find('.errMsg').html(message)
+			$(input).parent().addClass('mistake')
+			$(input).focus()
+		}
+
+	}
+	function showLoader(context){
+		var loader = document.createElement("div");
+		loader.setAttribute('id','loader');
+		qs(context,'#nextBtn').appendChild(loader);
+	}
+	function termsDiv(context,params) {
+		if (arguments.length < 2) {params = {}}
+        setTimeout(function () {
+
+			qs(context,'#privacyPolicy').addEventListener('click',function() {
+               // window.open('/news/article.aspx?did=1001243948&fid=3038', '_blank');
+                const a = document.createElement("a");
+                a.style = "display: none";
+                document.body.appendChild(a);
+                a.href = "/news/article.aspx?did=1001243948&fid=3038"
+                a.setAttribute("target", "_blank");
+                a.click()
+                document.body.removeChild(a);
+			})
+			qs(context,'#termsConditions').addEventListener('click',function() {
+               // window.open('/news/article.aspx?did=1000252043', '_blank');
+                const a = document.createElement("a");
+                a.style = "display: none";
+                document.body.appendChild(a);
+                a.href = "/news/article.aspx?did=1000252043"
+                a.setAttribute("target", "_blank");
+                a.click()
+                document.body.removeChild(a);
+
+			})
+			var cb_information = qs(context,'#cb_information')
+			if (cb_information) {
+				cb_information.addEventListener('click',function(event) {
+						if (event.target.checked) { information_error(context,null) }
+					}
+				)
+			}
+        }, 100)
+
+
+        var checkbox = document.querySelectorAll(".login_confirmation");
+        if (checkbox.length > 0) {
+            checkbox.forEach(function (cb) {
+                cb.addEventListener("click", function () {
+                    dataLayer.push({
+                        'event': 'login',
+                        'eventInfo': {
+                            'screenName': location.href,
+                            'user_action': 'clicks_on_' + this.children[0].id,
+                            'click_text': this.children[1].innerText,
+                            'flow_name': 'main_flow',
+                            'screen_name': 'login_screen',
+                            'login_method': this.children[0].id,
+                            'actions': 1
+                        }
+                    });
+                });
+            });
+        }
+
+		var description = '<p class="login_confirmation">'+ text(context,'globes.terms_conditions.confirm') + '</p>'
+		return '<div class="login_termsDiv">'
+			+ (params.order == 'description_first' ? description : '')
+			+ (params.checkboxes ? '<div class="login_confirmation">'
+									+ '<div id=square class="" _style="position:absolute;width:15px;height:15px;margin-top:4px;background-color:transparent"></div>'
+									+ '<input type="checkbox" id="cb_information" >'
+									+ '<label for="cb_information">' + text(context,'globes.terms_conditions.checkbox1') + '</label>'
+									+ '<div class="errMsg"></div>'
+								+ '</div>'
+								+ '<div class="login_confirmation">'
+									+ '<input type="checkbox" id="cb_markting">'
+									+ '<label for="cb_markting">' + text(context,'globes.terms_conditions.checkbox2') + '</label>'
+								+ '</div>'
+				: ''
+			)
+			+ (params.order == 'description_first' ? '' : description)
+			+ '</div>'
+	}
+	function social_connect(context) {
+		if (context.request.with_social == false) {return ''}
+		if (!context.request.isFromApp) {
+			setTimeout(function() {
+				InitGoogleConnect(qs(context,'#LoginBtn_google'))
+				InitFacebookConnect()
+				qs(context,'#LoginBtn_facebook').addEventListener('click',function() {GetFacebookStatus(context.request.language)})
+				InitLinkedInConnect(qs(context,'#LoginBtn_linkedin'));
+				InitAppleConnect(qs(context,'#LoginBtn_apple'));
+			},100)
+		}
+	
+		return '<div class=Login_orText><span>' + text(context, 'all_steps.or') + '</span></div>'
+			+ '<div id=LoginBtn_google class="login_btn left">' + text(context,'start.google')  + '</div>'
+			+ '<div id=LoginBtn_facebook class="login_btn left">' + text(context,'start.facebook')  + '</div>'
+			+ '<div id=LoginBtn_linkedin class="login_btn left">' + text(context,'start.linkedin')  + '</div>'
+		//	+ '<p class=\"login_textUnderline center\" id=\"showMoreConnect\">' + text(context,'start.more')  + '</p>'
+			+ (context.request.os == 'ios'
+				? '<div id=LoginBtn_apple class="apple-btn login_btn left" style="display:flex !important;">' + text(context,'start.apple')  +' </div>'
+				: ''
+			)
+	}
+    steps.start.show = function (context) {
+
+
+        dataLayer.push({
+            'event': 'login', 'eventInfo':
+            {
+                'screenName': location.href,
+                'user_action': 'view_login_screen',
+                'flow_name': 'main_flow',
+                'screen_name': 'login_screen',
+                'actions': 1
+            }
+        });
+
+		
+		context.step_container.innerHTML = ''
+			+ '<h1 class=login_title>' + text(context,'start.title')  + '</h1>'
+			+ '<div class="start_sub_title">' + text(context,'start.sub_title') + '</div>'
+			+ '<div id=LoginMainBtn class=login_btn>' + text(context,'start.email_or_mobile')  + '</div>'
+			+ social_connect(context)
+			+ '<div id=ExternalMessage>' + (context.request.ExternalMessage ? context.request.ExternalMessage : '') + '</div>'
+		//	+ '<p class="login_confirmation">'+ text(context,'globes.terms_conditions.confirm') + '</p>'
+			+ termsDiv(context)
+		
+		qs(context,'#LoginMainBtn').addEventListener('click',function(event) {
+				context.stack.push({
+					back : function() {
+						pop(context); 
+						steps.start.show(context)
+					//	qs(context,'#cb_information').checked = context.poped.cb_information
+					//	qs(context,'#cb_markting').checked = context.poped.cb_markting
+					}
+					
+				//	,cb_information : qs(context,'#cb_information').checked
+				//	,cb_markting : qs(context,'#cb_markting').checked
+				})
+				console.log(context.stack.last())
+            steps.globes.value.show(context)
+
+            dataLayer.push({
+                'event': 'login', 'eventInfo':
+                {
+                    'screenName': location.href,
+                    'user_action': 'clicks_on_' + this.id,
+                    'click_text': this.innerText,
+                    'flow_name': 'main_flow',
+                    'screen_name': 'login_screen',
+                    'login_method': this.id,
+                    'actions': 1
+                }
+            });
+
+		});
+	//	if (true || context.request.os == 'ios') {
+	//		qs(context,'#LoginBtn_apple').style.display = "flex"
+	//	}
+	//	qs(context,'#showMoreConnect').addEventListener('click', function(){
+	//		this.style.display = "none"
+	//		qs(context,'#LoginBtn_apple').style.display = "flex"
+	//	});
+		if (!context.request.isFromApp) {
+			qs(context,'#LoginBtn_google').addEventListener('click',function(event) {
+			    last_clicked_context = get_context(event.target)
+			    dataLayer.push({
+			        'event': 'login', 'eventInfo':
+                    {
+                        'screenName': location.href,
+                        'user_action': 'clicks_on_' + this.id,
+                        'click_text': this.innerText,
+                        'flow_name': 'main_flow',
+                        'screen_name': 'login_screen',
+                        'login_method': this.id,
+                        'actions': 1
+                    }
+			    });
+			})
+			qs(context,'#LoginBtn_facebook').addEventListener('click',function(event) {
+			    last_clicked_context = get_context(event.target)
+			    dataLayer.push({
+			        'event': 'login', 'eventInfo':
+                    {
+                        'screenName': location.href,
+                        'user_action': 'clicks_on_' + this.id,
+                        'click_text': this.innerText,
+                        'flow_name': 'main_flow',
+                        'screen_name': 'login_screen',
+                        'login_method': this.id,
+                        'actions': 1
+                    }
+			    });
+			})
+			qs(context,'#LoginBtn_linkedin').addEventListener('click',function(event) {
+			    last_clicked_context = get_context(event.target)
+			    dataLayer.push({
+			        'event': 'login', 'eventInfo':
+                    {
+                        'screenName': location.href,
+                        'user_action': 'clicks_on_' + this.id,
+                        'click_text': this.innerText,
+                        'flow_name': 'main_flow',
+                        'screen_name': 'login_screen',
+                        'login_method': this.id,
+                        'actions': 1
+                    }
+			    });
+			})
+			InitGoogleConnect(qs(context,'#LoginBtn_google'))
+			if (!context.request.isFromApp && typeof (window.fbAsyncInit) == 'undefined') { InitFacebookConnect() }
+		}
+	}
+	steps.globes.change_password = function(context) {
+		// alert('steps.globes.change_password')
+		context.step_container.innerHTML = ''
+			+ '<h1 class=login_title>' + text(context,'globes.change_password.title')  + '</h1>'
+			+ input({id:'password',type:'password',tabindex:1,eyeid:'eye1',label:text(context,'all_steps.password')})
+			+ '<h2 id="under_the_password" class="login_subTitle font14">' + text(context,'globes.registration.password.under_the_password') + '</h2>'
+			+ input({id:'password2',type:'password',tabindex:2,eyeid:'eye2',label:text(context,'all_steps.password_verification')})
+			+ '<div id="step_error" class="errMsg"></div>'
+			+ back_and_next(context,false)
+			+ '<div id="loader" style="display:none"></div>'
+		
+		qs(context,'#eye1').addEventListener('click', function () { toggle_password('#password', '#eye1', context) })
+		qs(context,'#eye2').addEventListener('click', function () { toggle_password('#password2','#eye2', context) })
+		
+		qs(context,'#password').addEventListener('keyup',function(event) {
+			qs(context,'#under_the_password').style.display = 'none'
+			password_error(context,this,is_valid_password(this.value))
+		})
+		qs(context,'#password2').addEventListener('keyup',function(event) {
+			input_error(this,this.value != qs(context,'#password').value ? text(context,'globes.registration.password_not_equals_password2') : null)
+		})
+
+		qs(context,'#nextBtn').innerHTML = text(context, 'globes.change_password.next');
+		qs(context,'#nextBtn').addEventListener('click',function(event) {
+			var r = is_valid_password(qs(context,'#password').value)
+			var errors_found = false
+			qs(context,'#step_error').innerHTML = ''
+			if (r != true) {
+				if (r.not_too_short == false) {
+					errors_found = true
+					input_error(qs(context,'#password'), text(context,'globes.registration.password_too_short'));
+				}
+				if (r.contains_digits == false) {
+					errors_found = true
+					input_error(qs(context,'#password'), text(context,'globes.registration.password_does_not_contain_digits'));
+				}
+				if (r.contains_letters == false) {
+					errors_found = true
+					input_error(qs(context,'#password'), text(context,'globes.registration.password_does_not_contain_letters'));
+				}
+			}
+			if (qs(context,'#password').value != qs(context,'#password2').value) {
+				errors_found = true
+				input_error(qs(context,'#password2'), text(context,'globes.registration.password_not_equals_password2'));
+			}
+			if (errors_found) {
+				return
+			}else{
+				qs(context,'#loader').style.display = 'block'
+			}
+			$.post(ajax_handler + '?change-password'
+				,{
+					token : context.request.token
+					,user_id : context.request.user_id
+					,password : qs(context,'#password').value
+				}
+				,function(r) {
+					qs(context,'#loader').style.display = 'none'
+					var json = eval('(' + r + ')')
+				//	console.log(json)
+					if (is_success(json)) {
+						context.connect_response = json
+						onsuccess(context)
+						return
+					}else{
+						qs(context,'#step_error').innerHTML = text(context,'globes.change_password.change_failed')
+					}
+				}
+				,'text')
+		})
+	}
+	steps.globes.terms.show = function(context) {
+		context.step_container.innerHTML = ''
+			+ '<h1 class=login_title>' + text(context,'globes.terms_conditions.title')  + '</h1>'
+			+ termsDiv(context,{order:'description_first',checkboxes:true})
+			+ back_and_next(context,true)
+	//	$(qs(context,'#backBtn')).hide()
+		qs(context,'#backBtn').addEventListener('click',function() {
+			steps.globes.value.show(context)
+		})
+		qs(context,'#nextBtn').innerHTML = text(context,'globes.terms_conditions.title')
+		qs(context,'#nextBtn').addEventListener('click',function() {
+			var cb_information = qs(context,'#cb_information').checked
+			if (!cb_information) {
+				errors_found = true
+				information_error(context, text(context,'globes.terms_conditions.cb_information_must_be_checked'));
+				return
+			}
+			$.post(ajax_handler + '?register-social'
+				,{
+					provider : context.social_values.enProvider
+					,providerUId : context.social_values.enProviderUId
+					,providerEmail : context.social_values.enProviderEmail
+					,providerFirstName : context.social_values.enProviderFirstName
+					,providerLastName : context.social_values.enProviderLastName
+					,providerGender : context.social_values.enProviderGender
+					,providerImage : context.social_values.providerImage
+					,language : context.request.language
+					,cb_marketing : qs(context,'#cb_markting').checked
+					,cb_information : cb_information
+				}
+				,function(r) {
+					var json = eval('(' + r + ')')
+				//	console.log(json)
+					if (is_success(json)) {
+						context.connect_response = json
+					//	context.stack.push({validation_required:json.validation_required})
+					//	steps.globes.email_verification.show(context)
+
+                        dataLayer.push({
+                            'event': 'login', 'eventInfo': {
+                                'screenName': location.href,
+                                'user_action': 'finish_registration',
+                                'flow_name': 'no_email_found',
+                                'screen_name': 'thank_you',
+                                'login_method': 'email',
+                                'actions': 1,
+                                'user_status': 'registered',
+                                'registration_method': 'email'
+                            }
+                        });
+
+						onsuccess(context)
+					}else{
+						ll(r)
+					}
+				}
+				,'text')
+		})
+	}
+	function input(params) {
+		return '<div class="form-label form-css-label">'
+				+ '<fieldset class="filled">'
+					+ '<input id=' + params.id + ' type="' + params.type + '" tabindex="' + params.tabindex + '" autocomplete="off" required  />'
+					+ '<label for="' + params.id + '">' + params.label + '</label>'
+					+ (params.eyeid ? '<span id="' + params.eyeid + '" class="eye" ></span>' : '')
+					+ '<span class="errMsg"></span>'
+				+ '</fieldset>'
+			+ '</div>'
+	}
+	function setPositionForSmallScreens() {
+		if (window.innerHeight < 840 && !is_mobile) {
+			var elmnt = document.getElementsByClassName("loginContainer")[0];
+			if (elmnt != undefined) {
+				var scrollHeight = (window.pageYOffset !== undefined) ? window.pageYOffset : (document.documentElement || document.body.parentNode || document.body).scrollTop;
+				elmnt.style.top = scrollHeight + "px";
+			}
+		}
+	}
+	function showFirstCommentPopup(context) {
+		context.step_container.innerHTML = ''
+			+ '<div class="comment_title">'
+				+ 'עשינו שינוי קטן כדי שיהיה פה יותר נעים'
+			+ '</div>'
+			+ showFirstMessage()
+			+ '<p class="login-external-links">'
+				+ '<a href="/news/article.aspx?did=1001325993" target="_blank">'
+					+ ' למה צריך להזדהות '
+				+ '</a>'
+				+ ' | '
+				+ '<a href="/news/article.aspx?did=1001325990" target="_blank">'
+					+ ' תנאי הקהילה שלנו '
+				+ '</a>'
+			+ '</p>'
+			+ '<div id="continue_btn" class="btn active">המשך</div>'
+
+		qs(context,'#continue_btn').addEventListener('click', function () {
+			//try { ga('send', 'event', gaParameter3, 'Registration', 'Clicked to Signup - from login') } catch (ex) { }
+			if (context.request.mode == 2) {
+				update_details(context)
+			} else { 
+				if (context.request.mode == 1) {
+					context.request.message_selector = 'sso';
+					steps.start.show(context);
+				} else {
+				//	calling_context.container.parentNode.removeChild(calling_context.container);
+					cleaner(context)
+				}
+			}
+		})
+		setPositionForSmallScreens()
+	}
+	function showFirstMessage() {
+		if (user_id <= 0) {
+			return "<p>שיפרנו את מערכת התגובות שלנו ומעכשיו כל מגיב ומגיבה יזדהו בכינוי קבוע, כדי שנוכל ליהנות משיח ענייני, הוגן ומכבד. כדי להצטרף לקהילת המגיבים שלנו יש לבצע תהליך רישום קצר לאתר ולבחור כינוי שילווה אתכם בכל התגובות.</p>";
+		} else {
+			if (nick_name != "") {
+				return "<p>שיפרנו את מערכת התגובות שלנו ומעכשיו כל מגיב ומגיבה יזדהו בכינוי קבוע, כדי שנוכל ליהנות משיח ענייני, הוגן ומכבד. מעתה הכינוי שבחרתם ילווה אתכם בכל התגובות, ניתן לשנות את הכינוי באזור האישי.</p>";
+			} else {
+				return "<p>שיפרנו את מערכת התגובות שלנו ומעכשיו כל מגיב ומגיבה יזדהו בכינוי קבוע, כדי שנוכל ליהנות משיח ענייני, הוגן ומכבד. כדי להצטרף לקהילת המגיבים שלנו יש לבחור כינוי שילווה אתכם בכל התגובות.</p>";
+			}
+		}
+	}
+	function update_details(context) {
+		context.step_container.innerHTML = ''
+			+ "<h1 class='title_update'>" + text(context,'globes.update_details.title') + "</h1>"
+			+ "<div class='update-comment'><p>" + text(context,'globes.update_details.sub_title') + "</p></div>"
+			+ input({id:'nick_name',type: 'text',tabindex: 1, label: text(context,'globes.update_details.nick_name')})
+			+ input({id:'first_name',type: 'text',tabindex: 2,label: text(context,'globes.update_details.first_name')})
+			+ input({id:'last_name',type: 'text',tabindex: 3,label: text(context,'globes.update_details.last_name')})
+			+ '<div id="update_message" class="error_message errmsg">' + (typeof (context.request.signin_message) == 'string' ? context.request.signin_message : '') + '</div>'
+			+ '<div id="update_btn" class="btn">' + text(context,'globes.update_details.update_btn') + '</div>';
+
+		if (user_name != '') {
+			qs(context,'#first_name').value = user_name;
+			qs(context,'#first_name').parentElement.style.pointerEvents = 'none'
+		}
+		if (last_name != '') {
+			qs(context,'#last_name').value = last_name;
+			qs(context,'#last_name').parentElement.style.pointerEvents = 'none'
+		}
+		if (nick_name != '') { qs(context,'#nick_name').value = nick_name }
+
+		setPositionForSmallScreens();
+
+		submit_handler = function (context) {
+		
+			var first_name = qs(context,'#first_name').value.trim()
+			var last_name = qs(context,'#last_name').value.trim()
+			var nick_name = qs(context,'#nick_name').value.trim()
+
+			if (first_name.length > 0 && !validateNames(first_name)) {
+				qs(context,'#update_message').innerHTML = text(context,'globes.update_details.invalid_name')
+				return;
+			}
+			if (last_name.length > 0 && !validateNames(last_name)) {
+				qs(context,'#update_message').innerHTML = text(context,'globes.update_details.invalid_name')
+				return;
+			}
+			if (nick_name.length <= 0) {
+				qs(context,'#update_message').innerHTML = text(context,'globes.update_details.select_unique_nick_name')
+				return;
+			}
+
+			ajax('update-details'
+				, 'user_id=' + user_id
+				+ '&first_name=' + url_encoded(first_name)
+				+ '&last_name=' + url_encoded(last_name)
+				+ '&nick_name=' + url_encoded(nick_name)
+				, function (r) {
+					var json = eval('(' + r + ')')
+					if (is_success(json)) {
+						context.connect_response = {
+							user_id: user_id
+							, login_id: login_id
+							, email: login_id
+							, user_name: first_name
+							, last_name: last_name
+							, nick_name: nick_name
+						}
+						onsuccess(context);
+						return;
+					} else {
+						if (json.error == 'error nick name') {
+							qs(context,'#update_message').innerHTML = text(context,'globes.update_details.select_another_nick_name')
+						} else {
+							qs(context,'#update_message').innerHTML = text(context,'globes.update_details.replace_failed')
+						}
+					}
+				}
+			)
+		}
+		function checkInputs(context) {
+			if (qs(context,'#nick_name').value !== '') {
+				qs(context,'#update_btn').classList.add('active');
+				qs(context,'#update_btn').addEventListener('click', function() {submit_handler(context)})
+			} else {
+				qs(context,'#update_btn').classList.remove('active');
+				qs(context,'#update_btn').removeEventListener('click', function() {submit_handler(context)})
+			}
+		}
+		if (qs(context,'#nick_name').value === '') {
+			qs(context,'#nick_name').addEventListener('keyup', function() {checkInputs(context)})
+		} else {
+			qs(context,'#update_btn').classList.add('active');
+			qs(context,'#update_btn').addEventListener('click', function() { submit_handler(context) })
+		}
+		// document.querySelector('.loginWr').addEventListener('change', function() {checkInputs(context)})
+		
+	}
+	steps.globes.value.show = function(context,poped) {
+
+        dataLayer.push({
+            'event': 'login', 'eventInfo':
+            {
+                'screenName': location.href,
+                'user_action': 'view_sms_mail_screen',
+                'flow_name': 'sms_mail_flow',
+                'screen_name': 'login_screen_sms_mail',
+                'login_method': 'email',
+                'actions': 1
+            }
+        });
+
+		for_debuggers(context)
+		var label = text(context,'globes.value.place_holder' + (stack_value(context,'value_type') == 'new-mobile' ? '.email' : '.email_or_mobile'))
+		context.step_container.innerHTML = ''
+			+ '<h1 class=login_title>' + text(context,'globes.value.title')  + '</h1>'
+			+ '<div class="start_sub_title">' + text(context,'globes.value.sub_title') + '</div>'
+			+ (stack_value(context,'show_email') ? stack_value(context,'email') : '')
+			+ input({id:'email',type:'email',tabindex:1,label:label})
+		//	+ '<div class=\"form-label form-css-label\">'
+		//		+ '<fieldset class=\"filled\">'
+		//			+ '<input id=\"email\" type=\"email\" tabindex=\"1\" required>'
+		//			+ '<label for=\"email\">' + text(context,'globes.value.place_holder' + (stack_value(context,'value_type') == 'new-mobile' ? '.email' : '.email_or_mobile')) + '</label>'
+		//			+ '<span class=\"errMsg\"></span>'
+		//		+ '</fieldset>'
+		//	+ '</div>'
+			+ back_and_next(context,false)
+			+ social_connect(context)
+		//	+ '<p class="login_confirmation">'+ text(context,'globes.terms_conditions.confirm') + '</p>'
+			+ termsDiv(context)
+		if (poped) {qs(context,'#email').value = context.poped.value}
+		qs(context,'#email').focus();
+		qs(context,'#email').addEventListener('keyup',function(event) {
+			if (event.keyCode == 13) {
+				event.preventDefault()
+				steps.globes.value.next(context)
+			}
+		})
+        qs(context, '#nextBtn').addEventListener('click', function (event) {
+			
+			if (!use_captcha) {
+				steps.globes.value.next(context);
+				return
+			}
+
+            grecaptcha.ready(function () {
+                console.log('grecaptcha.ready 1');
+
+                grecaptcha.execute(document.getElementById("hidden_sitekey").value, { action: 'login_submit' })
+                    .then(function (token) {
+                        fetch("/news/login-2022/verifyCaptcha.ashX?token=" + token + '&host=' + location.host)
+                            .then(response => response.json())
+                            .then(data => {
+                                console.log(data)
+                                if (data.success == true && data.score > 0.1 && data.action == "login_submit") {
+                                    //success
+                                    steps.globes.value.next(context);
+                                }
+                                else {
+                                    console.log('grecaptcha Error 2212-1');
+                                    alert('Error 2212-1')
+                                }
+                            })
+                            .catch((error) => {
+                                console.error('grecaptcha Error:', error);
+                            });
+                    })
+            });
+            
+        })
+	//	qs(context,'#backBtn').addEventListener('click',function() {
+	//		stack_value(context,'back')()
+	//	})
+		qs(context,'input').value = arguments.length > 1 && poped ? context.poped.value : stack_value(context,'value',false)
+	}
+	steps.globes.value.next = function (context) {
+		var value = qs(context,'input').value.trim()
+		var value_type = stack_value(context,'value_type')
+		if (value.length == 0) {
+		//	var error_message = text(context, 'globes.value.required_parameter_missing')
+			if (value_type == 'new-email') {
+				input_error(qs(context,'#email'), text(context, 'globes.value.invalid_mail'));
+			} else {
+				input_error(qs(context,'#email'), text(context, 'globes.value.invalid_mail_or_mobile'));
+			}
+		//	var label = qs(context,'label').innerHTML
+		//	input_error(qs(context,'#email'), error_message.replace(/<label>/,label));
+		} else {
+			$.post(ajax_handler + '?get-value-type'
+			,{
+				value : value
+				,value_type : value_type
+				,os : context.request.os
+			}
+			,function(r) {
+			//	console.log(r)
+				var json = eval('(' + r + ')')
+				if (!is_success(json)) {
+					if (json.error == 'invalid-email') {
+					//	var error_message = text(context, 'globes.value.invalid_value')
+					//	var label = qs(context,'label').innerHTML
+					//	input_error(qs(context,'#email'), error_message.replace(/<label>/,label));
+						if (stack_value(context,'value_type') == 'new-mail') {
+							input_error(qs(context,'#email'), text(context, 'globes.value.invalid_mail'));
+						} else {
+							input_error(qs(context,'#email'), text(context, 'globes.value.invalid_mail_or_mobile'));
+						}
+
+						return
+					}
+					alert('ajax failed: ' + json.error)
+					return
+				}
+				var stack_object = {
+					back : function() { pop(context); steps.globes.value.show(context,true) }
+					,value : value
+					,value_type : value_type || json.value_type
+				}
+				if (stack_value(context,'edit_initial_value') == null) {
+					var stack_length = context.stack.length
+					stack_object.edit_initial_value = function() {
+						context.stack.length = stack_length + 1
+						pop(context)
+						steps.globes.value.show(context,true)
+					}
+				}
+				switch(json.value_type) {
+                    case 'login-id':
+
+                        dataLayer.push({
+                            'event': 'login',
+                            'eventInfo': {
+                                'screenName': location.href,
+                                'user_action': 'view_enter_account_screen',
+                                'flow_name': 'existing_email',
+                                'screen_name': 'enter_screen',
+                                'actions': 1
+                            }
+                        });
+						
+						stack_object.email = value
+						stack_object.has_authenticated_mobile = json.has_authenticated_mobile
+						stack_object.user_exists = true
+						stack_object.edit = true
+						context.stack.push(stack_object)
+						steps.globes.password.show(context)
+						break
+
+                    case 'authenticated-mobile':
+						
+						try { 
+							if (is_competent_iosversion(context.request.os,context.request.ver)) {
+								console.log('app.verificationScreen(' + value + ')');
+								app.verificationScreen(value)
+								return
+							}
+						} catch(e) {}
+
+                        dataLayer.push({
+                            'event': 'login', 'eventInfo':
+                            {
+                                'screenName': location.href,
+                                'user_action': 'view_enter_screen',
+                                'flow_name': 'phone_found',
+                                'screen_name': 'enter_screen',
+                                'login_method': 'sms',
+                                'actions': 1,
+                                'user_status': 'registered',
+                                'registration_method': 'sms'
+                            }
+                        });
+						
+						stack_object.mobile = value
+						stack_object.has_authenticated_mobile = true
+						stack_object.user_exists = true
+						stack_object.edit = true
+						context.stack.push(stack_object)
+						steps.globes.code.show(context)
+
+						break
+
+                    case 'new-mobile':
+
+                        dataLayer.push({
+                            'event': 'login', 'eventInfo':
+                            {
+                                'screenName': location.href,
+                                'user_action': 'new_account_details',
+                                'flow_name': 'no_phone_found',
+                                'screen_name': 'new_account_details',
+                                'login_method': 'sms ',
+                                'actions': 1
+                            }
+                        });
+						
+						try { 
+							if (false && is_competent_iosversion(context.request.os,context.request.ver)) {
+								console.log('app.verificationScreen(' + value + ')');
+								app.verificationScreen(value)
+								return
+							}
+						} catch(e) {}
+						
+						stack_object.mobile = value
+						stack_object.edit = true
+						context.stack.push(stack_object)
+						steps.globes.code.show(context)
+						break
+
+                    case 'new-email':
+
+                        dataLayer.push({
+                            'event': 'login', 'eventInfo':
+                            {
+                                'screenName': location.href,
+                                'user_action': 'starts_registration',
+                                'flow_name': 'no_email_found',
+                                'screen_name': 'account_registration',
+                                'login_method': 'email',
+                                'actions': 1
+                            }
+                        });
+						
+						stack_object.first_name = '' // value.split('@')[0]
+						stack_object.email = value
+						stack_object.edit = true
+						context.stack.push(stack_object)
+						steps.globes.registration.email.show(context)
+						break
+					default:
+						ll(r)
+				}
+			}
+			,'text'
+		)}
+	}
+	steps.globes.password.show = function(context) {
+		for_debuggers(context)
+		var email = stack_value(context,'email')
+		var mobile = stack_value(context,'mobile')
+		context.step_container.innerHTML = ''
+			+ '<h1 class=login_title>' + text(context,'globes.password.title')  + '</h1>'
+			+ '<p class=login_comment>' + (email == null ? formated_mobile(mobile) : email) + '</p>'
+			+ '<span class=login_textUnderline id=editBtn' + (stack_value(context,'edit') == false ? ' hidden' : '') + '>' + text(context,'all_steps.edit') + '</span>'
+			+ input({id:'password',type:'password',tabindex:1,label:text(context,'globes.password.place_holder.password'),eyeid:'eye1'})
+			+ '<div class=\"login_textUnderline marginM\" id="forgot_password" >' + text(context,'globes.password.forgot_password') + '</div>'
+			+ back_and_next(context,true)
+			+ (stack_value(context,'has_authenticated_mobile') ? '<div class=\"login_textUnderline center\" id="connectWithCode" >' + text(context,'globes.password.connect_with_code') + '</div>' : '')
+
+		if (stack_value(context,'has_authenticated_mobile',false)) {
+            qs(context, '#connectWithCode').addEventListener('click', function (event) {
+                steps.globes.password.send_code(context)
+
+                dataLayer.push({
+                    'event': 'login', 'eventInfo':
+                    {
+                        'screenName': location.href,
+                        'user_action': 'clicks_on_' + this.id,
+                        'click_text': this.innerText,
+                        'flow_name': 'existing_email',
+                        'screen_name': 'login_screen',
+                        'login_method': 'email',
+                        'registration_method': 'email',
+                        'user_status': 'registered',
+                        'actions': 1
+                    }
+                });
+            })
+		}
+		qs(context,'#eye1').addEventListener('click', function () { toggle_password('#password', '#eye1', context) })
+        qs(context, '#editBtn').addEventListener('click', function (event) {
+            stack_value(context, 'edit_initial_value')()
+
+            dataLayer.push({
+                'event': 'login', 'eventInfo':
+                {
+                    'screenName': location.href,
+                    'user_action': 'clicks_on_' + this.id,
+                    'click_text': this.innerText,
+                    'flow_name': 'existing_email',
+                    'screen_name': 'login_screen',
+                    'login_method': 'email',
+                    'registration_method': 'email',
+                    'user_status': 'registered',
+                    'actions': 1
+                }
+            });
+        })
+		if (stack_value(context,'edit') == true) {qs(context,'#backBtn').style.visibility = 'hidden'}
+		qs(context,'#backBtn').addEventListener('click',function(event) {stack_value(context,'back')()})
+		qs(context,'#nextBtn').innerHTML = text(context,'globes.password.next')
+		qs(context,'#nextBtn').addEventListener('click',function(event) {
+				steps.globes.password.next(context)
+		})
+		qs(context,'#forgot_password').addEventListener('click',function(event) {
+			$.post(ajax_handler + '?forgot-password'
+				,{
+				value_type : stack_value(context,'value_type')
+				,value : stack_value(context,'value',false)
+				,mobile : stack_value(context,'mobile')
+				,code : stack_value(context,'code')
+				,email : stack_value(context,'email')
+				,user : stack_value(context,'user')
+			},function(r) {
+				var json = eval('(' + r + ')')
+			//	console.log(json)
+				if (is_success(json)) {
+					    context.stack.push({
+						    recipient : json.email
+						    ,back : function() {pop(context); steps.globes.password.show(context)}
+					    })
+					    steps.globes.forgot_password.show(context)
+					    return
+				}
+				if (json.error == "email not valid") {
+                    input_error(qs(context,'#password'), text(context, 'all_steps.email_incorrect'));
+					return
+				}
+				ll(r)
+
+			}
+			,'text'
+		)
+
+		})
+		qs(context,'#password').addEventListener('keyup',function(event) {if (event.keyCode == 13) {steps.globes.password.next(context)}})
+	}
+	steps.globes.password.send_code = function(context) {
+		var value_type = stack_value(context,'value_type')
+		$.post(ajax_handler + '?send-code'
+			,{
+				value : stack_value(context,'value')
+				,value_type : value_type
+				,os : context.request.os
+			},function(r) {
+				var json = eval('(' + r + ')')
+			//	console.log(json)
+				if (is_success(json)) {
+					if (value_type == 'login-id') {context.stack.last().mobile = json.mobile}
+					steps.globes.code.show(context)
+				} else {
+					input_error(qs(context,'#password'), text(context,'globes.password.send_code_failed'));
+				}
+			}
+			,'text'
+		)
+	}
+	steps.globes.forgot_password.show = function(context) {
+		for_debuggers(context)
+		var recipient = stack_value(context,'recipient')
+		context.step_container.innerHTML = ''
+			+ '<h1 class=login_title>' + text(context,'globes.password.reset_password')  + '</h1>'
+			+ '<h2 class=login_subTitle>' 
+			+ text(context,recipient == null ? 'globes.forgot_password.fill_email' : 'globes.password.reset_password_text') + " "
+            + '</h2>'
+			+ (recipient == null 
+				? input({id:'email',type:'text',tabindex:1,label:text(context,'globes.value.place_holder.email')})
+				: '<p class=line>' + recipient + '</p>' 
+				)
+			
+			+ '<p class=login_textUnderline id="forgot_password">' + text(context,'globes.password.email_not_recived') + '</p>'
+			+ back_and_next(context,recipient != null)
+		if (recipient != null) { qs(context,'#backBtn').addEventListener('click',function(event) {stack_value(context,'back')()}) }
+        qs(context, "#nextBtn").addEventListener('click', function (event) {
+			if (recipient == null) {
+				if (qs(context,'#email').value.trim() == '') {
+					input_error(qs(context,'#email'),text(context,'globes.forgot_password.fill_email'))
+					return
+				}
+				input_error(qs(context,'#email'),null)
+				$.post(ajax_handler + '?forgot-password'
+					,{
+						value_type : 'login-id'
+						,email : qs(context,'#email').value
+					}
+					,function(r) {
+						var json = eval('(' + r + ')')
+						if (is_success(json)) {
+							recipient = json.email
+							context.stack.push({
+								value_type : 'login-id'
+								,email : json.email
+							})
+							qs(context,'#forgot_password').style.display = 'block'
+							qs(context,'#email').setAttribute('disabled',true)
+							ShowSuccess(text(context, 'globes.password.email_sent_again'));
+							return
+						}
+						input_error(qs(context,'#email'),text(context,'globes.forgot_password.send_failed'))
+						return
+					}
+					,'text'
+				)
+				return
+            }
+
+			cancel(context)
+            top.location.reload();
+		});
+		if (recipient == null) {qs(context,'#forgot_password').style.display = 'none'}
+		qs(context,'#forgot_password').addEventListener('click',function(event) {
+			if (recipient == null) { return }
+			$.post(ajax_handler + '?forgot-password'
+				,{
+					value_type : stack_value(context,'value_type')
+					,value : stack_value(context,'value',false)
+					,mobile : stack_value(context,'mobile')
+					,code : stack_value(context,'code')
+					,email : stack_value(context,'email')
+					,user : stack_value(context,'user')
+				}
+				,function(r) {
+					var json = eval('(' + r + ')')
+					if (is_success(json)) {
+						ShowSuccess(text(context, 'globes.password.email_sent_again'));
+						context.stack.push({
+							recipient : json.email
+							,back : function() {pop(context); steps.globes.password.show(context)}
+						})
+						return
+					}
+					if (json.error == "email not valid") {
+						return
+					}
+				}
+				,'text'
+			)
+		})
+	}
+	steps.globes.password.next = function(context) {
+		var email = qs(context,'#email') ? qs(context,'#email').value : ''
+		var password = qs(context,'#password')
+		if (password.value.trim().length == 0) {
+			input_error(password,text(context,'globes.password.cannot_be_empty'))
+			return
+		}
+		
+		if (!use_captcha) {
+			next_body(context)
+			return
+		}
+		
+		function next_body() {
+			var post_body = {
+					value_type : stack_value(context,'value_type')
+					,value : stack_value(context,'value',false)
+					,mobile : stack_value(context,'mobile')
+					,code : stack_value(context,'code')
+					,email : stack_value(context,'email')
+					,user : stack_value(context,'user')
+					,password : password.value.trim()
+					,lead_id : context.request.lead_id > 0 ? context.request.lead_id : 0
+				}
+			if (post_body.value == null && post_body.value_type == 'authenticated-mobile' && post_body.mobile != null) {post_body.value = post_body.mobile}
+			$.post(ajax_handler + '?connect-with-password',post_body,function(r) {
+					console.log(r)
+					var json = eval('(' + r + ')')
+					if (is_success(json)) {
+						if( email != null ){
+							dataLayer.push({
+								'event': 'login', 'eventInfo': {
+									'screenName': location.href,
+									'user_action': 'finish_registration',
+									'flow_name': 'no_email_found',
+									'screen_name': 'thank_you',
+									'login_method': 'email',
+									'actions': 1,
+									'user_status': 'registered',
+									'registration_method': 'email'
+								}
+							});
+						} else {
+							dataLayer.push({
+								'event': 'login', 'eventInfo':
+								{
+									'screenName': location.href,
+									'user_action': 'finish_login',
+									'flow_name': 'phone_found',
+									'screen_name': 'thank_you',
+									'login_method': 'sms',
+									'actions': 1,
+									'user_status': 'registered',
+									'registration_method': 'sms'
+								}
+							});						 
+						}
+						context.connect_response = json
+						var ignoreValidated = context.request.ignoreValidated == true
+						if (!ignoreValidated && json.validation_required == true) {
+							context.stack.push({validation_required:true})
+							steps.globes.email_verification.show(context)
+							return
+						}
+					//	alert(r)
+						if (stack_value(context,'value_type') == 'new-mobile') {
+							if (stack_value(context,'ask_to_update')) {
+								steps.globes.update.show(context)
+							} else {
+								steps.globes.phone_added.show(context)
+
+								dataLayer.push({
+									'event': 'login', 'eventInfo':
+									{
+										'screenName': location.href,
+										'user_action': 'view_phone_updated',
+										'flow_name': 'no_phone_found',
+										'screen_name': 'view_phone_updated',
+										'login_method': 'sms',
+										'actions': 1
+									}
+								});
+							}
+							return
+						}
+						onsuccess.connect_response = json
+						onsuccess(context)
+					} else {
+						input_error(qs(context,'#password'), text(context,'globes.password.signin_failed'));
+					}
+				},'text'
+			);                                        
+			
+		}
+
+		grecaptcha.ready(function () {
+	 
+	                console.log('grecaptcha.ready 2');
+
+                    grecaptcha.execute(document.getElementById("hidden_sitekey").value, { action: 'login_submit' })
+                        .then(function (token) {
+                            fetch("/news/login-2022/verifyCaptcha.ashx?token=" + token + '&host=' + location.host)
+                                .then(response => response.json())
+                                .then(data => {
+                                    console.log(data)
+                                    if (data.success == true && data.score > 0.1 && data.action == "login_submit") {
+										next_body()
+                                    } else {
+                                        console.log('grecaptcha Error 2212-1');
+                                        alert('Error 2212-1')
+                                    }
+                                })
+                                .catch((error) => {
+                                    console.error('grecaptcha Error:', error);
+                                });
+                        })
+                });
+	
+	}
+
+	steps.globes.update.show = function(context,poped) {
+		for_debuggers(context)
+		context.step_container.innerHTML = ''
+			+ '<h1 class=login_title>' + text(context,'globes.update.title')  + '</h1>'
+			+ back_and_next(context,true)
+			+ '<p class="login_textUnderline center" id="editAccount">' + text(context,'globes.update.sub_title')  + '</p>'
+        qs(context, '#nextBtn').addEventListener('click', function (event) {cancel(context)})
+		qs(context,'#backBtn').addEventListener('click',function() {
+			stack_value(context,'back')()
+		})
+		qs(context,'#editAccount').addEventListener('click',function() {
+			window.location.href = '/news/personal_zone/manageaccount.aspx';
+		})
+		qs(context,'input').value = arguments.length > 1 && poped
+			? context.poped.value
+			: stack_value(context,'value',false)
+	}
+
+
+	function get_is_purchase(context) {
+	//	alert('context.request.message_selector: ' + context.request.message_selector)
+
+        //ll("get_is_purchase: " + context.request.message_selector);
+
+
+		return typeof(context.request.message_selector) == 'string'
+			&& context.request.message_selector.match(/purchase|event/)
+	}
+	steps.globes.registration.email.show = function(context,poped) {
+		if(value_type == "new-email") {
+            dataLayer.push({
+                'event': 'login', 'eventInfo':
+                {
+                    'screenName': location.href,
+                    'user_action': 'starts_registration',
+                    'flow_name': 'no_email_found',
+                    'screen_name': 'account_registration',
+                    'login_method': 'email',
+                    'actions': 1
+                }
+            });
+		} else {
+            dataLayer.push({
+                'event': 'login', 'eventInfo':
+                {
+                    'screenName': location.href,
+                    'user_action': 'new_account_details',
+                    'flow_name': 'no_phone_found',
+                    'screen_name': 'new_account_details',
+                    'login_method': 'sms ',
+                    'actions': 1
+                }
+            });
+		}
+		for_debuggers(context)
+		var value_type = stack_value(context, 'value_type');
+		var is_purchase = get_is_purchase(context)
+		context.step_container.innerHTML = ''
+			+ '<h1 class=login_title>' + text(context,'globes.registration.email.title')  + '</h1>'
+			+ '<h2 class=login_subTitle>' + text(context,'globes.registration.email.sub_title')  + '</h2>'
+			+ (value_type == "new-mobile" ? '<span class=login_comment id=mobile>' +  stack_value(context,'mobile') + '</span>' : '')
+			+ (value_type == "new-email" ? '<span class=login_comment >' + stack_value(context,'email') + '</span>' : '')
+			+ '<span class=login_textUnderline id=editBtn>' + text(context,'all_steps.edit') + '</span>'
+			+ input({id:'first_name',type:'text',tabindex:1,label:text(context,'globes.registration.place_holder.first_name')})
+			+ input({id:'last_name',type:'text',tabindex:2,label:text(context,'globes.registration.place_holder.last_name')})
+			+ (value_type == "new-mobile" 
+				? input({id:'email',type:'email',label:text(context,'globes.registration.place_holder.email')})
+				: ''
+			)
+			+ back_and_next(context,true)
+
+		var mobile_container = qs(context,'#mobile')
+		if (mobile_container && stack_value(context,'value').match(/^0\d{9}$/)) {
+			mobile_container.innerHTML = stack_value(context,'value').replace(/(\d{3})(\d{3})(\d{2})(\d{2})/,"$1-$2-$3-$4")
+		}
+		if (arguments.length > 1 && poped) {
+		//	debugger
+			qs(context,'#first_name').value = context.poped.first_name
+			qs(context,'#last_name').value = context.poped.last_name
+			if (qs(context,'#email')) { qs(context,'#email').value = context.poped.email }
+
+		} else {
+			qs(context,'#first_name').value = stack_value(context,'first_name',false)
+			qs(context,'#last_name').value = stack_value(context,'last_name',false)
+			if (qs(context,'#email')) {qs(context,'#email').value = stack_value(context,'email',false)}
+		}
+		if (is_purchase) {
+		//	debugger
+			document.getElementById('first_name').value = ''
+			document.getElementById('first_name').parentElement.parentElement.style.display = 'none'
+			document.getElementById('last_name').parentElement.parentElement.style.display = 'none'
+			if (qs(context,'#email') == null) {
+				context.stack.push({
+					first_name : ''
+					,last_name : ''
+					,back : function() {pop(context); stack_value(context,'back')()}
+				})
+				steps.globes.registration.password.show(context)
+				return
+			}
+		}
+		qs(context,'#editBtn').addEventListener('click',function(event) {stack_value(context,'edit_initial_value')()})
+		qs(context,'#backBtn').addEventListener('click',function(event) {stack_value(context,'back')()})
+		qs(context,'#nextBtn').addEventListener('click',function(event) {
+			var first_name = qs(context,'#first_name')
+			var last_name = qs(context,'#last_name')
+			input_error(first_name, null);
+			input_error(last_name, null);
+			var errors_found = false
+			var email = qs(context,'#email')
+			if (!is_purchase) {
+				if(first_name.value.length == 0  || !validateNames(first_name.value)) {
+					input_error(qs(context,'#first_name'), text(context,'all_steps.first_name_incorrect'));
+					errors_found = true
+				}
+				if (last_name.value.trim().length > 0) {
+					if(!validateNames(last_name.value)) {
+						input_error(qs(context,'#last_name'), text(context,'all_steps.last_name_incorrect'));
+						errors_found = true
+					}
+				}
+			}
+			if(email != null && email.value.length == 0) {
+				input_error(qs(context,'#email'), text(context,'all_steps.email_incorrect'));
+				errors_found = true
+			}
+			if(!errors_found) {
+				if (email != null) {
+					$.post(ajax_handler + '?email-examination'
+					,{email : email.value}
+					,function(r) {
+						var json = eval('(' + r + ')')
+					//	console.log(json)
+						if (is_success(json)) {
+							var obj = {
+								first_name : qs(context,'#first_name').value
+								,last_name : qs(context,'#last_name').value
+								,back : function() {pop(context); steps.globes.registration.email.show(context,true)}
+							}
+							if (qs(context,'#email')) {obj.email = qs(context,'#email').value}
+							context.stack.push(obj)
+							steps.globes.registration.password.show(context)
+						} else {
+							if (json.error == 'invalid-email') {
+								input_error(qs(context,'#email'), text(context,'globes.registration.invalid_email'));
+								return
+							}
+							if (json.error == 'email-exists') {
+								input_error(qs(context,'#email'), text(context,'globes.registration.email_exists'));
+								qs(context,'#connect').addEventListener('click'
+									,function() {
+										context.stack.push({
+											back : function() {pop(context); steps.globes.registration.email.show(context,true)}
+											,first_name : qs(context,'#first_name').value
+											,last_name : qs(context,'#last_name').value
+											,email : qs(context,'#email').value
+											,ask_to_update : true
+										})
+										steps.globes.password.show(context)
+									}
+								)
+								return
+							} else {
+								input_error(qs(context,'#email'), text(context,'globes.registration.invalid_email'));
+							}
+						}
+					}
+					,'text')
+				} else {
+					context.stack.push({
+						back : function() {pop(context); steps.globes.registration.email.show(context,true)}
+						,first_name : qs(context,'#first_name').value
+						,last_name : qs(context,'#last_name').value
+					})
+					steps.globes.registration.password.show(context)
+				}
+			}
+		})
+	}
+	function password_error(context,input,r) {
+		if (r == true) {input_error(input, null); return false}
+		if (r.not_too_short == false) {
+			input_error(input, text(context,'globes.registration.password_too_short'));
+			return true
+		}
+		if (r.contains_digits == false) {
+			input_error(input, text(context,'globes.registration.password_does_not_contain_digits'));
+			return true
+		}
+		if (r.contains_letters == false) {
+			input_error(input, text(context,'globes.registration.password_does_not_contain_letters'));
+			return true
+		}
+		input_error(input,text(context,'globes.registration.password.under_the_password'))
+		return true
+	}
+	steps.globes.registration.password.show = function(context) {
+		for_debuggers(context)
+		var mobile = stack_value(context,'mobile')
+		if (mobile == null) {
+            dataLayer.push({
+                'event': 'login', 'eventInfo': {
+                    'screenName': location.href,
+                    'user_action': 'choose_password',
+                    'flow_name': 'no_email_found',
+                    'screen_name': 'set_password',
+                    'login_method': 'email',
+                    'actions': 1
+                }
+            });
+		} else {
+            dataLayer.push({
+                'event': 'login', 'eventInfo':
+                {
+                    'screenName': location.href,
+                    'user_action': 'choose_password',
+                    'flow_name': 'no_phone_found',
+                    'screen_name': 'choose_password',
+                    'login_method': 'sms',
+                    'actions': 1
+                }
+            });
+		}
+		context.step_container.innerHTML = ''
+			+ '<h1 class=login_title>' + text(context,'globes.registration.password.title')  + '</h1>'
+			+ input({id:'password',type:'password',tabindex:1,eyeid:'eye1',label:text(context,'all_steps.password')})
+			+ '<h2 id="under_the_password" class="login_subTitle font14">' + text(context,'globes.registration.password.under_the_password')  + '</h2>'
+			+ input({id:'password2',type:'password',tabindex:2,eyeid:'eye2',label:text(context,'all_steps.password_verification')})
+			+ termsDiv(context,{checkboxes:true})
+			
+			+ back_and_next(context,true)
+			+ '<div id=\"loader\" style=\"display:none\"></div>'
+		
+		qs(context,'#eye1').addEventListener('click', function () { toggle_password('#password', '#eye1', context) })
+		qs(context,'#eye2').addEventListener('click', function () { toggle_password('#password2','#eye2', context) })
+		qs(context,'#nextBtn').innerHTML = text(context, 'globes.registration.password.next');
+		qs(context,'#backBtn').addEventListener('click',function(event) {
+			stack_value(context,'back')()
+		})
+		qs(context,'#password').addEventListener('keyup',function(event) {
+			qs(context,'#under_the_password').style.display = 'none'
+			password_error(context,this,is_valid_password(this.value))
+		})
+		qs(context,'#password2').addEventListener('keyup',function(event) {
+			input_error(this,this.value != qs(context,'#password').value ? text(context,'globes.registration.password_not_equals_password2') : null)
+		})
+		qs(context,'#nextBtn').addEventListener('click',function(event) {
+			input_error(qs(context,'#password'), null);
+			input_error(qs(context,'#password2'), null);
+			var r = is_valid_password(qs(context,'#password').value)
+			var errors_found = false
+			if (r != true) {
+				if (r.not_too_short == false) {
+					errors_found = true
+					input_error(qs(context,'#password'), text(context,'globes.registration.password_too_short'));
+				}
+				if (r.contains_digits == false) {
+					errors_found = true
+					input_error(qs(context,'#password'), text(context,'globes.registration.password_does_not_contain_digits'));
+				}
+				if (r.contains_letters == false) {
+					errors_found = true
+					input_error(qs(context,'#password'), text(context,'globes.registration.password_does_not_contain_letters'));
+				}
+			}
+			if (qs(context,'#password').value != qs(context,'#password2').value) {
+				errors_found = true
+				input_error(qs(context,'#password2'), text(context,'globes.registration.password_not_equals_password2'));
+			}
+			var cb_information = qs(context,'#cb_information').checked
+			if (!cb_information) {
+				errors_found = true
+				information_error(context, text(context,'globes.terms_conditions.cb_information_must_be_checked'));
+			}
+			if (errors_found) {
+				return
+			}else{
+				qs(context,'#loader').style.display = "block"
+			}
+			$.post(ajax_handler + '?register'
+				,{
+					first_name : stack_value(context,'first_name')
+					,last_name : stack_value(context,'last_name')
+					,email : stack_value(context,'email')
+					,password : qs(context,'#password').value
+					,mobile : stack_value(context,'mobile')
+					,code : stack_value(context,'code')
+					,value_type : stack_value(context,'value_type')
+					,language : context.request.language
+					,cb_marketing : qs(context,'#cb_markting').checked
+                    ,cb_information: cb_information
+                    , pianoParamC: context.request.pianoParamC ?? ''
+                    , pianoParamD: context.request.pianoParamD?.action ?? ''
+					
+				}
+				,function(r) {
+					var json = eval('(' + r + ')')
+				//	console.log(json)
+					if (is_success(json)) {
+						if (mobile == null) {
+                            dataLayer.push({
+                                'event': 'login', 'eventInfo': {
+                                    'screenName': location.href,
+                                    'user_action': 'finish_registration',
+                                    'flow_name': 'no_email_found',
+                                    'screen_name': 'thank_you',
+                                    'login_method': 'email',
+                                    'actions': 1,
+                                    'user_status': 'registered',
+                                    'registration_method': 'email'
+                                }
+                            });
+						} else {
+                            dataLayer.push({
+                                'event': 'login', 'eventInfo':
+                                {
+                                    'screenName': location.href,
+                                    'user_action': 'finish_registration',
+                                    'flow_name': 'no_phone_found',
+                                    'screen_name': 'thank_you',
+                                    'login_method': 'sms',
+                                    'actions': 1, 
+                                    'user_status': 'registered',
+                                    'registration_method': 'sms'
+                                }
+                            });
+						}
+                        context.connect_response = json
+
+						if (get_is_purchase(context)) {
+							onsuccess(context)
+                        } else {                          
+							context.stack.push({validation_required:json.validation_required})
+							steps.globes.email_verification.show(context)
+							return
+						}
+					}else{
+						ll(r)
+					}
+				}
+				,'text')
+		})
+
+	}
+	/*
+	function email_available(context) {
+		$.post(ajax_handler + '?email-available',{
+				email : stack_value(context,'email')
+				,value_type : stack_value(context,'value_type')
+				,password : password
+			},function(r) {
+				var json = eval('(' + r + ')')
+			//	console.log(context.json)
+				if (is_success(json)) {
+					onsuccess(context,json)
+				} else {
+					//show_error(context,'connect_with_password.signin_failed')
+					input_error(qs(context,'#password'), text(context,'connect_with_password.signin_failed'));
+				}
+			},'text'
+		)
+	}
+	*/
+	function ShowSuccess(msg) {
+		const para = document.createElement("p");
+		para.setAttribute('id','LoginSuccessMsg');
+		const node = document.createTextNode(msg);
+		para.appendChild(node);
+		const element = document.getElementById("ContainerLogin");
+		element.appendChild(para);
+		setTimeout(function() {
+			element.removeChild(para)
+		}, 2000);
+	}
+    function toggle_password(passwordid, eyeid, context) {
+            var password = qs(context, passwordid)
+            var eye = qs(context, eyeid)
+            var password_type = password.getAttribute('type')
+            if (password_type == 'password') {
+                password.setAttribute('type', 'text')
+                eye.classList.add('show')
+            } else {
+                password.setAttribute('type', 'password')
+                eye.classList.remove('show')
+            }
+    }
+	steps.globes.email_verification.show = function(context) {
+		var mobile = stack_value(context,'mobile')
+		if (mobile == null) {
+            dataLayer.push(
+                {
+                    'event': 'login', 'eventInfo':
+                    {
+                        'screenName': location.href,
+                        'user_action': 'email_verification',
+                        'flow_name': 'no_email_found',
+                        'screen_name': 'email_verification',
+                        'login_method': 'email',
+                        'actions': 1
+                    }
+                });
+		} else {
+            dataLayer.push({
+                'event': 'login', 'eventInfo':
+                {
+                    'screenName': location.href,
+                    'user_action': 'mail_verification',
+                    'flow_name': 'no_phone_found',
+                    'screen_name': 'mail_verification',
+                    'login_method': 'sms',
+                    'actions': 1
+                }
+            });
+		}
+		for_debuggers(context)
+		var value_type = stack_value(context, 'value_type')
+		context.step_container.innerHTML = '<!-- email_verification -->'
+			+ '<h1 class=login_title>' + (stack_value(context,'validation_required') ==  false ? text(context,'globes.email_verification.title') : text(context,'globes.validation_required.title'))  + '</h1>'
+			+ '<h2 class=login_subTitle>'+ (stack_value(context,'validation_required') ==  false ? text(context,'globes.email_verification.sub_title') : text(context,'globes.validation_required.sub_title')) + " "
+			+  stack_value(context,'email') + '</h2>'
+			+ '<p id=resend_email class=login_textUnderline>' + text(context,'globes.email_verification.email_not_received') + '</p>'
+			+ back_and_next(context,false)
+			+ '<p class=\"font14 center\">' + text(context,'globes.email_verification.wrong_email')  + '</p>'
+
+		qs(context, "#resend_email")
+			.addEventListener('click'
+            , function (event) {
+
+                dataLayer.push({
+                    'event': 'login', 'eventInfo':
+                    {
+                        'screenName': location.href,
+                        'user_action': 'clicks_on_' + this.id,
+                        'click_text': this.innerText,
+                        'flow_name': 'no_email_found',
+                        'screen_name': 'email_verification',
+                        'login_method': 'email',
+                        'actions': 1
+                    }
+                });
+
+					$.post(ajax_handler + '?resend-email',{}
+						,function(r) {
+						//	console.log(r)
+							var json = eval('(' + r + ')')
+							if (!is_success(json)) {
+								if (json.error == 'invalid-email') {
+									return
+								}
+								alert('ajax failed: ' + json.error)
+								return
+							}
+							//alert(r)
+							ShowSuccess(text(context, 'globes.password.email_sent_again'));
+						},'text')
+				}
+			)
+		qs(context, "#nextBtn").innerHTML = stack_value(context,'validation_required') ==  false ? text(context, 'globes.email_verification.next') : text(context,'globes.validation_required.next');
+		if (value_type == 'new-email') {qs(context, "#nextBtn").innerHTML = text(context, 'globes.email_verification.next_with_continue')}
+		if (value_type == 'new-mobile') {qs(context, "#nextBtn").innerHTML = text(context, 'globes.email_verification.next_with_end')}
+        qs(context, "#nextBtn").addEventListener('click', function (event) {
+
+            dataLayer.push({
+                'event': 'login', 'eventInfo':
+                {
+                    'screenName': location.href,
+                    'user_action': 'clicks_on_' + this.id,
+                    'click_text': this.innerText,
+                    'flow_name': 'no_email_found',
+                    'screen_name': 'email_verification',
+                    'login_method': 'email',
+                    'actions': 1
+                }
+            });
+				value_type == "new-email"
+					? steps.globes.connect_phone.show(context)
+					: onsuccess(context)
+		});
+        qs(context,'#editAccount').addEventListener('click',function() {
+			window.location.href = '/news/personal_zone/manageaccount.aspx';
+		})
+	}
+
+    steps.globes.connect_phone.show = function (context) {
+
+        dataLayer.push({
+            'event': 'login', 'eventInfo':
+            {
+                'screenName': location.href,
+                'user_action': 'clicks_on_next',
+                'flow_name': 'no_email_found',
+                'screen_name': 'next_time',
+                'login_method': 'email',
+                'actions': 1
+            }
+        });
+		
+		for_debuggers(context)
+		context.step_container.innerHTML = ''
+			+ '<h1 class=login_title>' + text(context,'globes.connect_phone.title')  + '</h1>'
+			+ '<h2 class=login_subTitle>' + text(context,'globes.connect_phone.sub_title') + '</h2>'
+			+ back_and_next(context,false)
+			+ '<p class=\"login_textUnderline center\" id="loginCloseWindow\">' + text(context,'globes.connect_phone.close') + '</p>'
+		qs(context, "#nextBtn").innerHTML = text(context, 'globes.connect_phone.next');
+        qs(context, "#nextBtn").addEventListener('click', function (event) {
+
+            dataLayer.push({
+                'event': 'login', 'eventInfo':
+                {
+                    'screenName': location.href,
+                    'user_action': 'clicks_on_' + this.id,
+                    'click_text': this.innerText,
+                    'flow_name': 'no_email_found',
+                    'screen_name': 'email_verification',
+                    'login_method': 'email',
+                    'actions': 1
+                }
+            });
+					context.stack.push({
+						value_type : 'new-mobile-for-connected-user'
+						,back : function() {pop(context); steps.globes.connect_phone.show(context)}
+					})
+					steps.globes.connect_phone_add.show(context)
+				}
+			)
+        qs(context, '#loginCloseWindow').addEventListener('click', function (event) {
+
+            dataLayer.push({
+                'event': 'login', 'eventInfo':
+                {
+                    'screenName': location.href,
+                    'user_action': 'clicks_on_' + this.id,
+                    'click_text': this.innerText,
+                    'flow_name': 'no_email_found',
+                    'screen_name': 'email_verification',
+                    'login_method': 'email',
+                    'actions': 1
+                }
+            });
+			// cancel(context)
+            onsuccess(context)
+
+            dataLayer.push({
+                'event': 'login', 'eventInfo': {
+                    'screenName': location.href,
+                    'user_action': 'finish_registration',
+                    'flow_name': 'no_email_found',
+                    'screen_name': 'thank_you',
+                    'login_method': 'email',
+                    'actions': 1,
+                    'user_status': 'registered',
+                    'registration_method': 'email'
+                }
+            });
+			
+		})
+	}
+    steps.globes.connect_phone_add.show = function (context, poped) {
+
+        dataLayer.push({
+            'event': 'login', 'eventInfo': {
+                'screenName': location.href,
+                'user_action': 'view_sms_mail_screen',
+                'flow_name': 'no_email_found',
+                'screen_name': 'login_screen_sms_mail',
+                'login_method': 'email',
+                'actions': 1
+            }
+        });
+		
+		for_debuggers(context)
+		context.step_container.innerHTML = ''
+			+ '<h1 class=login_title>' + text(context,'globes.connect_phone.add.title')  + '</h1>'
+			+ input({id:'phone',type:'tel',tabindex:1,label:text(context,'globes.connect_phone.add.placeholder')})
+			+ back_and_next(context,true)
+		if (arguments.length > 1 && poped) {qs(context,'#phone').value = context.poped.mobile}
+		qs(context,'#backBtn').addEventListener('click',function(event) {stack_value(context,'back')()})
+		qs(context,"#nextBtn").addEventListener('click',function(event) {
+			var phone = qs(context,'#phone').value
+			if (!IsPhoneNumber(phone)) {
+				input_error(qs(context,'#phone'), text(context,'globes.connect_phone.add.invalid_phone'));
+				return
+			}
+			$.post(ajax_handler + '?send-code'
+				,{
+					value_type : stack_value(context,'value_type')
+					,value : phone
+					,mobile : phone
+				}
+				,function(r) {
+				//	console.log(r)
+					var json = eval('(' + r + ')')
+					if (!is_success(json)) {
+						if (json.error == 'invalid-email') {
+							input_error(qs(context,'#phone'), text(context,'globes.connect_phone.add.invalid_phone'));
+							return
+						}
+						alert('ajax failed: ' + json.error)
+						return
+					}
+					context.stack.push({
+						value : phone
+						,mobile : phone
+						,back : function() {pop(context); steps.globes.connect_phone_add.show(context,true)}
+						,edit_initial_value : function() {stack_value(context,'back')()}
+					})
+					steps.globes.code.show(context)
+				}
+				,'text')
+		});
+}
+steps.globes.phone_added.show = function(context) {
+
+    dataLayer.push({
+        'event': 'login', 'eventInfo': {
+            'screenName': location.href,
+            'user_action': 'phone_login_next_time',
+            'flow_name': 'no_email_found',
+            'screen_name': 'phone_login_next_time',
+            'login_method': 'email',
+            'actions': 1
+        }
+    });
+
+		for_debuggers(context)
+		context.step_container.innerHTML = ''
+			+ '<h1 class=login_title>' + text(context,'globes.connect_phone.success.title')  + '</h1>'
+			+ '<h2 class=login_subTitle>' + text(context,'globes.connect_phone.success.sub_title') + '</h2>'
+			+ back_and_next(context,false)
+
+		qs(context, "#nextBtn").innerHTML = text(context, 'globes.connect_phone.success.next');
+    qs(context, "#nextBtn").addEventListener('click', function (event) {
+
+        var value_type = stack_value(context, 'value_type');
+
+        ll("cancel 3 cancel 3 cancel 3 cancel: " + value_type);
+
+        if (typeof (isApp) != "undefined" && isApp && value_type == "new-mobile-for-connected-user") {
+                ll(context.connect_response);
+       }
+
+       onsuccess(context);
+      // cancel(context)
+
+        dataLayer.push({
+            'event': 'login', 'eventInfo':
+            {
+                'screenName': location.href,
+                'user_action': 'finish_registration',
+                'flow_name': 'no_phone_found',
+                'screen_name': 'thank_you',
+                'login_method': 'sms',
+                'actions': 1
+            }
+        });			
+		});
+	}
+	function IsPhoneNumber(phone) {
+		var regex = /^05\d[1-9]\d{6}$/ /// /^[0-9\.\s\.\-]{7,15}$/;
+		return regex.test(phone)
+	}
+    steps.globes.code.show = function (context) {
+
+        dataLayer.push({
+            'event': 'login', 'eventInfo':
+            {
+                'screenName': location.href,
+                'user_action': 'view_sms_verification_screen',
+                'flow_name': 'no_email_found',
+                'screen_name': 'sms_verification',
+                'login_method': 'sms',
+                'actions': 1
+            }
+        });
+		
+		for_debuggers(context)
+		var value_type = stack_value(context, 'value_type');
+		context.step_container.innerHTML = ''
+			+ '<h1 class=login_title>' + ((value_type == 'new-mobile') ? text(context,'globes.registration.email.title') : text(context,'globes.code.title')) + '</h1>'
+		//	+ '<p class=login_comment>' + (email == null ? formated_mobile(mobile) : email) + '</p>'
+
+			+ '<h1 class=\"login_title inlineBlock\">' + (value_type.match(/mobile/) ? '<span class=ltrStyle>' + formated_mobile(stack_value(context,'mobile')) + '</span>'  : stack_value(context,'email'))  + '</h1>'
+			+ (stack_value(context,'edit') == true ? '<span class=login_textUnderline id=editBtn>' + text(context,'all_steps.edit') + '</span>' : '')
+			
+			+ '<h2 class=login_subTitle>' + text(context,'globes.code.sub_title')  + '</h2>'
+			+ '<div class=\"form-label form-css-label\">'
+			+ '<fieldset class=\"filled login_code\">'
+			+ '<input id=d1 class=login_code_input maxlength="4" inputmode="numeric" autocomplete="off"  value="">'
+			+ '<input id=d2 class=login_code_input maxlength="1" inputmode="numeric" autocomplete="off"  value="">'
+			+ '<input id=d3 class=login_code_input maxlength="1" inputmode="numeric" autocomplete="off"  value="">'
+			+ '<input id=d4 class=login_code_input maxlength="1" inputmode="numeric" autocomplete="off"  value="">'
+            //+ '<input id=fgt type="text" style="width: 200px" name="auth-token inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autofocus />'
+			+ '<span class=\"errMsg\"></span>'
+			+ '</fieldset>'
+			+  '</div>'
+			+ '<p id=resend_code class=login_textUnderline>' + text(context,'globes.code.code_not_received') + '</p>'
+			+ back_and_next(context,true)
+			+ (stack_value(context,'user_exists') ? '<div class=\"login_textUnderline center\" id=\"connectWithPassword\" >' + text(context,'globes.code.connect_with_password') + '</div>' : '')
+			+ '<div class=\"center font14\" id="costumer_service" style=\"display:none\">' + text(context,'globes.code.customer_service')  + '</div>'
+		$(qs(context,'.login_code')).find('input').on('keyup',function(event) {steps.globes.code.keyup(context,event)})
+		var cwpBtn = qs(context,'#connectWithPassword')
+		qs(context,'#editBtn').addEventListener('click',function(event) {stack_value(context,'edit_initial_value')()})
+		if (cwpBtn) {
+			cwpBtn.addEventListener('click',function(event) {
+                dataLayer.push({
+                    'event': 'login', 'eventInfo':
+                    {
+                        'screenName': location.href,
+                        'user_action': 'view_enter_screen',
+                        'flow_name': 'phone_found',
+                        'screen_name': 'enter_screen',
+                        'login_method': 'sms',
+                        'actions': 1
+                    }
+                });
+				steps.globes.password.show(context)
+			})
+		}
+		if (stack_value(context,'edit') == true) {qs(context,'#backBtn').style.visibility = 'hidden'}
+		qs(context,'#backBtn').addEventListener('click',function(event) {stack_value(context,'back')()})
+		qs(context,'#nextBtn').innerHTML = (value_type == "new-mobile-for-connected-user" || "new-mobile" ? text(context, 'all_steps.next.he') : text(context, 'globes.code.title'))
+		qs(context,'#nextBtn').addEventListener('click',function(event) {steps.globes.code.next(context,event)})
+        qs(context,'#d1').focus()
+        var inputs = document.querySelectorAll(".login_code_input");
+        inputs.forEach((input, key) => {
+         
+          input.addEventListener("keyup", function (e) {
+            if(e.keyCode !== 8){
+                if (input.value) {
+                      if (key !== 3) {                       
+                        inputs[key + 1].focus();
+                      }
+                }
+           }else{
+              if(key => 1){
+                inputs[key - 1].focus();
+              }
+           }
+          });
+        });
+
+        
+        
+		qs(context,'#resend_code').addEventListener('click',function(event) {
+		$.post(ajax_handler + '?resend-code'
+			,{
+				value : stack_value(context,'value')
+				,value_type : stack_value(context,'value_type')
+			},function(r) {
+				var json = eval('(' + r + ')')
+				if (is_success(json)) {
+                    //qs(context,'#resend_code').innerHTML += json.counter
+					if (json.counter > 2){
+						qs(context,'#costumer_service').style.display = 'block'
+						var cslink =  qs(context,'#csLink')
+						if(cslink) {qs(context,'#csLink').addEventListener('click',function(event) {window.location.href = '/news/client_service/clients_service.aspx'})}
+					}else{
+						ShowSuccess(text(context, 'globes.code.code_sent_again'))
+					}
+				} else {
+					alert('failed to resend')
+				}
+				context.stack.push({
+						back : function() {pop(context); steps.globes.code.show(context)}
+				})
+			}
+			,'text')
+		})
+
+	
+	}
+	steps.globes.code.keyup = function(context,event) {
+		if (event.keyCode == 13) {steps.globes.code.next(context,event)}
+		if (/[0-9]/.test(event.key)) {
+			var next = 1 + parseInt(event.target.id.substring(1))
+			var input = qs(context,(next == 5 ? '#nextBtn' : '#d' + next))
+			console.log(input)
+		//	alert(input.id)
+			input.focus()
+		}
+	}
+    steps.globes.code.next = function (context, event) {
+
+		event.preventDefault()
+		var code = ''
+		for(var i=1; i < 5 ;i++) { code += qs(context,'#d' + i).value }
+		if (!code.match(/\d{4}/)) {
+			input_error(qs(context,'#d1'), text(context,'globes.code.invalid_code'));
+			return
+		}
+		var value_type = stack_value(context,'value_type')
+		if (value_type == 'new-mobile-for-connected-user') {
+			$.post(ajax_handler + '?add-mobile'
+				,{mobile : stack_value(context,'mobile') , code : code }
+				,function (r) {
+					console.log(r)
+					var json = eval('(' + r + ')')
+					if (is_success(json)) {
+                        steps.globes.phone_added.show(context)
+
+                        ll("success: new-mobile-for-connected-user");
+					//	alert('success')
+					} else {
+						ll(r)
+					}
+				}
+				,'text')
+			return
+		}
+		var fd = [] // new FormData()
+		fd.push('value_type=' + value_type)
+		fd.push('value=' + stack_value(context,'value'))
+		fd.push('mobile=' + isnull(stack_value(context,'mobile'),''))
+		fd.push('email=' + isnull(stack_value(context,'email'),''))
+		fd.push('code=' + code)
+		fd.push('lead_id=' + (context.request.lead_id > 0 ? context.request.lead_id : 0))
+		var response_handler = function(rt) {
+		var json = eval('(' + rt + ')')
+		//	console.log(json)
+			if (is_success(json)) {
+				switch(value_type)
+				{
+					case 'new-mobile-for-connected-user':
+						steps.globes.phone_added.show(context)
+						break
+					case 'new-mobile':
+						context.stack.push({
+							back : function() {pop(context); stack_value(context,'back')()}
+							,code : code
+							,emails : json.emails.split(';').filter(e => e.match(/[a-z]/i))
+						})
+						steps.globes.mail_list.show(context)
+						break
+					default:
+
+                        dataLayer.push({
+                            'event': 'login', 'eventInfo':
+                            {
+                                'screenName': location.href,
+                                'user_action': 'finish_login',
+                                'flow_name': 'phone_found',
+                                'screen_name': 'thank_you',
+                                'login_method': 'sms',
+                                'actions': 1, 'user_status': 'registered',
+                                'registration_method': 'sms'
+                            }
+                        });
+
+						context.connect_response = json
+						onsuccess(context)
+						break
+				}
+			} else {
+				input_error(qs(context,'#d1'), text(context,'globes.code.code_not_found'));
+			}
+		}
+
+		ajax('connect-with-code',fd.join('&'),response_handler)
+		/*
+		$.post(ajax_handler + '?connect-with-code'
+			,{
+				value : stack_value(context,'value')
+				,mobile : stack_value(context,'mobile')
+				,value_type : value_type
+				,code : code
+			},function(r) {
+				alert(1)
+				var json = eval('(' + r + ')')
+			//	console.log(json)
+				if (is_success(json)) {
+					switch(value_type)
+					{
+						case 'new-mobile-for-connected-user':
+							steps.globes.phone_added.show(context)
+							break
+						case 'new-mobile':
+							context.stack.push({
+								back : function() {pop(context); stack_value(context,'back')()}
+								,code : code
+								,emails : json.emails.split(';').filter(e => e.match(/[a-z]/i))
+							})
+							steps.globes.mail_list.show(context)
+							break
+						default:
+							context.connect_response = json
+							onsuccess(context)
+							break
+					}
+				} else {
+					//show_error(context,'globes.code.code_not_found')
+					input_error(qs(context,'#d1'), text(context,'globes.code.code_not_found'));
+				}
+			}
+			,'text'
+		)
+		*/
+	}
+	steps.globes.mail_list.show = function(context) {
+		var emails = stack_value(context,'emails')
+		if (emails.length == 0) {
+			context.stack.push({
+				back : function() {
+					pop(context); 
+					if (emails.length > 0) {
+						steps.globes.mail_list.show(context)
+					} else {
+						stack_value(context,'back')()
+					}
+				}
+			//	back:function() {pop(context); stack_value(context,'back')()}
+			//	,first_name : ''
+			//	,last_name : ''
+			//	,email : ''
+			})
+			steps.globes.registration.email.show(context)
+			return
+		}
+
+        dataLayer.push({
+            'event': 'login', 'eventInfo':
+            {
+                'screenName': location.href,
+                'user_action': 'view_add_more_login',
+                'flow_name': 'no_phone_found',
+                'screen_name': 'view_add_more_login',
+                'login_method': 'sms',
+                'actions': 1
+            }
+        });
+		
+		for_debuggers(context)
+		context.step_container.innerHTML = ''
+			+ '<h1 class=login_title>' + text(context,'globes.mail_list.title')  + '</h1>'
+			+ '<h2 class=login_subTitle>' + text(context,'globes.mail_list.sub_title')  + '</h2>'
+			+ '<div id="mailim">'
+			+ emails.map((e,index) => '<div  class=\"login_btn center\" data-user="' + e.split('.')[0] + '" data-email="' + e.replace(/^\d+\./,'') + '">'
+								+ text(context, 'globes.mail_list.connectWith')
+								+ ltr.start + e.replace(/^\d+\./,'') + ltr.end
+								+ '</div>').join('')
+			+ '<div class=Login_orText><span>או</span></div>'
+			+ '<div class=\"login_btn center\" data-user=\"0\">' + text(context,'globes.mail_list.other') + '</div>'
+			+ '</div>'
+			+ back_and_next(context,true)
+
+		qs(context,'#backBtn').addEventListener('click',function(event) {stack_value(context,'back')()})
+		$(qs(context,'#nextBtn')).hide()
+		$(qs(context,'#mailim')).find('.login_btn').click(function(event) {
+				var user = event.target.getAttribute('data-user')
+				if (user > 0) { // user-exists
+					context.stack.push({
+						email : event.target.getAttribute('data-email')
+						,user : user
+						,show_email : true
+						,back : function() {pop(context); steps.globes.mail_list.show(context)}
+						,edit : false
+					})
+
+                    dataLayer.push({
+                        'event': 'login', 'eventInfo':
+                        {
+                            'screenName': location.href,
+                            'user_action': 'view_enter_account_screen',
+                            'flow_name': 'no_phone_found',
+                            'screen_name': 'enter_account',
+                            'login_method': 'sms',
+                            'actions': 1
+                        }
+                    });
+					
+					steps.globes.password.show(context)
+				} else {
+					context.stack.push({
+						back : function() {pop(context); steps.globes.mail_list.show(context)}
+                    })
+
+                    dataLayer.push({
+                        'event': 'login', 'eventInfo':
+                        {
+                            'screenName': location.href,
+                            'user_action': 'new_account_details',
+                            'flow_name': 'no_phone_found',
+                            'screen_name': 'new_account_details',
+                            'login_method': 'sms ',
+                            'actions': 1
+                        }
+                    });
+					
+					steps.globes.registration.email.show(context)
+				}
+			}
+		)
+	}
+	var preinit_request = null
+	function preinit() {
+		resource_loader()
+		var request = arguments.length == 0 ? {} : arguments[0]
+		if (request.with_close == undefined) {request.with_close = arguments.length < 2 ? true : arguments[1] }
+	//	console.log(resource_counter , resources.length)
+		if (resource_counter < resources.length) {
+			preinit_request = request
+			setTimeout(function() {preinit(request)},1000)
+		} else {
+			preinit_request = null
+			init({ request : request })
+		}
+	}
+	function call_activator(context,button,fields) {
+		var a = fields.split(',')
+		for (var i = 0; i < a.length; i++) { if (qs(context,a[i]).value.trim().length == 0) { return } }
+		console.log(button, fields)
+		$(qs(context,button)).addClass('active')
+	}
+	function add_activator(context,button, fields) {
+	   // var cb_fromglobes = qs('cb_fromglobes')
+	   // if (cb_fromglobes) {
+		 //   cb_fromglobes.setAttribute('data-button', button)
+		 //   cb_fromglobes.setAttribute('data-fields', fields)
+	   // }
+		var a = fields.split(',')
+		for (var i = 0; i < a.length; i++) { qs(context,a[i]).addEventListener('keyup', function () { call_activator(context,button, fields) }) }
+		setTimeout(function () { call_activator(context,button, fields) }, 1000)
+	}
+	function check_code_callback(responseText,context) {
+		var json = eval('(' + responseText + ')')
+		if (json.status == 'success') {
+			//sessionStorage.setItem('tzui', json.tz + ':' + json.ui);
+			context.connect_response = { tz: json.tz, ui: json.ui }
+			onsuccess(context)
+			return
+		}
+		$(qs(context,'#WaitForCode')).find('.error_message').html('קוד לא תקין')
+	}
+	function check_code(context) {
+		var wfc = qs(context,'#WaitForCode')
+		console.log('WaitForCode',wfc)
+		$(wfc).find('.error_message').html('')
+		var code = qs(context,'#code1').value + qs(context,'#code2').value + qs(context,'#code3').value + qs(context,'#code4').value
+		if (code.match(/^\d{4}$/)) {
+			ajax('check-subscriber-code', 'mobile=' + qs(context,'#mobile').value.trim() + '&code=' + code, function(r) { check_code_callback(r,context) })
+			return
+		}
+		$(qs(context,'#WaitForCode')).find('.error_message').html('נא להקליד קוד תקין')
+	}
+	function validate_subscriber(context) {
+		context.step_container.parentNode.style.float = 'right'
+		context.step_container.innerHTML = ''
+			+ '<h1 class="login_title" -style="text-align:right">' + text(context,'validate_subscriber.title') + '</h1>'
+			+ '<p class="login_comment" -style="text-align:right;position:relative;right:-42px">' + text(context,'validate_subscriber.sub_title')  + '</p>'
+			+ '<br>'
+			+ input({id:'mobile',type:'text',tabindex:1,label:text(context,'validate_subscriber.mobile')})
+			+ '<div>'
+		//	+ (typeof (context.request.backToCaller_handler) == 'function'
+		//		? '<div id=backToCaller>backBtn</div>'
+		//		: ''
+		//	)
+			+ '<div id=send_code class=btn>' + text(context,'validate_subscriber.next') + '</div>'
+			+ '</div>'
+			+ '<div id="WaitForCode" style= "display:none" >'
+			+ '<div class="steptitle">'
+			+ '<div class="text2 n1">'
+			+ '<span > הודעת SMS עם קוד נשלחה למספר הנייד </span > <span id="cell"> ###-#XXXX## </span>'
+			+ '<br><span>זה לא הנייד שלך ? נא לפנות <a class="red_bottom" href="mailto:sherut@globes.co.il" > לשירות לקוחות </a> </span>'
+			+ '</div > '
+			+ '</div>'
+			+ '<div class="activatePhone">'
+			+ '<input id="code4" class="codedigit" maxlength="1" autocomplete="off">'
+			+ '<input id="code3" class="codedigit" maxlength="1" autocomplete="off">'
+			+ '<input id="code2" class="codedigit" maxlength="1" autocomplete="off">'
+			+ '<input id="code1" class="codedigit" maxlength="1" autocomplete="off">'
+			+ '</div>'
+			+ '<div class="error_message errMsg"></div>'
+			+ '<div class="btnWr">'
+			+ '<div class="back" id=backToValidateSubscriber >חזרה</div>'
+			+ '<div id=check_code class="textbox clickable" > המשך </div>'
+			+ '</div>'
+
+			+ '<div class="text3 n2">'
+			+ 'לא קיבלת את הקוד?'
+			+ '<span class="red_bottom clickable" onclick="ResendCode()"> לנסות שוב </span>'
+			+ 'או לפנות'
+			+ '<a class="red_bottom" href="mailto:sherut@globes.co.il" > לשירות לקוחות </a>'
+			+ '</div>'
+			+ '</div>'
+	//	set_backToBtn()
+        add_activator(context,'#send_code', '#mobile')
+        submit_handler = function () {
+			
+			/*
+            var tz = qs(context,'#tz')
+            input_error(tz, null)
+            if (!IsTZ(tz.value)) {
+                input_error(tz, text(context,'validate_subscriber.invalid_tz'))
+                return
+            }
+			*/
+            var mobile = qs(context,'#mobile') 
+			if (!mobile.value.match(/^05\d{8}$/)){
+                input_error(mobile, text(context,'validate_subscriber.invalid_mobile'))
+                return
+			}
+            ajax('send-code-to-subscriber', 'mobile=' + mobile.value // 'tz=' + tz.value
+                , function (responseText) {
+                    console.log(responseText)
+                    var json = eval('(' + responseText + ')')
+                    if (json.status == 'success') {
+                        qs(context,'#send_code').parentNode.style.display = 'none'
+                        $(qs(context,'#mobile')).attr('readonly', 'readonly')
+                        $(qs(context,'#mobile')).prop('disabled', true)
+						$(qs(context,'label')).html('')
+                        $(qs(context,'#mobile')).parent().parent().addClass('readonly')
+                        $(qs(context,'#cell')).html(mobile.value) // json.cell)
+
+                        qs(context,'#WaitForCode').style.display = 'block'
+                        qs(context,'#code1').focus()
+
+						qs(context,'#code1').addEventListener('keyup', function (event) { codedigit(event) })
+						qs(context,'#code2').addEventListener('keyup', function (event) { codedigit(event) })
+						qs(context,'#code3').addEventListener('keyup', function (event) { codedigit(event) })
+						qs(context,'#code4').addEventListener('keyup', function (event) { codedigit(event) })
+
+						add_activator(context,'#check_code', '#code1,#code2,#code3,#code4')
+						//set_backToBtn('backToValidateSubscriber', validate_subscriber)
+						qs(context,'#backToValidateSubscriber').addEventListener('click', function() {validate_subscriber(context)})
+						qs(context,'#check_code').addEventListener('click', function() {check_code(context)})
+						return
+                    }
+                    input_error(qs(context,'#mobile'), 'מנוי לא אותר במערכת, נא לפנות לשירות לקוחות לבירור')
+                }
+            )
+
+
+        }
+        qs(context,'#send_code').addEventListener('click', submit_handler)
+    }
+    function codedigit(event) {
+        console.log(event)
+        var etv = event.target.value
+        if (!etv.toString().match(/[0-9]/)) {
+            event.target.value = ''
+            return
+        }
+        var d = parseInt(event.target.id.match(/\d/i, ''))
+        // console.log(d,'#code' + (d == 4 ? 0 : d + 1))
+        $('#code' + (d == 4 ? 1 : d + 1)).focus()
+        //console.log(event)
+    }
+	function IsTZ(tz) {
+		tz = parseInt('' + tz, 10)
+		if (isNaN(tz) || tz < 9999 || tz > 999999999) { return false }
+		var s = tz.toString()
+		var nb = s.substring(0, s.length - 1)
+		var iMultNum = 2
+		var iTmp, iSum = 0
+		while (nb.length > 0) {
+			iTmp = parseInt(nb.substring(nb.length - 1)) * iMultNum;
+			if (iTmp >= 10) { iTmp = Math.round((iTmp / 10) - 0.5) + (iTmp % 10) }
+			iSum = iSum + iTmp;
+			iMultNum = (iMultNum % 2) + 1;
+			nb = (nb.length > 1) ? nb.substring(0, nb.length - 1) : '';
+		}
+		var bikoret = tz % 10;
+		var result = (10 - (iSum % 10)) % 10;
+		return bikoret == result
+	}
+	function send_clientService_event(stage) {
+		var serviceName = '', formName = '';
+		var page = top.location.search.replace('?', '').replace(/(.*)(page=)(\d{1,3})(.*)/, "$3")
+		if (!isNaN(page)) {
+			var iPage = parseInt(page);
+			switch (iPage) {
+				case 1: serviceName = 'מינוי דיגיטלי'; formName = 'בעיה בהתחברות'; break;
+				case 2: serviceName = 'מינוי דיגיטלי'; formName = 'פניה כללית'; break;
+				case 3: serviceName = 'מינוי דיגיטלי'; formName = 'ביטול מינוי דיגיטלי'; break;
+				case 5: serviceName = 'מינוי לעיתון המודפס'; formName = 'לא קיבלתי עיתון'; break;
+				case 6: serviceName = 'מינוי לעיתון המודפס'; formName = 'הקפאת מינוי'; break;
+				case 7: serviceName = 'מינוי לעיתון המודפס'; formName = 'פניה כללית'; break;
+				case 8: serviceName = 'מינוי לעיתון המודפס'; formName = 'שינוי כתובת'; break;
+				case 9: serviceName = 'מינוי לעיתון המודפס'; formName = 'ביטול מינוי לעיתון המודפס'; break;
+				case 101: serviceName = 'מינוי לעיתון המודפס/דיגיטלי'; formName = 'בעיית גישה לעיתון הדיגיטלי'; break;
+				case 105: serviceName = 'מינוי לעיתון המודפס'; formName = 'עיתון רטוב/קרוע'; break;
+			}
+		} else {
+			if (location.href.indexOf('tz.aspx') > 0) {
+				serviceName = 'מינוי לעיתון המודפס';
+				formName = 'הפעלת מנוי דיגיטלי';
+			}
+		}
+
+		if (serviceName != '' && formName != '') {
+			var stageName = stage = 'tz' ? 'אימות פרטי מנוי' : 'אימות טלפוני';
+			ga('send', 'event', 'Personal zone', 'Contact us - ' + serviceName + ' - ' + formName, 'Submit form - ' + stageName);
+		}
+	}
+
+	return {
+		onsuccess : function (json) {
+			var context = contexts[0]
+			context.connect_response = json
+			onsuccess(context)
+		}
+		,connect_new_social : function(social_values) {
+			var context = contexts[0]
+			context.social_values = social_values
+			steps.globes.terms.show(context)
+			return
+		}
+		,connect_to_existing_email : function(email,has_authenticated_mobile) {
+			var context = contexts[0]
+			context.stack = create_stack([
+				{}
+				,{
+					value : email
+					,email: email
+					,value_type: 'login-id'
+					,has_authenticated_mobile: has_authenticated_mobile
+					,user_exists: true
+					,back : function() {
+					//	debugger
+						pop(context);
+						steps.globes.value.show(context,true) 
+					}
+					,edit_initial_value : function() { pop(context); steps.globes.value.show(context,true) }
+				}
+			])
+			steps.globes.password.show(context)
+		}
+		,get_property : function(property_name) {
+			if (contexts.length != 1 || contexts[0] == null) {return null}
+			if (property_name == 'language') {return contexts[0].request.language}
+			return null
+		}
+		,register_and_signin : function() {
+			preinit.apply(null,arguments)
+		}
+		,signin : function() {
+			preinit.apply(null,arguments)
+		}
+		,connect : function(context) { 
+			preinit.apply(null,arguments)
+		}
+		,checkpoint: function (context, with_cancel) {
+			if (arguments.length < 2) { with_cancel = true }
+			if (arguments.length < 1) { context = {} }
+			var me = this
+			ajax('connection-status', '',
+				function (responseText) {
+					if (responseText == 'connected') {
+						if (typeof (context.onsuccess) == 'function') { context.onsuccess() }
+					} else {
+						me.signin(context, with_cancel)
+					}
+				}
+			)
+		}
+		,is_valid_password: function (password,detailed) {
+			var r = is_valid_password(password)
+			return r == true ? true : arguments.length > 1 && detailed ? r : false
+		}
+		,ajax : function(querystring, formdata, response_handler /* text */) {
+			ajax(querystring, formdata, response_handler)
+		}
+		,appendExternalMessage : function(ExternalMessage,request,with_close) {
+			if (preinit_request != null) {
+				preinit_request.ExternalMessage = ExternalMessage
+				return
+			}
+			console.log('arguments.length',arguments.length)
+			console.log('ExternalMessage',ExternalMessage)
+			console.log('contexts.length',contexts.length)
+			if (contexts.length > 0) {console.log('contexts[0].stack.length',contexts[0].stack.length)}
+			if (arguments.length == 1 && contexts.length == 1 && contexts[0] != null) {
+				contexts[0].request.ExternalMessage = ExternalMessage
+				if (contexts[0].stack.length == 0) {
+					steps.start.show(contexts[0])
+				}
+				return
+			}
+			if (arguments.length > 1) {
+				if (arguments.length == 3) {request.with_close = with_close}
+				request.ExternalMessage = ExternalMessage
+			}
+			// if () {preinit(request)}
+		//	alert(ExternalMessage)
+		}
+		,login_path : login_path
+		,ajax_handler : ajax_handler
+		,show_loading : function() {}
+		,hide_loading : function() {}
+		,is_debugger : false
+		,change_password: function (request, with_close) {
+			request = request || {}
+			request.start_at = 'change_password'
+			preinit(request , with_close)
+		}
+		,updateDetails: function (request, with_close) {
+			request = request || {}
+			request.start_at = 'update_details'
+			preinit(request , with_close)
+		}
+		,delete_me : function() {
+			ajax('delete-me',{},function(r) {
+				var json = eval('(' + r + ')')
+				alert(is_success(json) ? 'deleted' : json.error)
+				location.reload()
+			})
+		}
+		,disconnect : function() {
+			ajax('disconnect',{},function(r) {
+				var json = eval('(' + r + ')')
+				if (is_success(json)) {
+					location.reload()
+				} else {
+					alert(json.error)
+				}
+			})
+		}
+		,validate_subscriber : function(request,with_close) {
+			request = request || {}
+			with_close = with_close || false
+			request.start_at = 'validate_subscriber'
+			preinit(request , with_close)
+		}
+		,showFirstCommentPopup: function (request, with_close, mode) {
+			request = request || {}
+			request.mode = mode
+			request.start_at = 'showFirstCommentPopup'
+			preinit(request , with_close)
+		}
+		, send_clientService_event: function (stage) {
+			send_clientService_event(stage);
+		}
+		, show_the_stack : function (){
+			console.log(contexts[0].stack)
+		}
+		, connect_authenticated_mobile_with_password : function (mobile) {
+			var request = {mobile : mobile , start_at : 'connect-mobile-with-password'}
+			preinit(request,false)
+		}
+	}
+})()
+var connector
+if (loginver == 2022) {connector = connector22}
+
+

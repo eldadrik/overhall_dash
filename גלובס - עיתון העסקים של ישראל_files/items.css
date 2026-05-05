@@ -1,0 +1,8 @@
+﻿.p_items_box{/*float:right;*/height:33px !important;overflow:hidden;background:#fff;}
+.p_items{width:100%;font-family:arial;font-size:12px;direction:rtl;padding:0px 0px;font-weight:bold;float:right;}
+.pass_table_items .bgred .p_change {color:#c00}
+.pass_table_items .bggreen .p_change {color:#339900}
+.p_img_item{float:right;border:0px;margin-left:3px;}
+.p_down{padding:0px 3px 0px 5px;border-top:1px solid #FFF;}
+.p_price, .p_change{font-size:12px;direction:ltr !important;}	
+.p_change{float:left;}

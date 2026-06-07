@@ -14,7 +14,6 @@ const STATUS_LABELS = {
 
 const PROVIDER_LABELS = {
   "google-trends-rss": "Google Trends RSS",
-  "google-trends-stock-explore": "Google Trends Stocks",
   "x-official-trends": "API רשמי של X",
   "xai-web-search-fallback": "xAI חיפוש רשת",
   "xai-x-search-fallback": "xAI X Search",
@@ -23,7 +22,6 @@ const PROVIDER_LABELS = {
   loading: "Loading",
   unavailable: "לא זמין"
 };
-const STOCK_TRENDS_DELAY_MS = 5000;
 
 function PanelHeader({ eyebrow, title, caption, tone = "ok" }) {
   return (
@@ -75,7 +73,7 @@ function TrendPanel({ eyebrow, title, bucket, localeTag, emptyMessage, initialVi
   const [isExpanded, setIsExpanded] = useState(false);
   const hasExpandableItems = initialVisibleCount && bucket.items.length > initialVisibleCount;
   const visibleItems = hasExpandableItems && !isExpanded ? bucket.items.slice(0, initialVisibleCount) : bucket.items;
-  const panelEmptyMessage = bucket.status === "loading" ? bucket.caption || "Loading trends..." : emptyMessage;
+  const panelEmptyMessage = bucket.status === "loading" ? "Loading X trends..." : emptyMessage;
 
   return (
     <section className={`panel card panel--${variant}`}>
@@ -406,35 +404,6 @@ function markXTrendsUnavailable(dashboard, message) {
   };
 }
 
-function loadingSearchBucket(caption = "Loading Google trends...") {
-  return {
-    status: "loading",
-    caption,
-    items: []
-  };
-}
-
-function unavailableSearchBucket(message) {
-  return {
-    status: "error",
-    caption: message,
-    items: []
-  };
-}
-
-function countSearchBuckets(searches) {
-  return [searches?.he, searches?.en].filter(isActiveBucket).length;
-}
-
-function areInitialXBucketsSettled(dashboard) {
-  return [
-    dashboard?.xTrends?.he,
-    dashboard?.xTrends?.en,
-    dashboard?.economicXTrends?.he,
-    dashboard?.economicXTrends?.en
-  ].every((bucket) => bucket && bucket.status !== "loading");
-}
-
 export default function HomePage() {
   const [dashboard, setDashboard] = useState(null);
   const [error, setError] = useState(null);
@@ -442,58 +411,6 @@ export default function HomePage() {
   const [xError, setXError] = useState(null);
   const [isLoadingXTrends, setIsLoadingXTrends] = useState(false);
   const [isAskingGrok, setIsAskingGrok] = useState(false);
-  const [googleMode, setGoogleMode] = useState("regular");
-  const [stockSearches, setStockSearches] = useState(null);
-  const [stockSources, setStockSources] = useState(null);
-  const [stockWarnings, setStockWarnings] = useState([]);
-  const [stockError, setStockError] = useState(null);
-  const [isLoadingStockSearches, setIsLoadingStockSearches] = useState(false);
-
-  const loadStockSearches = useCallback(async ({ shouldApply = () => true } = {}) => {
-    setIsLoadingStockSearches(true);
-
-    try {
-      const response = await fetch("/api/google-trends?mode=stocks&refresh=1", {
-        cache: "no-store"
-      });
-
-      if (!response.ok) {
-        throw new Error(`Google stock trends request failed with status ${response.status}.`);
-      }
-
-      const payload = await response.json();
-
-      if (!shouldApply()) {
-        return;
-      }
-
-      setStockSearches(payload.searches);
-      setStockSources(payload.sources?.searches || null);
-      setStockWarnings(payload.warnings || []);
-      setStockError(null);
-    } catch (loadError) {
-      if (!shouldApply()) {
-        return;
-      }
-
-      setStockWarnings([]);
-      setStockError(loadError);
-      setStockSearches({
-        he: unavailableSearchBucket(loadError.message),
-        en: unavailableSearchBucket(loadError.message)
-      });
-      setStockSources({
-        he: "unavailable",
-        en: "unavailable"
-      });
-    } finally {
-      if (!shouldApply()) {
-        return;
-      }
-
-      setIsLoadingStockSearches(false);
-    }
-  }, []);
 
   const loadXTrends = useCallback(async ({ refreshGrok = false, shouldApply = () => true } = {}) => {
     if (refreshGrok) {
@@ -573,15 +490,6 @@ export default function HomePage() {
     }
   }, [loadXTrends]);
 
-  const handleGoogleStockToggle = useCallback(() => {
-    if (googleMode === "stocks") {
-      setGoogleMode("regular");
-      return;
-    }
-
-    setGoogleMode("stocks");
-  }, [googleMode]);
-
   useEffect(() => {
     let isMounted = true;
 
@@ -592,45 +500,14 @@ export default function HomePage() {
     };
   }, [loadDashboard]);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    if (!dashboard || stockSearches || stockError || isLoadingStockSearches || !areInitialXBucketsSettled(dashboard)) {
-      return () => {
-        isMounted = false;
-      };
-    }
-
-    const timerId = window.setTimeout(() => {
-      void loadStockSearches({ shouldApply: () => isMounted });
-    }, STOCK_TRENDS_DELAY_MS);
-
-    return () => {
-      isMounted = false;
-      window.clearTimeout(timerId);
-    };
-  }, [dashboard, isLoadingStockSearches, loadStockSearches, stockError, stockSearches]);
-
-  const stockLoadingSearches = {
-    he: loadingSearchBucket("Loading Google stock trends..."),
-    en: loadingSearchBucket("Loading Google stock trends...")
-  };
-  const displayedSearches = googleMode === "stocks" ? stockSearches || stockLoadingSearches : dashboard?.searches;
-  const displayedSearchSources = googleMode === "stocks" ? stockSources || { he: "loading", en: "loading" } : dashboard?.sources.searches;
   const generatedAtLabel = dashboard ? new Date(dashboard.generatedAt).toLocaleString() : "טוען...";
-  const visibleActivePanels =
-    dashboard && displayedSearches
-      ? Math.max(0, dashboard.summary.activePanels - countSearchBuckets(dashboard.searches) + countSearchBuckets(displayedSearches))
-      : null;
-  const activePanelsLabel = visibleActivePanels === null ? "טוען..." : `${visibleActivePanels} / 7`;
+  const activePanelsLabel = dashboard ? `${dashboard.summary.activePanels} / 7` : "טוען...";
   const grokCreatedAt =
     dashboard?.xTrends?.he?.createdAt ||
     dashboard?.xTrends?.en?.createdAt ||
     dashboard?.economicXTrends?.he?.createdAt ||
     dashboard?.economicXTrends?.en?.createdAt;
-  const visibleStockWarnings = googleMode === "stocks" ? stockWarnings : [];
-  const visibleStockError = googleMode === "stocks" && stockError ? [`Google stock trends: ${stockError.message}`] : [];
-  const combinedWarnings = [...(dashboard?.warnings ?? []), ...visibleStockWarnings, ...xWarnings, ...visibleStockError, ...(xError ? [`X trends: ${xError.message}`] : [])];
+  const combinedWarnings = [...(dashboard?.warnings ?? []), ...xWarnings, ...(xError ? [`X trends: ${xError.message}`] : [])];
 
   return (
     <main className="shell">
@@ -672,25 +549,12 @@ export default function HomePage() {
         <>
           <section className="section-block section-block--google">
             <div className="section-block-head">
-              <div className="section-heading-copy">
-                <p className="eyebrow">Google Trends</p>
-                <h2>מגמות חיפוש</h2>
-              </div>
-              <div className="section-block-actions">
-                <button
-                  className={`section-toggle-button ${googleMode === "stocks" ? "is-active" : ""}`}
-                  disabled={isLoadingStockSearches}
-                  onClick={handleGoogleStockToggle}
-                  title="הצג מגמות מניות"
-                  type="button"
-                >
-                  {isLoadingStockSearches ? "טוען..." : "מניות"}
-                </button>
-              </div>
+              <p className="eyebrow">Google Trends</p>
+              <h2>מגמות חיפוש</h2>
             </div>
             <div className="google-grid">
               <TrendPanel
-                bucket={displayedSearches.he}
+                bucket={dashboard.searches.he}
                 eyebrow="חיפושי Google"
                 emptyMessage="מגמות החיפוש בעברית אינן זמינות כרגע."
                 initialVisibleCount={5}
@@ -700,7 +564,7 @@ export default function HomePage() {
                 variant="google"
               />
               <TrendPanel
-                bucket={displayedSearches.en}
+                bucket={dashboard.searches.en}
                 eyebrow="חיפושי Google"
                 emptyMessage="מגמות החיפוש באנגלית אינן זמינות כרגע."
                 initialVisibleCount={5}
@@ -758,11 +622,11 @@ export default function HomePage() {
             <div className="sources-grid">
               <div>
                 <span>חיפוש / ישראל</span>
-                <strong>{PROVIDER_LABELS[displayedSearchSources.he] || displayedSearchSources.he}</strong>
+                <strong>{PROVIDER_LABELS[dashboard.sources.searches.he] || dashboard.sources.searches.he}</strong>
               </div>
               <div>
                 <span>חיפוש / ארה״ב</span>
-                <strong>{PROVIDER_LABELS[displayedSearchSources.en] || displayedSearchSources.en}</strong>
+                <strong>{PROVIDER_LABELS[dashboard.sources.searches.en] || dashboard.sources.searches.en}</strong>
               </div>
               <div>
                 <span>X / ישראל</span>

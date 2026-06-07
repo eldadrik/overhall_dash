@@ -366,51 +366,10 @@ img {
   border-bottom: 1px solid var(--border-strong);
 }
 
-.section-block--google .section-block-head {
-  justify-content: flex-start;
-}
-
 .section-block-head h2 {
   margin: 0;
   font-size: clamp(1.45rem, 2vw, 2rem);
   line-height: 1.1;
-}
-
-.section-heading-copy {
-  min-width: 0;
-}
-
-.section-block-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.section-toggle-button {
-  min-width: 88px;
-  min-height: 36px;
-  padding: 0 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  background: var(--surface);
-  color: var(--accent-dark);
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 800;
-  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, opacity 160ms ease;
-}
-
-.section-toggle-button:hover:not(:disabled),
-.section-toggle-button.is-active {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--paper);
-}
-
-.section-toggle-button:disabled {
-  cursor: progress;
-  opacity: 0.62;
 }
 
 .google-grid {
@@ -822,13 +781,8 @@ img {
 
   .section-block-head {
     align-items: flex-start;
-    flex-direction: column;
+    flex-direction: column-reverse;
     gap: 4px;
-  }
-
-  .section-block-actions,
-  .section-toggle-button {
-    width: 100%;
   }
 
   .panel--google {

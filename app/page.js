@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { hasHebrewCharacters, normalizeStatusTone } from "@/lib/format";
 
@@ -8,6 +8,7 @@ const STATUS_LABELS = {
   ok: "פעיל",
   warning: "חלקי",
   partial: "חלקי",
+  loading: "Loading",
   error: "לא זמין"
 };
 
@@ -18,6 +19,7 @@ const PROVIDER_LABELS = {
   "xai-x-search-fallback": "xAI X Search",
   "grok-x-search": "Grok X Search",
   "polymarket-gamma": "Polymarket Gamma",
+  loading: "Loading",
   unavailable: "לא זמין"
 };
 
@@ -71,11 +73,12 @@ function TrendPanel({ eyebrow, title, bucket, localeTag, emptyMessage, initialVi
   const [isExpanded, setIsExpanded] = useState(false);
   const hasExpandableItems = initialVisibleCount && bucket.items.length > initialVisibleCount;
   const visibleItems = hasExpandableItems && !isExpanded ? bucket.items.slice(0, initialVisibleCount) : bucket.items;
+  const panelEmptyMessage = bucket.status === "loading" ? "Loading X trends..." : emptyMessage;
 
   return (
     <section className={`panel card panel--${variant}`}>
       <PanelHeader eyebrow={eyebrow} title={title} caption={bucket.caption} tone={bucket.status} />
-      <TrendList items={visibleItems} emptyMessage={emptyMessage} localeTag={localeTag} variant={variant} />
+      <TrendList items={visibleItems} emptyMessage={panelEmptyMessage} localeTag={localeTag} variant={variant} />
       {hasExpandableItems ? (
         <button className="show-more-button" onClick={() => setIsExpanded((value) => !value)} type="button">
           {isExpanded ? "Show fewer" : `${showMoreLabel} (${bucket.items.length - initialVisibleCount})`}
@@ -148,33 +151,165 @@ function WarningStrip({ warnings }) {
   );
 }
 
-function GrokActions({ createdAt, isAsking, onAskAgain }) {
+function GrokActions({ createdAt, isAsking, isLoading, onAskAgain }) {
+  const isBusy = isAsking || isLoading;
+  const statusText = isLoading
+    ? "Loading X trends..."
+    : createdAt
+      ? `Created at ${new Date(createdAt).toLocaleString()}`
+      : "No saved Grok result yet";
+
   return (
     <section className="grok-actions card">
       <div>
         <p className="eyebrow">Grok X Search</p>
-        <p>{createdAt ? `Created at ${new Date(createdAt).toLocaleString()}` : "No saved Grok result yet"}</p>
+        <p>{statusText}</p>
       </div>
-      <button className="cost-button" disabled={isAsking} onClick={onAskAgain} title="Uses a paid xAI request" type="button">
+      <button className="cost-button" disabled={isBusy} onClick={onAskAgain} title="Uses a paid xAI request" type="button">
         <span aria-hidden="true">₪</span>
-        {isAsking ? "Asking..." : "Ask again"}
+        {isAsking ? "Asking..." : isLoading ? "Loading..." : "Ask again"}
       </button>
     </section>
   );
 }
 
+function isActiveBucket(bucket) {
+  return Boolean(bucket) && bucket.status !== "error" && bucket.status !== "loading";
+}
+
+function countActiveXBuckets(dashboard) {
+  return [
+    dashboard?.xTrends?.he,
+    dashboard?.xTrends?.en,
+    dashboard?.economicXTrends?.he,
+    dashboard?.economicXTrends?.en
+  ].filter(isActiveBucket).length;
+}
+
+function mergeXTrendsPayload(dashboard, payload) {
+  if (!dashboard || !payload?.xTrends || !payload?.economicXTrends) {
+    return dashboard;
+  }
+
+  const currentXActive = countActiveXBuckets(dashboard);
+  const nextXActive =
+    payload.summary?.activePanels ??
+    [payload.xTrends.he, payload.xTrends.en, payload.economicXTrends.he, payload.economicXTrends.en].filter(isActiveBucket).length;
+
+  return {
+    ...dashboard,
+    xTrends: payload.xTrends,
+    economicXTrends: payload.economicXTrends,
+    summary: {
+      ...dashboard.summary,
+      activePanels: Math.max(0, dashboard.summary.activePanels - currentXActive) + nextXActive
+    },
+    sources: {
+      ...dashboard.sources,
+      xTrends: payload.sources?.xTrends ?? dashboard.sources.xTrends,
+      economicXTrends: payload.sources?.economicXTrends ?? dashboard.sources.economicXTrends
+    }
+  };
+}
+
+function markXTrendsUnavailable(dashboard, message) {
+  if (!dashboard) {
+    return dashboard;
+  }
+
+  const currentXActive = countActiveXBuckets(dashboard);
+  const bucket = {
+    status: "error",
+    caption: message,
+    items: []
+  };
+
+  return {
+    ...dashboard,
+    xTrends: {
+      he: bucket,
+      en: bucket
+    },
+    economicXTrends: {
+      he: bucket,
+      en: bucket
+    },
+    summary: {
+      ...dashboard.summary,
+      activePanels: Math.max(0, dashboard.summary.activePanels - currentXActive)
+    },
+    sources: {
+      ...dashboard.sources,
+      xTrends: {
+        he: "unavailable",
+        en: "unavailable"
+      },
+      economicXTrends: {
+        he: "unavailable",
+        en: "unavailable"
+      }
+    }
+  };
+}
+
 export default function HomePage() {
   const [dashboard, setDashboard] = useState(null);
   const [error, setError] = useState(null);
+  const [xWarnings, setXWarnings] = useState([]);
+  const [xError, setXError] = useState(null);
+  const [isLoadingXTrends, setIsLoadingXTrends] = useState(false);
   const [isAskingGrok, setIsAskingGrok] = useState(false);
 
-  async function loadDashboard({ refreshGrok = false } = {}) {
+  const loadXTrends = useCallback(async ({ refreshGrok = false, shouldApply = () => true } = {}) => {
     if (refreshGrok) {
       setIsAskingGrok(true);
+    } else {
+      setIsLoadingXTrends(true);
     }
 
     try {
-      const url = refreshGrok ? "/api/dashboard?refresh=1&refreshGrok=1" : "/api/dashboard";
+      const url = refreshGrok ? "/api/x-trends?refresh=1" : "/api/x-trends";
+      const response = await fetch(url, {
+        cache: "no-store"
+      });
+
+      if (!response.ok) {
+        throw new Error(`X trends request failed with status ${response.status}.`);
+      }
+
+      const payload = await response.json();
+
+      if (!shouldApply()) {
+        return;
+      }
+
+      setDashboard((current) => mergeXTrendsPayload(current, payload));
+      setXWarnings(payload.warnings || []);
+      setXError(null);
+    } catch (loadError) {
+      if (!shouldApply()) {
+        return;
+      }
+
+      setXWarnings([]);
+      setXError(loadError);
+      setDashboard((current) => markXTrendsUnavailable(current, loadError.message));
+    } finally {
+      if (!shouldApply()) {
+        return;
+      }
+
+      if (refreshGrok) {
+        setIsAskingGrok(false);
+      } else {
+        setIsLoadingXTrends(false);
+      }
+    }
+  }, []);
+
+  const loadDashboard = useCallback(async ({ forceRefresh = false, shouldApply = () => true } = {}) => {
+    try {
+      const url = forceRefresh ? "/api/dashboard?refresh=1" : "/api/dashboard";
       const response = await fetch(url, {
         cache: "no-store"
       });
@@ -185,53 +320,42 @@ export default function HomePage() {
 
       const payload = await response.json();
 
+      if (!shouldApply()) {
+        return;
+      }
+
       setDashboard(payload);
       setError(null);
+      setXWarnings([]);
+      setXError(null);
+      void loadXTrends({ shouldApply });
     } catch (loadError) {
-      setError(loadError);
-    } finally {
-      if (refreshGrok) {
-        setIsAskingGrok(false);
+      if (!shouldApply()) {
+        return;
       }
+
+      setError(loadError);
     }
-  }
+  }, [loadXTrends]);
 
   useEffect(() => {
     let isMounted = true;
 
-    async function loadDashboard() {
-      try {
-        const response = await fetch("/api/dashboard", {
-          cache: "no-store"
-        });
-
-        if (!response.ok) {
-          throw new Error(`Dashboard request failed with status ${response.status}.`);
-        }
-
-        const payload = await response.json();
-
-        if (isMounted) {
-          setDashboard(payload);
-          setError(null);
-        }
-      } catch (loadError) {
-        if (isMounted) {
-          setError(loadError);
-        }
-      }
-    }
-
-    loadDashboard();
+    void loadDashboard({ shouldApply: () => isMounted });
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [loadDashboard]);
 
   const generatedAtLabel = dashboard ? new Date(dashboard.generatedAt).toLocaleString() : "טוען...";
-  const activePanelsLabel = dashboard ? `${dashboard.summary.activePanels} / 5` : "טוען...";
-  const grokCreatedAt = dashboard?.xTrends?.he?.createdAt || dashboard?.xTrends?.en?.createdAt;
+  const activePanelsLabel = dashboard ? `${dashboard.summary.activePanels} / 7` : "טוען...";
+  const grokCreatedAt =
+    dashboard?.xTrends?.he?.createdAt ||
+    dashboard?.xTrends?.en?.createdAt ||
+    dashboard?.economicXTrends?.he?.createdAt ||
+    dashboard?.economicXTrends?.en?.createdAt;
+  const combinedWarnings = [...(dashboard?.warnings ?? []), ...xWarnings, ...(xError ? [`X trends: ${xError.message}`] : [])];
 
   return (
     <main className="shell">
@@ -300,9 +424,9 @@ export default function HomePage() {
             </div>
           </section>
 
-          <GrokActions createdAt={grokCreatedAt} isAsking={isAskingGrok} onAskAgain={() => loadDashboard({ refreshGrok: true })} />
+          <GrokActions createdAt={grokCreatedAt} isAsking={isAskingGrok} isLoading={isLoadingXTrends} onAskAgain={() => loadXTrends({ refreshGrok: true })} />
 
-          <section className="grid">
+          <section className="grid trend-grid">
             <TrendPanel
               bucket={dashboard.xTrends.he}
               eyebrow="מגמות X"
@@ -319,7 +443,24 @@ export default function HomePage() {
             />
           </section>
 
-          <WarningStrip warnings={dashboard.warnings} />
+          <section className="grid trend-grid">
+            <TrendPanel
+              bucket={dashboard.economicXTrends.he}
+              eyebrow="Economic X Trends"
+              emptyMessage="Economic X trends in Hebrew are not available right now."
+              localeTag="economic-x-he"
+              title="ישראל / עברית"
+            />
+            <TrendPanel
+              bucket={dashboard.economicXTrends.en}
+              eyebrow="Economic X Trends"
+              emptyMessage="Economic X trends in English are not available right now."
+              localeTag="economic-x-en"
+              title="ארה״ב / אנגלית"
+            />
+          </section>
+
+          <WarningStrip warnings={combinedWarnings} />
 
           <section className="sources card">
             <div className="sources-head">
@@ -342,6 +483,14 @@ export default function HomePage() {
               <div>
                 <span>X / ארה״ב</span>
                 <strong>{PROVIDER_LABELS[dashboard.sources.xTrends.en] || dashboard.sources.xTrends.en}</strong>
+              </div>
+              <div>
+                <span>Economic X / ישראל</span>
+                <strong>{PROVIDER_LABELS[dashboard.sources.economicXTrends.he] || dashboard.sources.economicXTrends.he}</strong>
+              </div>
+              <div>
+                <span>Economic X / ארה״ב</span>
+                <strong>{PROVIDER_LABELS[dashboard.sources.economicXTrends.en] || dashboard.sources.economicXTrends.en}</strong>
               </div>
               <div>
                 <span>פולימרקט</span>

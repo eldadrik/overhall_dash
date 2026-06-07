@@ -214,6 +214,10 @@ img {
   gap: 16px;
 }
 
+.trend-grid + .trend-grid {
+  margin-top: 16px;
+}
+
 .section-block {
   margin-bottom: 16px;
 }
@@ -564,7 +568,7 @@ img {
 
 .sources-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 10px;
   margin-top: 14px;
 }

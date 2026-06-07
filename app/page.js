@@ -88,6 +88,157 @@ function TrendPanel({ eyebrow, title, bucket, localeTag, emptyMessage, initialVi
   );
 }
 
+function formatProbability(value) {
+  return `${Math.round(value * 100)}%`;
+}
+
+function formatSignedProbability(value) {
+  const roundedValue = Math.round(value * 100);
+
+  if (roundedValue > 0) {
+    return `+${roundedValue} pts`;
+  }
+
+  return `${roundedValue} pts`;
+}
+
+function formatChartDate(value) {
+  return new Date(value).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function buildChartGeometry(history) {
+  const width = 100;
+  const height = 100;
+  const padding = {
+    top: 10,
+    right: 2,
+    bottom: 8,
+    left: 2
+  };
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+  const prices = history.map((point) => point.price);
+  const rawMin = Math.min(...prices);
+  const rawMax = Math.max(...prices);
+  const spread = rawMax - rawMin;
+  const guard = Math.max(0.02, spread * 0.18);
+  const min = Math.max(0, rawMin - guard);
+  const max = Math.min(1, rawMax + guard);
+  const domain = max - min || 1;
+  const baseline = padding.top + chartHeight;
+  const points = history.map((point, index) => {
+    const x = history.length === 1 ? padding.left + chartWidth / 2 : padding.left + (index / (history.length - 1)) * chartWidth;
+    const y = padding.top + ((max - point.price) / domain) * chartHeight;
+
+    return {
+      ...point,
+      x,
+      y
+    };
+  });
+  const linePath = points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+  const areaPath =
+    points.length > 1
+      ? `${linePath} L ${points[points.length - 1].x} ${baseline} L ${points[0].x} ${baseline} Z`
+      : "";
+
+  return {
+    width,
+    height,
+    baseline,
+    min,
+    max,
+    points,
+    ticks: [max, (max + min) / 2, min].map((value) => ({
+      value,
+      y: padding.top + ((max - value) / domain) * chartHeight
+    })),
+    linePath,
+    areaPath
+  };
+}
+
+function PriceHistoryChart({ history }) {
+  const points = Array.isArray(history)
+    ? history
+        .filter((point) => point && Number.isFinite(point.price) && Number.isFinite(Date.parse(point.time)))
+        .sort((left, right) => Date.parse(left.time) - Date.parse(right.time))
+    : [];
+
+  if (!points.length) {
+    return null;
+  }
+
+  const geometry = buildChartGeometry(points);
+  const firstPoint = points[0];
+  const lastPoint = points[points.length - 1];
+  const firstLabel = formatChartDate(firstPoint.time);
+  const lastLabel = formatChartDate(lastPoint.time);
+  const latestPriceLabel = formatProbability(lastPoint.price);
+  const change = lastPoint.price - firstPoint.price;
+  const changeTone = change > 0 ? "up" : change < 0 ? "down" : "flat";
+  const firstGeometryPoint = geometry.points[0];
+  const latestGeometryPoint = geometry.points[geometry.points.length - 1];
+
+  return (
+    <div className="price-chart" dir="ltr">
+      <div className="price-chart-head">
+        <div>
+          <p className="eyebrow">Polymarket Price</p>
+          <h3>Last Week</h3>
+        </div>
+        <div className="price-chart-summary">
+          <div>
+            <span>Start</span>
+            <strong>{formatProbability(firstPoint.price)}</strong>
+          </div>
+          <div>
+            <span>Latest</span>
+            <strong>{latestPriceLabel}</strong>
+          </div>
+          <div>
+            <span>Move</span>
+            <strong className={`price-chart-change price-chart-change--${changeTone}`}>{formatSignedProbability(change)}</strong>
+          </div>
+        </div>
+      </div>
+      <div className="price-chart-plot">
+        <svg aria-label="Selected market price history" className="price-chart-svg" preserveAspectRatio="none" role="img" viewBox={`0 0 ${geometry.width} ${geometry.height}`}>
+          <defs>
+            <linearGradient id="price-chart-area" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="currentColor" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {geometry.ticks.map((tick) => (
+            <line className="price-chart-grid" key={tick.value} x1="0" x2="100" y1={tick.y} y2={tick.y} />
+          ))}
+          {geometry.areaPath ? <path className="price-chart-area" d={geometry.areaPath} /> : null}
+          {geometry.linePath ? <path className="price-chart-line" d={geometry.linePath} /> : null}
+          <line className="price-chart-end-marker" x1={firstGeometryPoint.x} x2={firstGeometryPoint.x} y1={firstGeometryPoint.y - 4} y2={firstGeometryPoint.y + 4} />
+          <line className="price-chart-end-marker price-chart-end-marker--latest" x1={latestGeometryPoint.x} x2={latestGeometryPoint.x} y1={latestGeometryPoint.y - 5} y2={latestGeometryPoint.y + 5} />
+        </svg>
+        <div className="price-chart-axis-labels" aria-hidden="true">
+          {geometry.ticks.map((tick) => (
+            <span key={tick.value} style={{ top: `${tick.y}%` }}>
+              {formatProbability(tick.value)}
+            </span>
+          ))}
+        </div>
+        <div className="price-chart-foot">
+          <span>{firstLabel}</span>
+          <span>{lastLabel}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function HotBetPanel({ hotBet }) {
   if (!hotBet.item) {
     return (
@@ -130,6 +281,7 @@ function HotBetPanel({ hotBet }) {
           </a>
         ) : null}
       </div>
+      <PriceHistoryChart history={item.priceHistory} />
     </section>
   );
 }

@@ -608,6 +608,36 @@ img {
   font-size: 0.86rem;
 }
 
+.trend-evidence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.trend-evidence span {
+  color: var(--ok);
+  font-weight: 800;
+}
+
+.trend-evidence a {
+  padding: 2px 7px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--accent-dark);
+  font-weight: 700;
+}
+
+.trend-evidence a:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--paper);
+}
+
 .show-more-button {
   width: 100%;
   min-height: 38px;

@@ -17,7 +17,7 @@ const PROVIDER_LABELS = {
   "x-official-trends": "API רשמי של X",
   "xai-web-search-fallback": "xAI חיפוש רשת",
   "xai-x-search-fallback": "xAI X Search",
-  "grok-x-search": "Grok X Search",
+  "grok-x-search": "Verified Grok X Search",
   "polymarket-gamma": "Polymarket Gamma",
   loading: "Loading",
   unavailable: "לא זמין"
@@ -60,6 +60,16 @@ function TrendList({ items, emptyMessage, localeTag, variant = "default" }) {
                 <p className="trend-subtitle" dir={dir}>
                   {item.subtitle}
                 </p>
+              ) : null}
+              {item.sourcePostUrls?.length ? (
+                <div className="trend-evidence" dir="ltr">
+                  <span title={item.evidenceSummary || "Verified from X posts"}>Verified from X</span>
+                  {item.sourcePostUrls.slice(0, 3).map((sourceUrl, sourceIndex) => (
+                    <a href={sourceUrl} key={sourceUrl} rel="noreferrer" target="_blank">
+                      Post {sourceIndex + 1}
+                    </a>
+                  ))}
+                </div>
               ) : null}
             </div>
           </li>
